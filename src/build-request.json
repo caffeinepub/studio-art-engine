@@ -1,0 +1,132 @@
+{
+  "kind": "build_request",
+  "title": "Chunked NFT collection generation with progress, cancel, and low-freeze safeguards for 10k–20k runs",
+  "priority": "normal",
+  "requirements": [
+    {
+      "id": "REQ-1",
+      "text": "Update the Vault collection generation flow to run in chunks/batches (instead of one long tight loop) and explicitly yield to the UI between batches so the app remains responsive when generating collections larger than ~5,000 NFTs.",
+      "target": "frontend",
+      "source": {
+        "messageIds": [
+          "msg-4",
+          "msg-5"
+        ],
+        "quotes": [
+          "Do it pls",
+          "implement chunked / batched collection generation with progressive commits, UI yielding to prevent freezes"
+        ]
+      },
+      "acceptanceCriteria": [
+        "Generating a collection of 10,000 NFTs does not cause the UI to freeze for extended periods; the browser remains interactive during generation.",
+        "Generation work yields to the event loop at least once per batch (e.g., via requestAnimationFrame, setTimeout(0), or equivalent) so progress updates and user input are processed."
+      ]
+    },
+    {
+      "id": "REQ-2",
+      "text": "Implement progressive commit during generation: after each batch, append the newly generated NFTs into the current project’s generatedNFTs via onUpdateProject so memory pressure is reduced (no large, growing in-function array that is only committed at the end), while preserving the existing replace-only model by clearing generatedNFTs once at the start of the run.",
+      "target": "frontend",
+      "source": {
+        "messageIds": [
+          "msg-5"
+        ],
+        "quotes": [
+          "progressive commits"
+        ]
+      },
+      "acceptanceCriteria": [
+        "At the start of a new generation run, the project.generatedNFTs list is cleared immediately (replace-only behavior remains).",
+        "During generation, project.generatedNFTs grows incrementally in batches (observable in UI item count) rather than only appearing at the end.",
+        "After completion, generatedNFTs are sorted by token id as they are today and lastGeneratedAt is updated."
+      ]
+    },
+    {
+      "id": "REQ-3",
+      "text": "Add an in-generation progress UI that shows both percentage and numeric progress (e.g., “3,250 / 10,000”) and provide a Cancel control that safely stops the current generation run without corrupting state.",
+      "target": "frontend",
+      "source": {
+        "messageIds": [
+          "msg-5"
+        ],
+        "quotes": [
+          "clear progress + cancel indicator"
+        ]
+      },
+      "acceptanceCriteria": [
+        "While generating, the UI shows a continuously updating progress indicator with both percent and counts generated/target.",
+        "A Cancel button is visible only while generation is in progress.",
+        "Cancel stops further generation quickly (within one batch) and leaves any already-generated NFTs intact and usable (can be viewed/exported).",
+        "After cancel, the Generate button becomes usable again without requiring a tab switch or navigation."
+      ]
+    },
+    {
+      "id": "REQ-4",
+      "text": "Add an optional low-memory/headless generation mode toggle in the Vault generation controls that minimizes UI and rendering work during generation (to improve reliability for 10k–20k runs). This mode must be optional and default to off.",
+      "target": "frontend",
+      "source": {
+        "messageIds": [
+          "msg-5"
+        ],
+        "quotes": [
+          "optional headless (no-preview, low-memory) mode"
+        ]
+      },
+      "acceptanceCriteria": [
+        "A user-facing toggle (English text) is available near the Generate control to enable/disable headless/low-memory mode.",
+        "When enabled, Vault avoids expensive live rendering during the run (e.g., suppress/placeholder the grid rendering while generating, or equivalent) while still generating NFTs.",
+        "When generation finishes or is canceled, normal Vault rendering resumes automatically."
+      ]
+    },
+    {
+      "id": "REQ-5",
+      "text": "Add Vault rendering safeguards for very large generatedNFTs lists so opening or staying on Vault during a large generation run does not lock the UI (e.g., avoid rendering thousands of <img> nodes during generation and/or provide a lightweight “Generating…” view).",
+      "target": "frontend",
+      "source": {
+        "messageIds": [
+          "msg-5"
+        ],
+        "quotes": [
+          "safeguard Vault rendering so large runs don’t lock the UI"
+        ]
+      },
+      "acceptanceCriteria": [
+        "During generation, Vault does not attempt to render the full grid of thumbnails in a way that causes noticeable lockups.",
+        "After generation completes, the Vault grid becomes usable and scrollable; thumbnails display as expected."
+      ]
+    },
+    {
+      "id": "REQ-6",
+      "text": "Ensure generation remains deterministic with respect to existing rules and uniqueness constraints: the chunked/progressive pipeline must still enforce rule validation (exclude/force) and DNA uniqueness, and must continue to integrate forged tokens into the final set as it does today.",
+      "target": "frontend",
+      "source": {
+        "messageIds": [
+          "msg-4",
+          "msg-5"
+        ],
+        "quotes": [
+          "Chunked generation + progressive commit",
+          "10k–20k range can generate reliably"
+        ]
+      },
+      "acceptanceCriteria": [
+        "Generated NFTs continue to respect project.rules via isValidCombination checks.",
+        "No duplicate DNA values are introduced within a run (uniqueness is maintained across batches).",
+        "Forged tokens are included as before and still reserve token numbers appropriately.",
+        "If the generator cannot reach targetCount within maxAttempts, the UI reports partial completion (existing warning behavior preserved), and the app remains responsive."
+      ]
+    }
+  ],
+  "constraints": [
+    "Frontend immutable paths must not be edited: frontend/src/hooks/useInternetIdentity.ts, frontend/src/hooks/useInternetIdentity.tsx, frontend/src/hooks/useActor.ts, frontend/src/main.tsx, and anything under frontend/src/components/ui.",
+    "Backend must remain a single-actor Motoko canister; no additional backend services."
+  ],
+  "nonGoals": [
+    "Do not add new backend persistence or blob-storage syncing as part of this change.",
+    "Do not change the metadata standard/chain-format behavior beyond what is necessary to keep generation working.",
+    "Do not redesign unrelated pages (Dashboard/Workshop/Rules/Rarity/Preview/Forge) as part of this performance fix."
+  ],
+  "imageRequirements": {
+    "required": [],
+    "edits": []
+  }
+}

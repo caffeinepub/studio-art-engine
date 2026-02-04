@@ -1,0 +1,251 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 10 10 10;
+    --foreground: 255 255 255;
+    --card: 18 18 18;
+    --card-foreground: 255 255 255;
+    --popover: 18 18 18;
+    --popover-foreground: 255 255 255;
+    --primary: 102 102 102;
+    --primary-foreground: 255 255 255;
+    --secondary: 38 38 38;
+    --secondary-foreground: 255 255 255;
+    --muted: 38 38 38;
+    --muted-foreground: 163 163 163;
+    --accent: 136 136 136;
+    --accent-foreground: 255 255 255;
+    --destructive: 82 82 82;
+    --destructive-foreground: 255 255 255;
+    --border: 38 38 38;
+    --input: 38 38 38;
+    --ring: 102 102 102;
+    --radius: 0.5rem;
+    
+    /* Apple HIG Motion System - Universal Timing */
+    --motion-hover: 120ms;
+    --motion-press: 90ms;
+    --motion-component: 300ms;
+    --motion-modal: 700ms;
+    
+    /* Universal Easing Curve */
+    --ease-apple: cubic-bezier(0.16, 1, 0.3, 1);
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+    font-feature-settings: "cv11", "ss01";
+    font-optical-sizing: auto;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+  }
+  
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+}
+
+@layer utilities {
+  .sharp-shadow {
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+  }
+  
+  .sharp-shadow-hover {
+    transition: box-shadow var(--motion-hover) var(--ease-apple), 
+                transform var(--motion-hover) var(--ease-apple);
+  }
+  
+  .sharp-shadow-hover:hover {
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.5);
+    transform: translateY(-2px);
+  }
+  
+  .sharp-shadow-lg {
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+  }
+  
+  .smooth-transition {
+    transition: all var(--motion-hover) var(--ease-apple);
+  }
+
+  .smooth-hover {
+    transition: all var(--motion-hover) var(--ease-apple);
+  }
+
+  .smooth-hover:hover {
+    transform: translateY(-1px);
+  }
+
+  @media (max-width: 768px) {
+    button, a, [role="button"] {
+      min-height: 44px;
+      min-width: 44px;
+    }
+  }
+
+  .rarity-slider [role="slider"] {
+    background: rgb(255, 255, 255);
+    border: 2px solid rgb(136, 136, 136);
+    transition: all var(--motion-hover) var(--ease-apple);
+  }
+
+  .rarity-slider [role="slider"]:hover {
+    transform: scale(1.15);
+    box-shadow: 0 0 0 6px rgba(136, 136, 136, 0.15);
+  }
+
+  .rarity-slider [role="slider"]:active {
+    transform: scale(1.1);
+    transition: all var(--motion-press) var(--ease-apple);
+  }
+
+  .rarity-slider [role="slider"]:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+  
+  .focus-ring {
+    @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background;
+  }
+
+  /* Vault NFT Card - Edge-to-edge artwork */
+  .vault-nft-card img {
+    display: block;
+  }
+}
+
+/* Apple HIG Global Motion System Keyframes */
+@keyframes page-transition {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes spring-reveal {
+  from {
+    opacity: 0;
+    transform: translateY(30px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes slide-in {
+  from {
+    transform: translateY(8px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes pulse-subtle {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.9;
+  }
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes fade-in-scale {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: -1000px 0;
+  }
+  100% {
+    background-position: 1000px 0;
+  }
+}
+
+/* Apple HIG Motion Classes */
+.page-transition {
+  animation: page-transition var(--motion-component) var(--ease-apple);
+}
+
+.fade-in {
+  animation: fade-in var(--motion-component) var(--ease-apple);
+}
+
+.fade-in-scale {
+  animation: fade-in-scale var(--motion-component) var(--ease-apple);
+}
+
+.modal-enter {
+  animation: spring-reveal var(--motion-modal) var(--ease-apple);
+}
+
+.card-hover {
+  transition: all var(--motion-hover) var(--ease-apple);
+}
+
+.card-hover:hover {
+  transform: translateY(-2px);
+}
+
+.stagger-item {
+  animation: slide-in var(--motion-component) var(--ease-apple) backwards;
+}
+
+.skeleton {
+  background: linear-gradient(90deg, rgba(255,255,255,0.05) 25%, rgba(255,255,255,0.1) 50%, rgba(255,255,255,0.05) 75%);
+  background-size: 1000px 100%;
+  animation: shimmer 2s infinite;
+}
+
+/* Button Press Animation */
+button:active:not(:disabled) {
+  transform: scale(0.98);
+  transition: transform var(--motion-press) var(--ease-apple);
+}
+
+/* Modal Backdrop */
+.modal-backdrop {
+  backdrop-filter: blur(24px);
+  background: rgba(0, 0, 0, 0.85);
+  animation: fade-in var(--motion-modal) var(--ease-apple);
+}

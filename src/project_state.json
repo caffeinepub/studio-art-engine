@@ -1,0 +1,401 @@
+{
+  "schemaVersion": "1.0.0",
+  "projectStateVersion": 41,
+  "summary": "Studio Art Engine is a React/Tailwind single-page generative NFT art tool. It lets users create multiple projects (collections), define layered image traits, tune trait rarity weights, enforce cross-layer compatibility rules, preview randomized combinations, forge custom 1-of-1 tokens, generate a full collection of composite NFTs (images + metadata), and manage/export the results in a Vault with search, filters, sorting, and rarity tiers. Persistence is primarily client-side via localStorage using base64 data URLs; the repo also contains Motoko modules for an IC blob-storage/gateway authorization and GC workflow, plus Internet Identity/actor scaffolding for IC integration, and now includes an ICP-oriented build/deploy template with scripts and configuration for packaging the app as canisters.",
+  "existing_features": [
+    {
+      "id": "IF-1",
+      "title": "Multi-project collection management (Dashboard)",
+      "synonyms": [
+        "Project dashboard",
+        "Collection projects"
+      ],
+      "description": "Create, open, update, and delete NFT collection projects. Project settings include name, symbol, blockchain (ICP/ETH/SOL), collection size, and pixel-art mode, with modal-based configuration and per-project statistics (layers count, generated count).",
+      "reqIds": [],
+      "version": 1
+    },
+    {
+      "id": "IF-2",
+      "title": "LocalStorage persistence with validation, sanitization, migration, and autosave",
+      "synonyms": [
+        "Client-side persistence",
+        "Autosave",
+        "Data recovery"
+      ],
+      "description": "Projects are loaded/saved from localStorage with schema validation, sanitization defaults, migration of older rule formats, initialization of trait weights, debounced auto-save, quota warnings, and corrupted-data backup with partial recovery notifications.",
+      "reqIds": [],
+      "version": 1
+    },
+    {
+      "id": "IF-3",
+      "title": "Layer management (create, rename, delete, reorder)",
+      "synonyms": [
+        "Layer workshop",
+        "Layer editor"
+      ],
+      "description": "Add layers, select layers, rename layers inline, delete layers, and reorder layers via drag-and-drop. Deleting layers updates rules to remove/clean references to removed layers.",
+      "reqIds": [],
+      "version": 1
+    },
+    {
+      "id": "IF-4",
+      "title": "Trait management with image upload, rename, and delete",
+      "synonyms": [
+        "Trait editor",
+        "Asset upload"
+      ],
+      "description": "Upload multiple image files into a layer as traits (stored as data URLs), auto-name traits from filenames, preview thumbnails, rename traits inline, and delete traits. Deleting traits cleans/removes impacted rules to prevent dangling references.",
+      "reqIds": [],
+      "version": 1
+    },
+    {
+      "id": "IF-5",
+      "title": "Per-layer rendering controls (opacity and blend mode)",
+      "synonyms": [
+        "Layer settings",
+        "Compositing controls"
+      ],
+      "description": "Configure each layer’s opacity (0–100) and blend mode (normal/multiply/overlay), which affects canvas compositing in Preview/Forge/Vault generation paths.",
+      "reqIds": [],
+      "version": 1
+    },
+    {
+      "id": "IF-6",
+      "title": "Rarity Workshop: weight initialization, normalization, locking, and redistribution",
+      "synonyms": [
+        "Rarity tuning",
+        "Weight editor"
+      ],
+      "description": "Trait weights are auto-initialized (equal distribution) when missing/invalid, always normalized to sum to 100, and editable via sliders with proportional adjustment across unlocked traits. Supports locking traits, equalize-all, randomize distribution, expected-count display, and rare-trait highlighting (<1%).",
+      "reqIds": [],
+      "version": 1
+    },
+    {
+      "id": "IF-7",
+      "title": "Matching Rules system (exclude/force)",
+      "synonyms": [
+        "Compatibility rules",
+        "Trait rules"
+      ],
+      "description": "Create rules that either forbid combinations (exclude) or require combinations (force) based on a primary trait and a set of incompatible/required traits across layers. Includes add/edit modal, duplication, and deletion.",
+      "reqIds": [],
+      "version": 1
+    },
+    {
+      "id": "IF-8",
+      "title": "Preview: randomized valid combination generation and canvas rendering",
+      "synonyms": [
+        "Combination preview",
+        "Shuffle preview"
+      ],
+      "description": "Randomly selects traits according to weights, attempts to satisfy rules (up to 100 attempts), and renders the composite to a canvas using layer ordering, opacity, and blend mode. Provides pixel-mode toggle that persists to the project.",
+      "reqIds": [],
+      "version": 1
+    },
+    {
+      "id": "IF-9",
+      "title": "Forge: custom 1-of-1 token creation (Genesis craft and Direct injection)",
+      "synonyms": [
+        "Builder",
+        "Legendary forge",
+        "Custom tokens"
+      ],
+      "description": "Create custom tokens either by selecting one trait per layer (Genesis craft) and minting a composed image, or by uploading arbitrary images to inject directly. Assigns unique token numbers, maintains a vault of custom tokens, and supports deletion with confirmation (also removing dependent generated references).",
+      "reqIds": [],
+      "version": 1
+    },
+    {
+      "id": "IF-10",
+      "title": "Collection generation engine with DNA uniqueness and rule enforcement",
+      "synonyms": [
+        "Generate NFTs",
+        "Batch generator"
+      ],
+      "description": "Generates up to collectionSize NFTs by weighted random trait selection per layer, checks DNA uniqueness, enforces matching rules, and produces composite PNG data URLs and per-token metadata. Integrates forged custom tokens as 1-of-1 items with reserved token numbers.",
+      "reqIds": [],
+      "version": 1
+    },
+    {
+      "id": "IF-11",
+      "title": "Vault: browse, search, filter, sort, and inspect generated NFTs",
+      "synonyms": [
+        "Collection vault",
+        "Artifact grid"
+      ],
+      "description": "Displays generated items in a grid with search across token id/name/attributes, trait-based filtering with a layer-grouped asset library sidebar, and sorting by index, rarity, or commonness. Provides an NFT detail modal with tier/rank display, trait list, and quick filter toggles.",
+      "reqIds": [],
+      "version": 1
+    },
+    {
+      "id": "IF-12",
+      "title": "Vault rarity analytics: frequency-based scoring, ranking, and tiers",
+      "synonyms": [
+        "Rarity ranking",
+        "Tier system"
+      ],
+      "description": "Computes trait frequencies from generated NFTs (excluding forged 1-of-1 type attribute), derives per-NFT rarity score via product of frequencies, ranks items, and assigns percentile-based tiers (Legendary/Epic/Ultra Rare/Rare/Uncommon/Common).",
+      "reqIds": [],
+      "version": 1
+    },
+    {
+      "id": "IF-13",
+      "title": "Exports: single NFT export, metadata export, and ZIP download (images + JSON)",
+      "synonyms": [
+        "Download tools",
+        "Exporter"
+      ],
+      "description": "Exports individual NFT image and metadata JSON, exports master metadata JSON for the full collection, and downloads an entire collection as a ZIP archive containing images/{id}.png and json/{id}.json plus _metadata.json using a custom in-browser ZIP creator.",
+      "reqIds": [],
+      "version": 1
+    },
+    {
+      "id": "IF-14",
+      "title": "Single NFT regeneration",
+      "synonyms": [
+        "Regenerate item",
+        "Reroll token"
+      ],
+      "description": "Allows regenerating a single non-forged NFT while preserving its token number, ensuring new DNA uniqueness and rule validity, and updating image/metadata accordingly.",
+      "reqIds": [],
+      "version": 1
+    },
+    {
+      "id": "IF-15",
+      "title": "Pixel-art rendering mode across the app",
+      "synonyms": [
+        "Pixel mode",
+        "Image smoothing toggle"
+      ],
+      "description": "Project-level pixel art mode controls canvas image smoothing and img rendering style (pixelated vs auto) across Workshop thumbnails, Preview, Forge, and Vault displays.",
+      "reqIds": [],
+      "version": 1
+    },
+    {
+      "id": "IF-16",
+      "title": "Internet Identity authentication context and IC actor creation",
+      "synonyms": [
+        "II login",
+        "Actor hook",
+        "React Query actor"
+      ],
+      "description": "Provides an InternetIdentityProvider for login/logout and persisted identity loading, plus a useActor hook that creates an anonymous or authenticated backend actor (TanStack React Query cached) and invalidates dependent queries when identity changes.",
+      "reqIds": [],
+      "version": 1
+    },
+    {
+      "id": "IF-17",
+      "title": "Motoko blob-storage authorization and garbage-collection utilities",
+      "synonyms": [
+        "Blob storage mixin",
+        "Gateway authorization",
+        "Dead blob pruning"
+      ],
+      "description": "Backend Motoko modules implement authorized principal list management via a cashier canister, dead-blob listing and deletion confirmation (with forced GC trigger), and cashier cycle top-up/refill utilities via environment-configured cashier principal.",
+      "reqIds": [],
+      "version": 1
+    },
+    {
+      "id": "IF-18",
+      "title": "LocalStorage storage optimization: snapshot-based saves with compaction/pruning to reduce quota pressure",
+      "synonyms": [
+        "Storage compaction",
+        "Snapshot persistence",
+        "Autosave quota mitigation"
+      ],
+      "description": "Updates client-side persistence to reduce localStorage quota issues by saving a compact/latest snapshot (optionally bounded history) per project and performing cleanup/pruning of excess/large stored data to prevent AUTO-SAVE failures.",
+      "reqIds": [
+        "AR-1"
+      ],
+      "version": 1
+    },
+    {
+      "id": "IF-19",
+      "title": "ICP build/deploy template (canister-ready app packaging)",
+      "synonyms": [
+        "Build template",
+        "ICP deployment scaffolding",
+        "Canister packaging"
+      ],
+      "description": "Adds a reusable build-template workspace with frontend/backend canister YAMLs, deploy script, Dockerfile, pnpm workspace configs, and utility scripts (e.g., image pruning/resizing) to package and deploy the app to the Internet Computer.",
+      "reqIds": [],
+      "version": 1
+    },
+    {
+      "id": "IF-20",
+      "title": "Autosave status indicator UI",
+      "synonyms": [
+        "Save status indicator",
+        "Autosave HUD"
+      ],
+      "description": "Adds a UI indicator component that reflects local persistence state (e.g., saving/saved/failed) to make autosave behavior and failures more visible while editing projects.",
+      "reqIds": [],
+      "version": 1
+    },
+    {
+      "id": "IF-21",
+      "title": "Vault view mode toggle",
+      "synonyms": [
+        "Vault layout toggle",
+        "Grid/list toggle"
+      ],
+      "description": "Adds a control in the Vault to switch between alternative browsing layouts (e.g., grid vs. an alternate compact/list presentation) to improve collection inspection and navigation.",
+      "reqIds": [],
+      "version": 1
+    },
+    {
+      "id": "IF-22",
+      "title": "Backend main canister wired to blob-storage modules (non-empty backend API surface)",
+      "synonyms": [
+        "Backend canister implementation",
+        "Blob storage canister wiring"
+      ],
+      "description": "Implements a concrete backend canister entrypoint (backend/main.mo) that wires in the blob-storage modules, replacing the prior placeholder/empty backend actor and enabling an actual backend API surface suitable for IC integration.",
+      "reqIds": [],
+      "version": 1
+    },
+    {
+      "id": "IF-23",
+      "title": "Silent autosave failure handling (no user-visible AUTO-SAVE FAILED warning)",
+      "synonyms": [
+        "Remove AUTO-SAVE FAILED toast",
+        "No autosave failure notification"
+      ],
+      "description": "Removes the user-visible “⚠ AUTO-SAVE FAILED” notification/toast while keeping local persistence behavior safe and predictable (autosave continues to operate without surfacing failure warnings to the user).",
+      "reqIds": [
+        "AR-3"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-update-the-vault-collection-generation-flow-to-run-in-chunks-batches-instead-of-one-long-tight-loop-and-explicitly-yield-to-the-ui-between-batches-so-the-app-remains-responsive-when-generating-collections-larger-than-5-000-nfts",
+      "title": "Update the Vault collection generation flow to run in chunks/batches (instead of one long tight loop) and explicitly yield to the UI between batches so the app remains responsive when generating collections larger than ~5,000 NFTs.",
+      "reqIds": [
+        "REQ-1"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-implement-progressive-commit-during-generation-after-each-batch-append-the-newly-generated-nfts-into-the-current-project-s-generatednfts-via-onupdateproject-so-memory-pressure-is-reduced-no-large-growing-in-function-array-that-is-only-committed-at-the-end-while-preserving-the-existing-replace-only-model-by-clearing-generatednfts-once-at-the-start-of-the-run",
+      "title": "Implement progressive commit during generation: after each batch, append the newly generated NFTs into the current project’s generatedNFTs via onUpdateProject so memory pressure is reduced (no large, growing in-function array that is only committed at the end), while preserving the existing replace-only model by clearing generatedNFTs once at the start of the run.",
+      "reqIds": [
+        "REQ-2"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-add-an-in-generation-progress-ui-that-shows-both-percentage-and-numeric-progress-e-g-3-250-10-000-and-provide-a-cancel-control-that-safely-stops-the-current-generation-run-without-corrupting-state",
+      "title": "Add an in-generation progress UI that shows both percentage and numeric progress (e.g., “3,250 / 10,000”) and provide a Cancel control that safely stops the current generation run without corrupting state.",
+      "reqIds": [
+        "REQ-3"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-add-an-optional-low-memory-headless-generation-mode-toggle-in-the-vault-generation-controls-that-minimizes-ui-and-rendering-work-during-generation-to-improve-reliability-for-10k-20k-runs-this-mode-must-be-optional-and-default-to-off",
+      "title": "Add an optional low-memory/headless generation mode toggle in the Vault generation controls that minimizes UI and rendering work during generation (to improve reliability for 10k–20k runs). This mode must be optional and default to off.",
+      "reqIds": [
+        "REQ-4"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-add-vault-rendering-safeguards-for-very-large-generatednfts-lists-so-opening-or-staying-on-vault-during-a-large-generation-run-does-not-lock-the-ui-e-g-avoid-rendering-thousands-of-img-nodes-during-generation-and-or-provide-a-lightweight-generating-view",
+      "title": "Add Vault rendering safeguards for very large generatedNFTs lists so opening or staying on Vault during a large generation run does not lock the UI (e.g., avoid rendering thousands of <img> nodes during generation and/or provide a lightweight “Generating…” view).",
+      "reqIds": [
+        "REQ-5"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-ensure-generation-remains-deterministic-with-respect-to-existing-rules-and-uniqueness-constraints-the-chunked-progressive-pipeline-must-still-enforce-rule-validation-exclude-force-and-dna-uniqueness-and-must-continue-to-integrate-forged-tokens-into-the-final-set-as-it-does-today",
+      "title": "Ensure generation remains deterministic with respect to existing rules and uniqueness constraints: the chunked/progressive pipeline must still enforce rule validation (exclude/force) and DNA uniqueness, and must continue to integrate forged tokens into the final set as it does today.",
+      "reqIds": [
+        "REQ-6"
+      ],
+      "version": 1
+    }
+  ],
+  "new_feature_requests": [
+    {
+      "id": "AR-2",
+      "summary": "Prevent memory exhaustion during NFT generation (optimize in-memory image handling, generation pipeline, and storage of generated artifacts).",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-4",
+      "summary": "Support generating very large collections (e.g., >5,000 NFTs) without freezing: use batching/yielding to UI, progress + cancel, and performance/memory safeguards in generation + Vault rendering.",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-5",
+      "summary": "Implement chunked/batched collection generation (progressive commit/yield-to-UI, optional headless mode) so 10k–20k NFT collections can be generated without freezing or exhausting browser memory.",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-6",
+      "summary": "Optional Internet Identity (II) login with fully separate guest vs authenticated storage; when logged in, persist all project data including uploaded trait images and generated images/metadata in durable backend blob storage tied to the user principal, and restore reliably on re-login (no conflicts/overwrites with guest session data).",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-7",
+      "summary": "Add an in-app onboarding / feature tour walkthrough explaining core workflows (uploading, guest vs II mode, generating/regenerating, rules, collections) in a clear, lightweight, non-intrusive way.",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-8",
+      "summary": "Ensure blockchain-specific metadata generation strictly follows the selected chain standard from the start (ICP, Ethereum/OpenSea, Solana/Metaplex) and remains consistent across generation/export.",
+      "reqIds": [],
+      "status": "pending"
+    }
+  ],
+  "architecturalNotes": [
+    "Frontend is a React SPA with a simple view-state router (dashboard/workshop/rarity/rules/preview/builder/vault) managed in App.tsx.",
+    "Project data model is defined in frontend/src/App.tsx (Project, Layer, Trait, Rule, CustomToken, GeneratedNFT).",
+    "Persistence uses localStorage (STORAGE_KEY: studioArtEngine_projects) with validation/sanitization, migration of older rule format, debounced auto-save, storage quota warning, and corrupted-data backup/recovery.",
+    "UI uses TailwindCSS + shadcn-style UI components and Sonner toast notifications; design emphasizes a custom motion system (Apple-style easing/timing tokens) in tailwind config and global CSS.",
+    "Image composition is done client-side via HTML canvas, layering trait images with per-layer opacity and blend modes; optional pixel-art rendering disables image smoothing.",
+    "Rarity handling uses per-trait weights that are normalized to sum to 100, with lockable traits and proportional redistribution when adjusting weights.",
+    "Rules are enforced as constraint checks over selected trait IDs (exclude and force semantics) during preview shuffling and collection generation/regeneration.",
+    "Vault computes rarity post-generation from observed trait frequencies in generated items and ranks NFTs by product-of-frequencies (lower product = rarer), then assigns percentile-based tiers.",
+    "Export is fully client-side, including a minimal in-browser ZIP builder implementation for batch image+JSON downloads.",
+    "IC integration scaffolding exists: TanStack React Query is used to memoize/recreate an authenticated backend actor based on Internet Identity; backend Motoko includes blob storage gateway authorization and dead-blob pruning helpers. The backend main actor is currently empty.",
+    "Persistence strategy updated to reduce localStorage quota pressure by favoring compact/latest snapshot saves (optionally bounded history) with cleanup/compaction/pruning to prevent AUTO-SAVE FAILED during autosave.",
+    "Repository now includes a build-template workspace that packages the app for ICP deployment (canister.yaml for frontend/backend, deploy.sh, Dockerfile, pnpm workspace/package configs).",
+    "Build-template includes utility scripts for asset maintenance (e.g., resizing and pruning unused images) intended to reduce bundle/asset bloat.",
+    "Build-template frontend adds custom ESLint rules to enforce InternetIdentityProvider usage and prevent problematic BigInt usage in React Query keys.",
+    "Backend main actor is now implemented (non-empty) and composes/wires the blob-storage modules to expose a usable canister API surface (replacing prior placeholder backend/main.mo).",
+    "Frontend persistence layer was refactored into utility modules (e.g., frontend/src/utils/persistence.ts and StorageClient.ts), providing a clearer abstraction boundary for localStorage vs future backend/IC storage clients.",
+    "Backend blob-storage modules (Mixin.mo/Storage.mo) and backend/main.mo were updated in line with the motoko blob-storage component (v4.0.0), indicating ongoing evolution of the canister API/wiring beyond the initial wiring milestone.",
+    "Add memory-safety strategy for generation: avoid retaining unnecessary image/dataURL blobs in memory during/after generation (e.g., persist only latest generation snapshot, release intermediate canvases/bitmaps, and keep only lightweight metadata in active state).",
+    "Generation/persistence policy: persist only the latest generated NFT collection (overwrite previous generations); discard all prior generated artifacts from storage/state to prevent memory/storage bloat and ensure deterministic restore-on-reload behavior.",
+    "UX/persistence policy: do not show any user-visible “⚠ AUTO-SAVE FAILED” warnings/toasts; persistence should remain safe/predictable without failure notifications.",
+    "Large-collection scalability requirement: generation and Vault rendering must remain responsive beyond 5,000 items by batching work (yield to event loop), minimizing in-memory blobs, and using virtualization/lazy rendering where applicable.",
+    "Add large-collection generation mode: chunked/batched generation that yields to the event loop and progressively commits results (optionally headless/no-preview) to keep UI responsive and avoid freezes for 10k–20k items.",
+    "Storage mode separation requirement: guest users store uploads/generated data only in temporary session state; authenticated II users store all uploads and generated artifacts in persistent backend blob storage keyed by principal; guest and II datasets must be fully isolated and never overwrite each other.",
+    "UX requirement: add an interactive, lightweight onboarding/feature tour to guide users through the app’s main features and workflows without external documentation.",
+    "Metadata compliance requirement: metadata engine must output chain-specific formats (ICP vs Ethereum vs Solana) based on project setting, consistently across generation/export."
+  ],
+  "knownIssues": [
+    "Metadata attributes store layer/trait names (trait_type/value) rather than stable IDs; renaming layers/traits after generation can break Vault rarity calculations and trait frequency mapping, since Vault resolves attributes back to the current layer/trait lists by name.",
+    "Trait selection during generation/shuffle assumes layer trait weights effectively cover 0..100; if weights sum to <100 (or are all 0) a layer may end up with no selected trait, producing incomplete DNA/metadata. Rarity Workshop normalizes, but generation paths do not hard-enforce normalization pre-run.",
+    "Repository includes two different frontend index.css files in the provided tree/listing; if both exist in the real codebase, there is potential for style token conflicts/override confusion.",
+    "IDs for layers/traits/tokens are created via Date.now()/Math.random() patterns; collisions are unlikely but possible, and ordering can be affected across rapid operations.",
+    "Generating NFTs can exhaust browser memory due to retaining many large image data URLs/canvas buffers (especially when persisting or keeping multiple generations in state).",
+    "Creating collections larger than ~5,000 NFTs can freeze the app (UI becomes unresponsive) due to heavy synchronous generation work and/or Vault rendering/memory pressure.",
+    "Internet Identity persistence is incomplete: trait image uploads and generated image artifacts are not being durably stored/restored on re-login (only some project metadata persists), causing users to lose uploaded/generated images across sessions.",
+    "Vault sidebar faceted filtering/sorting can return 0 results incorrectly (trait key mismatches/case/attribute mapping) and/or breaks after GENERATING/REGENERATE; needs deterministic OR-within-layer AND-across-layers pipeline over a single metadata source of truth.",
+    "VAULT/collection generation UX issues observed: GENERATING can become disabled after first run, require tab switching to re-enable, and may fail to re-bind UI state (sorting/filtering) after regeneration; should be always clickable and update results instantly."
+  ],
+  "isFixRequest": true,
+  "gameProjectType": "none",
+  "projectName": "Studio Art Engine",
+  "clarification_mode": "pro",
+  "clarification_rounds": 0,
+  "requiresBackendChanges": false,
+  "requiresFrontendChanges": true
+}

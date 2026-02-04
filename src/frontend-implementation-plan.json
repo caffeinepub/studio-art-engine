@@ -1,0 +1,108 @@
+{
+  "kind": "implementation_plan",
+  "version": "1.0",
+  "title": "Vault chunked NFT generation with progress, cancel, and large-run rendering safeguards",
+  "requirements": [
+    {
+      "id": "REQ-1",
+      "summary": "Chunk Vault collection generation into batches and yield to the UI between batches to prevent freezes on 10k+ runs.",
+      "acceptanceCriteria": [
+        "Generating a collection of 10,000 NFTs does not cause the UI to freeze for extended periods; the browser remains interactive during generation.",
+        "Generation work yields to the event loop at least once per batch (e.g., via requestAnimationFrame, setTimeout(0), or equivalent) so progress updates and user input are processed."
+      ],
+      "file_operations": [
+        {
+          "path": "frontend/src/utils/yieldToUI.ts",
+          "operation": "create",
+          "description": "Add a small utility to yield execution back to the browser event loop (e.g., requestAnimationFrame/setTimeout) so long-running generation can remain responsive."
+        },
+        {
+          "path": "frontend/src/pages/Vault.tsx",
+          "operation": "modify",
+          "description": "Refactor generateCollection to run in configurable batches and await a yield-to-UI helper after each batch so state updates, rendering, and user interactions are processed between batches."
+        }
+      ]
+    },
+    {
+      "id": "REQ-2",
+      "summary": "Progressively commit generated NFTs to the project after each batch via onUpdateProject, clearing once at start and sorting/updating timestamp at end.",
+      "acceptanceCriteria": [
+        "At the start of a new generation run, the project.generatedNFTs list is cleared immediately (replace-only behavior remains).",
+        "During generation, project.generatedNFTs grows incrementally in batches (observable in UI item count) rather than only appearing at the end.",
+        "After completion, generatedNFTs are sorted by token id as they are today and lastGeneratedAt is updated."
+      ],
+      "file_operations": [
+        {
+          "path": "frontend/src/pages/Vault.tsx",
+          "operation": "modify",
+          "description": "Change generation state handling to: (1) clear generatedNFTs once at run start; (2) commit forged tokens immediately; (3) append each batch’s newly generated NFTs via onUpdateProject without accumulating a large in-function array; (4) on completion, perform a final onUpdateProject to sort by token id and set lastGeneratedAt."
+        }
+      ]
+    },
+    {
+      "id": "REQ-3",
+      "summary": "Add in-generation progress UI (percent + counts) and a Cancel control that stops generation within one batch while keeping already-generated NFTs usable.",
+      "acceptanceCriteria": [
+        "While generating, the UI shows a continuously updating progress indicator with both percent and counts generated/target.",
+        "A Cancel button is visible only while generation is in progress.",
+        "Cancel stops further generation quickly (within one batch) and leaves any already-generated NFTs intact and usable (can be viewed/exported).",
+        "After cancel, the Generate button becomes usable again without requiring a tab switch or navigation."
+      ],
+      "file_operations": [
+        {
+          "path": "frontend/src/pages/Vault.tsx",
+          "operation": "modify",
+          "description": "Add generation-run control state (e.g., a cancel ref/run id) and UI elements to display percent plus “generated / target” counts during generation, and a Cancel button shown only while generating that requests cancellation and is checked between batches so the run stops safely."
+        }
+      ]
+    },
+    {
+      "id": "REQ-4",
+      "summary": "Add an optional headless/low-memory mode toggle near Vault generation controls to reduce rendering work during 10k–20k runs (default off).",
+      "acceptanceCriteria": [
+        "A user-facing toggle (English text) is available near the Generate control to enable/disable headless/low-memory mode.",
+        "When enabled, Vault avoids expensive live rendering during the run (e.g., suppress/placeholder the grid rendering while generating, or equivalent) while still generating NFTs.",
+        "When generation finishes or is canceled, normal Vault rendering resumes automatically."
+      ],
+      "file_operations": [
+        {
+          "path": "frontend/src/pages/Vault.tsx",
+          "operation": "modify",
+          "description": "Add a headless/low-memory mode toggle (default off) to the Vault generation controls and use it to suppress expensive preview rendering while a run is in progress; ensure normal rendering is restored automatically on completion/cancel."
+        }
+      ]
+    },
+    {
+      "id": "REQ-5",
+      "summary": "Add Vault rendering safeguards so large generatedNFTs lists (and in-progress runs) do not lock the UI from rendering thousands of thumbnails.",
+      "acceptanceCriteria": [
+        "During generation, Vault does not attempt to render the full grid of thumbnails in a way that causes noticeable lockups.",
+        "After generation completes, the Vault grid becomes usable and scrollable; thumbnails display as expected."
+      ],
+      "file_operations": [
+        {
+          "path": "frontend/src/pages/Vault.tsx",
+          "operation": "modify",
+          "description": "Implement large-list rendering safeguards: during generation show a lightweight “Generating…” view (and avoid mapping thousands of <img> nodes), and for very large collections gate thumbnail rendering with a lightweight mode (e.g., render-limited/paged thumbnails or a user-controlled ‘show thumbnails’ action) to keep the UI responsive."
+        }
+      ]
+    },
+    {
+      "id": "REQ-6",
+      "summary": "Preserve determinism, rules validation, uniqueness, and forged-token integration across the chunked/progressive generation pipeline (including partial completion warnings).",
+      "acceptanceCriteria": [
+        "Generated NFTs continue to respect project.rules via isValidCombination checks.",
+        "No duplicate DNA values are introduced within a run (uniqueness is maintained across batches).",
+        "Forged tokens are included as before and still reserve token numbers appropriately.",
+        "If the generator cannot reach targetCount within maxAttempts, the UI reports partial completion (existing warning behavior preserved), and the app remains responsive."
+      ],
+      "file_operations": [
+        {
+          "path": "frontend/src/pages/Vault.tsx",
+          "operation": "modify",
+          "description": "Ensure the batched generator maintains a single run-scoped uniqueness set across batches, continues to apply isValidCombination checks, integrates forged tokens up-front with reserved token numbers, and preserves partial-completion warning behavior when maxAttempts is reached—while still yielding to the UI between batches."
+        }
+      ]
+    }
+  ]
+}

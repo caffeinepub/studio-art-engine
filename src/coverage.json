@@ -1,0 +1,95 @@
+{
+  "kind": "coverage_report",
+  "version": "1.0",
+  "generatedAt": "2026-02-03T16:16:22.857Z",
+  "sources": {
+    "buildRequest": true,
+    "implementationPlan": true
+  },
+  "requirements": {
+    "total": 6,
+    "implemented": 6,
+    "items": [
+      {
+        "id": "REQ-1",
+        "summary": "Update the Vault collection generation flow to run in chunks/batches (instead of one long tight loop) and explicitly yield to the UI between batches so the app remains responsive when generating collections larger than ~5,000 NFTs.",
+        "status": "implemented",
+        "plannedFiles": [
+          "frontend/src/utils/yieldToUI.ts",
+          "frontend/src/pages/Vault.tsx"
+        ],
+        "matchedFiles": [
+          "frontend/src/utils/yieldToUI.ts",
+          "frontend/src/pages/Vault.tsx"
+        ]
+      },
+      {
+        "id": "REQ-2",
+        "summary": "Implement progressive commit during generation: after each batch, append the newly generated NFTs into the current project’s generatedNFTs via onUpdateProject so memory pressure is reduced (no large, growing in-function array that is only committed at the end), while preserving the existing replace-only model by clearing generatedNFTs once at the start of the run.",
+        "status": "implemented",
+        "plannedFiles": [
+          "frontend/src/pages/Vault.tsx"
+        ],
+        "matchedFiles": [
+          "frontend/src/pages/Vault.tsx"
+        ]
+      },
+      {
+        "id": "REQ-3",
+        "summary": "Add an in-generation progress UI that shows both percentage and numeric progress (e.g., “3,250 / 10,000”) and provide a Cancel control that safely stops the current generation run without corrupting state.",
+        "status": "implemented",
+        "plannedFiles": [
+          "frontend/src/pages/Vault.tsx"
+        ],
+        "matchedFiles": [
+          "frontend/src/pages/Vault.tsx"
+        ]
+      },
+      {
+        "id": "REQ-4",
+        "summary": "Add an optional low-memory/headless generation mode toggle in the Vault generation controls that minimizes UI and rendering work during generation (to improve reliability for 10k–20k runs). This mode must be optional and default to off.",
+        "status": "implemented",
+        "plannedFiles": [
+          "frontend/src/pages/Vault.tsx"
+        ],
+        "matchedFiles": [
+          "frontend/src/pages/Vault.tsx"
+        ]
+      },
+      {
+        "id": "REQ-5",
+        "summary": "Add Vault rendering safeguards for very large generatedNFTs lists so opening or staying on Vault during a large generation run does not lock the UI (e.g., avoid rendering thousands of <img> nodes during generation and/or provide a lightweight “Generating…” view).",
+        "status": "implemented",
+        "plannedFiles": [
+          "frontend/src/pages/Vault.tsx"
+        ],
+        "matchedFiles": [
+          "frontend/src/pages/Vault.tsx"
+        ]
+      },
+      {
+        "id": "REQ-6",
+        "summary": "Ensure generation remains deterministic with respect to existing rules and uniqueness constraints: the chunked/progressive pipeline must still enforce rule validation (exclude/force) and DNA uniqueness, and must continue to integrate forged tokens into the final set as it does today.",
+        "status": "implemented",
+        "plannedFiles": [
+          "frontend/src/pages/Vault.tsx"
+        ],
+        "matchedFiles": [
+          "frontend/src/pages/Vault.tsx"
+        ]
+      }
+    ]
+  },
+  "changedFiles": [
+    "build-request.json",
+    "feature_evidence.json",
+    "frontend-file-summaries.txt",
+    "frontend-implementation-plan.json",
+    "frontend/src/pages/Vault.tsx",
+    "frontend/src/utils/yieldToUI.ts",
+    "project_state.json",
+    "scratch/component-selection.json",
+    "spec.md",
+    "spec_vs_diff_report.json"
+  ]
+}

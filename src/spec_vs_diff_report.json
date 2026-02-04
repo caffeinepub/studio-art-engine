@@ -1,0 +1,15 @@
+{
+  "kind": "spec_vs_diff_report",
+  "version": "1.0",
+  "generatedAt": "2026-02-03T16:16:22.813Z",
+  "summary": "The diff adds a UI-yield helper and updates the Vault page; the provided diff summary explicitly claims implementation of chunked generation with progressive commits, progress + cancel UI, optional low-memory/headless mode, rendering safeguards for large lists, and preserved determinism/uniqueness/rules/forged-token behavior. No clear requested requirements are missing based on the available (truncated) evidence.",
+  "missing_requirements": [],
+  "hallucinated_features": [],
+  "confidence": 0.63,
+  "changed_files": [
+    "frontend-file-summaries.txt",
+    "frontend/src/pages/Vault.tsx",
+    "frontend/src/utils/yieldToUI.ts",
+    "project_state.json"
+  ]
+}

@@ -1,0 +1,120 @@
+{
+  "kind": "feature_evidence_report",
+  "features": [
+    {
+      "featureId": "feature-update-the-vault-collection-generation-flow-to-run-in-chunks-batches-instead-of-one-long-tight-loop-and-explicitly-yield-to-the-ui-between-batches-so-the-app-remains-responsive-when-generating-collections-larger-than-5-000-nfts",
+      "featureTitle": "Update the Vault collection generation flow to run in chunks/batches (instead of one long tight loop) and explicitly yield to the UI between batches so the app remains responsive when generating collections larger than ~5,000 NFTs.",
+      "files": [
+        "frontend/src/pages/Vault.tsx",
+        "frontend/src/utils/yieldToUI.ts"
+      ],
+      "components": [
+        "blob-storage@4.0.0",
+        "core-infrastructure@1.0.2",
+        "shadcn-ui@1.0.0",
+        "build-template-react@1.0.0",
+        "initial-app@1.0.0",
+        "github-export-icp-cli@1.0.0"
+      ],
+      "testIds": [
+        "REQ-1"
+      ],
+      "confidence": "high"
+    },
+    {
+      "featureId": "feature-implement-progressive-commit-during-generation-after-each-batch-append-the-newly-generated-nfts-into-the-current-project-s-generatednfts-via-onupdateproject-so-memory-pressure-is-reduced-no-large-growing-in-function-array-that-is-only-committed-at-the-end-while-preserving-the-existing-replace-only-model-by-clearing-generatednfts-once-at-the-start-of-the-run",
+      "featureTitle": "Implement progressive commit during generation: after each batch, append the newly generated NFTs into the current project’s generatedNFTs via onUpdateProject so memory pressure is reduced (no large, growing in-function array that is only committed at the end), while preserving the existing replace-only model by clearing generatedNFTs once at the start of the run.",
+      "files": [
+        "frontend/src/pages/Vault.tsx"
+      ],
+      "components": [
+        "blob-storage@4.0.0",
+        "core-infrastructure@1.0.2",
+        "shadcn-ui@1.0.0",
+        "build-template-react@1.0.0",
+        "initial-app@1.0.0",
+        "github-export-icp-cli@1.0.0"
+      ],
+      "testIds": [
+        "REQ-2"
+      ],
+      "confidence": "high"
+    },
+    {
+      "featureId": "feature-add-an-in-generation-progress-ui-that-shows-both-percentage-and-numeric-progress-e-g-3-250-10-000-and-provide-a-cancel-control-that-safely-stops-the-current-generation-run-without-corrupting-state",
+      "featureTitle": "Add an in-generation progress UI that shows both percentage and numeric progress (e.g., “3,250 / 10,000”) and provide a Cancel control that safely stops the current generation run without corrupting state.",
+      "files": [
+        "frontend/src/pages/Vault.tsx"
+      ],
+      "components": [
+        "blob-storage@4.0.0",
+        "core-infrastructure@1.0.2",
+        "shadcn-ui@1.0.0",
+        "build-template-react@1.0.0",
+        "initial-app@1.0.0",
+        "github-export-icp-cli@1.0.0"
+      ],
+      "testIds": [
+        "REQ-3"
+      ],
+      "confidence": "high"
+    },
+    {
+      "featureId": "feature-add-an-optional-low-memory-headless-generation-mode-toggle-in-the-vault-generation-controls-that-minimizes-ui-and-rendering-work-during-generation-to-improve-reliability-for-10k-20k-runs-this-mode-must-be-optional-and-default-to-off",
+      "featureTitle": "Add an optional low-memory/headless generation mode toggle in the Vault generation controls that minimizes UI and rendering work during generation (to improve reliability for 10k–20k runs). This mode must be optional and default to off.",
+      "files": [
+        "frontend/src/pages/Vault.tsx"
+      ],
+      "components": [
+        "blob-storage@4.0.0",
+        "core-infrastructure@1.0.2",
+        "shadcn-ui@1.0.0",
+        "build-template-react@1.0.0",
+        "initial-app@1.0.0",
+        "github-export-icp-cli@1.0.0"
+      ],
+      "testIds": [
+        "REQ-4"
+      ],
+      "confidence": "high"
+    },
+    {
+      "featureId": "feature-add-vault-rendering-safeguards-for-very-large-generatednfts-lists-so-opening-or-staying-on-vault-during-a-large-generation-run-does-not-lock-the-ui-e-g-avoid-rendering-thousands-of-img-nodes-during-generation-and-or-provide-a-lightweight-generating-view",
+      "featureTitle": "Add Vault rendering safeguards for very large generatedNFTs lists so opening or staying on Vault during a large generation run does not lock the UI (e.g., avoid rendering thousands of <img> nodes during generation and/or provide a lightweight “Generating…” view).",
+      "files": [
+        "frontend/src/pages/Vault.tsx"
+      ],
+      "components": [
+        "blob-storage@4.0.0",
+        "core-infrastructure@1.0.2",
+        "shadcn-ui@1.0.0",
+        "build-template-react@1.0.0",
+        "initial-app@1.0.0",
+        "github-export-icp-cli@1.0.0"
+      ],
+      "testIds": [
+        "REQ-5"
+      ],
+      "confidence": "high"
+    },
+    {
+      "featureId": "feature-ensure-generation-remains-deterministic-with-respect-to-existing-rules-and-uniqueness-constraints-the-chunked-progressive-pipeline-must-still-enforce-rule-validation-exclude-force-and-dna-uniqueness-and-must-continue-to-integrate-forged-tokens-into-the-final-set-as-it-does-today",
+      "featureTitle": "Ensure generation remains deterministic with respect to existing rules and uniqueness constraints: the chunked/progressive pipeline must still enforce rule validation (exclude/force) and DNA uniqueness, and must continue to integrate forged tokens into the final set as it does today.",
+      "files": [
+        "frontend/src/pages/Vault.tsx"
+      ],
+      "components": [
+        "blob-storage@4.0.0",
+        "core-infrastructure@1.0.2",
+        "shadcn-ui@1.0.0",
+        "build-template-react@1.0.0",
+        "initial-app@1.0.0",
+        "github-export-icp-cli@1.0.0"
+      ],
+      "testIds": [
+        "REQ-6"
+      ],
+      "confidence": "high"
+    }
+  ]
+}
