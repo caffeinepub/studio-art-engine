@@ -1,250 +1,57 @@
 {
   "kind": "implementation_plan",
   "version": "1.0",
-  "title": "Apple HIG–style UI/UX refinement pass (frontend-only)",
+  "title": "UI refinements for branding text, Preview rounding, and Forge token image sizing",
   "requirements": [
     {
       "id": "REQ-1",
-      "summary": "Apply a coherent Apple HIG–inspired visual theme (surfaces + typography) across all existing pages without changing layout/navigation structure.",
+      "summary": "Remove the exact text \"Studio Art Engine\" from header branding and the browser document title.",
       "acceptanceCriteria": [
-        "All pages share a consistent surface system (background, card, popover, borders) and typography scale (headings/body/captions) without changing navigation structure or removing existing features.",
-        "No page contains the current ‘mixed style’ patterns (e.g., some areas use heavy uppercase/black weights while others use sentence case) without an intentional, consistent system.",
-        "Visual theme changes are implemented via shared Tailwind tokens/utilities (e.g., in frontend/src/index.css and Tailwind classes), not one-off inline styles per component unless truly necessary."
+        "When no project is selected (Dashboard view), the header does not display \"Studio Art Engine\".",
+        "The HTML document <title> no longer contains \"Studio Art Engine\".",
+        "No other visible UI element contains the exact text \"Studio Art Engine\"."
       ],
       "file_operations": [
         {
-          "path": "frontend/src/index.css",
+          "path": "frontend/src/components/Header.tsx",
           "operation": "modify",
-          "description": "Evolve the global theme tokens and utilities toward an Apple HIG-inspired surface system (translucent/blurred surfaces, subtle borders, calm contrast) and a consistent typography hierarchy (headings/body/captions). Add reusable utility classes for app background, glass cards/panels, and consistent text styles so pages can adopt the system without one-off inline styles."
+          "description": "Remove/replace the dashboard (no project selected) header branding text that currently renders \"Studio Art Engine\" so it no longer appears anywhere in the header."
         },
         {
-          "path": "frontend/tailwind.config.js",
+          "path": "frontend/index.html",
           "operation": "modify",
-          "description": "Extend Tailwind theme to support the updated surface/typography system (e.g., additional semantic colors/opacity patterns, consistent radius, shadow/elevation presets, and typography scale alignment) so pages can implement the theme via shared tokens/utilities."
-        },
-        {
-          "path": "frontend/src/App.tsx",
-          "operation": "modify",
-          "description": "Align app-wide container/background and view transition wrapper styling with the new theme utilities (keep the existing view routing and layout structure unchanged)."
+          "description": "Update the static HTML document <title> to remove the substring \"Studio Art Engine\" while keeping an appropriate remaining title for the app."
         }
       ]
     },
     {
       "id": "REQ-2",
-      "summary": "Unify interaction feedback and motion across components using existing motion tokens/easing; ensure consistent hover/press/focus/disabled/loading states and reduced-motion behavior.",
+      "summary": "Round corners only on the large central NFT preview render on the Preview page without affecting other NFT images elsewhere.",
       "acceptanceCriteria": [
-        "Hover, press, and focus states feel consistent across primary/secondary/ghost/outline buttons, clickable cards, accordion triggers, and icon buttons.",
-        "All transitions use the same timing/easing family (Apple-like curve) and respect prefers-reduced-motion (no noticeable animations when reduced motion is enabled).",
-        "Loading and disabled states are visually distinct and consistent (e.g., ‘Generating…’, ‘Exporting…’, ‘Saving…’) without layout shift or jitter."
+        "On the Preview page, the rendered NFT preview (canvas/image area) has visibly rounded corners.",
+        "NFT images/previews in other areas (e.g., Vault grid, Forge tokens grid) do not change corner radius as part of this requirement."
       ],
       "file_operations": [
         {
-          "path": "frontend/src/index.css",
+          "path": "frontend/src/pages/Preview.tsx",
           "operation": "modify",
-          "description": "Normalize interactive state utilities (hover/press/focus/disabled/loading) to consistently use existing motion tokens (--motion-hover/press/component/modal) and --ease-apple. Ensure focus styles are consistent via shared utilities (e.g., focus-ring), and confirm reduced-motion rules cover transitions/animations app-wide."
-        },
-        {
-          "path": "frontend/src/pages/Vault.tsx",
-          "operation": "modify",
-          "description": "Apply consistent interaction feedback to high-frequency controls (toolbar buttons, accordion triggers, NFT cards, modal close/action buttons) using shared motion/focus utilities; ensure loading/disabled labels do not cause layout shifts."
-        },
-        {
-          "path": "frontend/src/components/Header.tsx",
-          "operation": "modify",
-          "description": "Unify nav item hover/press/focus/active feedback for desktop and mobile navigation using shared motion/focus utilities, ensuring consistent timing/easing and stable layout."
+          "description": "Apply a targeted border-radius to the main preview canvas element (the large central preview) via a specific className/style so only this preview gets rounded corners and other canvases/images remain unchanged."
         }
       ]
     },
     {
       "id": "REQ-3",
-      "summary": "Standardize user-facing copy to a calm, premium English tone (replace ALL-CAPS UI/toasts/labels with sentence/title case where appropriate) without changing behavior.",
+      "summary": "Shrink the forged token NFT preview image within each Forge token card while preserving layout and behavior.",
       "acceptanceCriteria": [
-        "Toast messages throughout Workshop/Preview/Forge/Vault are no longer ALL-CAPS (e.g., “Layer added”, “Trait deleted”, “No valid combination after 100 attempts”).",
-        "Primary page headings and section labels use a consistent casing strategy (no random uppercase blocks) while preserving meaning.",
-        "No user-facing text is removed in a way that makes workflows unclear; copy edits only improve clarity/tone."
-      ],
-      "file_operations": [
-        {
-          "path": "frontend/src/pages/Workshop.tsx",
-          "operation": "modify",
-          "description": "Update user-facing copy (toasts, headings, button labels, empty states) to sentence/title case and calmer phrasing while preserving all existing Workshop behavior and regions (sidebar + main panel)."
-        },
-        {
-          "path": "frontend/src/pages/Preview.tsx",
-          "operation": "modify",
-          "description": "Update Preview page user-facing strings (toasts, button label, empty state, pixel mode labels) to a calm English tone (no ALL-CAPS) without changing behavior."
-        },
-        {
-          "path": "frontend/src/pages/Builder.tsx",
-          "operation": "modify",
-          "description": "Update Forge (Builder) page user-facing copy (toasts, headings, tab labels, button labels, empty states, confirmation dialog text) to remove ALL-CAPS and align with the global tone without changing workflows."
-        },
-        {
-          "path": "frontend/src/pages/Vault.tsx",
-          "operation": "modify",
-          "description": "Audit and refine Vault user-facing copy (toasts, button labels, empty states, progress text, modal labels) to keep consistent casing/tone across the page (no shouty ALL-CAPS)."
-        },
-        {
-          "path": "frontend/src/components/SaveStatusIndicator.tsx",
-          "operation": "modify",
-          "description": "Update the save status label styling/casing to align with the calm copy system (avoid heavy uppercase/black-weight presentation), while preserving the fixed-width behavior that prevents header layout shift."
-        }
-      ]
-    },
-    {
-      "id": "REQ-4",
-      "summary": "Polish global navigation and header responsiveness: consistent active state styling, stable alignment/spacing, and premium mobile menu interactions.",
-      "acceptanceCriteria": [
-        "Header alignment remains stable across view changes; no noticeable layout shifts when save status changes or when opening/closing the mobile menu.",
-        "Mobile navigation tap targets meet a comfortable minimum and have consistent feedback (hover/press/focus).",
-        "Active navigation item styling is consistent between desktop and mobile nav."
-      ],
-      "file_operations": [
-        {
-          "path": "frontend/src/components/Header.tsx",
-          "operation": "modify",
-          "description": "Refine header and navigation styling using the shared theme/motion utilities: consistent active state treatment across desktop/mobile, improved spacing/alignment, stable header height, and predictable mobile menu open/close behavior (no layout shift). Use existing shadcn-ui Button patterns already in use; verify the component's usage instructions before implementing."
-        },
-        {
-          "path": "frontend/src/components/SaveStatusIndicator.tsx",
-          "operation": "modify",
-          "description": "Adjust SaveStatusIndicator typography and state presentation to reduce visual jitter and ensure stable alignment in header across status changes (keep fixed width, improve calm premium feel)."
-        },
-        {
-          "path": "frontend/src/index.css",
-          "operation": "modify",
-          "description": "Ensure global tap-target comfort and focus/press feedback utilities support navigation items consistently across breakpoints (retain existing navigation structure)."
-        }
-      ]
-    },
-    {
-      "id": "REQ-5",
-      "summary": "Refine Dashboard UI (cards + dialogs + empty state) for spacing, hierarchy, and interaction feedback while preserving existing fields and flows.",
-      "acceptanceCriteria": [
-        "Project cards have consistent padding, typography hierarchy, and hover states; action icons (settings/delete) are discoverable and accessible without feeling hidden or jumpy.",
-        "Dialogs (New project / Project settings) use consistent surface styling, spacing, and focus treatment matching the global theme.",
-        "Empty state (“No projects yet”) looks intentional and aligned with the rest of the theme."
-      ],
-      "file_operations": [
-        {
-          "path": "frontend/src/pages/Dashboard.tsx",
-          "operation": "modify",
-          "description": "Refine project card surfaces/typography/spacing to match the global Apple HIG-inspired theme; improve action icon discoverability (avoid hover-only affordances on mobile) and unify hover/press/focus feedback. Update dialogs and empty state surfaces to match the shared surface system. Use existing shadcn-ui Card/Dialog/Button/Input/Label/Switch components already in use; verify the component's usage instructions before implementing."
-        },
-        {
-          "path": "frontend/src/components/ConfirmDestructiveDialog.tsx",
-          "operation": "modify",
-          "description": "Align the destructive confirmation dialog surface, spacing, and typography with the global theme (consistent modal surface/backdrop feel) while keeping the underlying confirm flow intact. Use existing shadcn-ui AlertDialog components already in use; verify the component's usage instructions before implementing."
-        }
-      ]
-    },
-    {
-      "id": "REQ-6",
-      "summary": "Refine Workshop UI for calmer typography and improved affordances (layers list, drag/reorder, rename, trait cards, upload) while preserving existing functionality and layout regions.",
-      "acceptanceCriteria": [
-        "Workshop sidebar (layers) has consistent item sizing, selection state, and drag affordance styling; rename/edit controls are aligned and do not visually ‘fight’ the drag handle.",
-        "Trait cards have consistent thumbnail framing, spacing, and action button styling; destructive actions remain clearly destructive.",
-        "Empty states (“No layers”, “Select layer”, “No traits”) match the app theme and don’t look like dead ends."
-      ],
-      "file_operations": [
-        {
-          "path": "frontend/src/pages/Workshop.tsx",
-          "operation": "modify",
-          "description": "Restyle Workshop sidebar and main panel to adopt the shared surface/typography/motion system (calmer casing/weights, consistent item sizing, clearer selection + drag affordance). Improve alignment of drag handle vs rename controls, and standardize trait card framing/actions (clear destructive affordance). Preserve all existing functionality and the sidebar+main layout regions. Use existing shadcn-ui components already in use (Button/Card/Input/Select/Slider/Dialog/ScrollArea); verify the component's usage instructions before implementing."
-        },
-        {
-          "path": "frontend/src/index.css",
-          "operation": "modify",
-          "description": "Add/adjust shared utilities for list items, draggable affordances, and thumbnail framing so Workshop styling remains consistent and not implemented as one-off inline styles."
-        }
-      ]
-    },
-    {
-      "id": "REQ-7",
-      "summary": "Refine Preview page UI to match the global theme (preview frame, generate action, pixel mode toggle panel) with immediate, consistent feedback.",
-      "acceptanceCriteria": [
-        "Preview’s custom-styled elements (frame gradients, button styles, toggle panel) are brought into the same design system as the rest of the app (shared tokens/utilities).",
-        "The ‘Generate random mix’ action clearly communicates loading/disabled state without jarring styling changes.",
-        "Pixel mode toggle area is aligned, readable, and consistent with other switch rows in the app."
-      ],
-      "file_operations": [
-        {
-          "path": "frontend/src/pages/Preview.tsx",
-          "operation": "modify",
-          "description": "Replace custom one-off styling (inline gradients/shadows and ad-hoc colors) with the shared theme surface utilities for the preview frame and toggle panel; convert the generate action to consistent Button-like interaction states (hover/press/focus/disabled/loading) using shared motion utilities. Keep existing layout and behavior; use the existing shadcn-ui Switch component already in use; verify the component's usage instructions before implementing."
-        },
-        {
-          "path": "frontend/src/index.css",
-          "operation": "modify",
-          "description": "Introduce/adjust reusable utilities for framed preview surfaces (glass/elevation/border) so Preview can use shared tokens/utilities rather than inline styles."
-        }
-      ]
-    },
-    {
-      "id": "REQ-8",
-      "summary": "Refine Forge (Builder) UI for consistent modal/panel surfaces, tabs, selection states, and action feedback while preserving workflow and screen structure.",
-      "acceptanceCriteria": [
-        "Forge modal uses the same modal/backdrop styling and motion system as other dialogs/modals in the app (consistent blur, elevation, corner radius, enter/exit feel).",
-        "Genesis trait selection tiles have a clear selected state and consistent hover/press behavior.",
-        "Direct injection queue items and remove buttons have consistent affordances and do not rely on ‘only appears on hover’ patterns on mobile."
+        "In the \"FORGED TOKENS\" grid on the Forge page, each token image renders smaller than before (e.g., with padding/margins inside the square preview area), matching the intent of the provided reference.",
+        "Token image aspect ratio is preserved and remains centered within its preview area.",
+        "No functional behavior changes to forged token actions (e.g., delete)."
       ],
       "file_operations": [
         {
           "path": "frontend/src/pages/Builder.tsx",
           "operation": "modify",
-          "description": "Unify the Forge modal/backdrop styling and motion with the global modal system (consistent blur/elevation/radius and reduced-motion behavior). Standardize tab styling, selected states for trait tiles, and queue item/remove button affordances (ensure not hover-only on mobile). Preserve the existing Forge workflow and overall structure. Use existing shadcn-ui primitives already in use (Button/AlertDialog); verify the component's usage instructions before implementing."
-        },
-        {
-          "path": "frontend/src/index.css",
-          "operation": "modify",
-          "description": "Add/adjust shared utilities for modal surfaces/backdrops, tabs/segmented controls, and selectable tiles to keep Builder styling consistent across the app."
-        }
-      ]
-    },
-    {
-      "id": "REQ-9",
-      "summary": "Refine Vault UI for readability and reduced clutter across toolbar, filters sidebar, grid cards, detail modal, and progress/loading states; keep behavior intact.",
-      "acceptanceCriteria": [
-        "Vault toolbar elements (publishing controls area, search, sort buttons, export) align cleanly and maintain consistent sizing across breakpoints.",
-        "NFT cards share consistent hover/press/focus states and typography; compact vs grid view modes feel like variants of the same system.",
-        "Detail modal styling matches the global theme (surface, border, spacing, typography) and retains clear primary/secondary actions."
-      ],
-      "file_operations": [
-        {
-          "path": "frontend/src/pages/Vault.tsx",
-          "operation": "modify",
-          "description": "Polish Vault layout spacing/alignment across toolbar, filters sidebar, grid cards, progress areas, and detail modal using the shared surface/typography/motion utilities. Ensure card variants (compact vs grid) share the same base component feel, and modal actions are clearly styled with consistent focus/disabled states. Use existing shadcn-ui components already in use (Card/Input/Progress/ScrollArea/Accordion/Switch/Label/Button); verify the component's usage instructions before implementing."
-        },
-        {
-          "path": "frontend/src/components/VaultViewModeToggle.tsx",
-          "operation": "modify",
-          "description": "Align the view mode toggle’s interactive states and casing/typography with the unified button/toggle system for consistency in the Vault toolbar. Use existing shadcn-ui Button patterns already in use; verify the component's usage instructions before implementing."
-        },
-        {
-          "path": "frontend/src/components/VaultPublishingControls.tsx",
-          "operation": "modify",
-          "description": "Align publishing controls UI (buttons, progress, status text) with the unified interaction/motion/copy system to reduce clutter and improve consistent feedback across states. Use existing shadcn-ui components already in use; verify the component's usage instructions before implementing."
-        }
-      ]
-    },
-    {
-      "id": "REQ-10",
-      "summary": "Refine Settings page polish (form panel + preview panel) for spacing, consistent section styling, and predictable interactive states without changing functionality.",
-      "acceptanceCriteria": [
-        "Settings sections (Publishing status, How it works, Pinata JWT, Solana creators, Dimensions, Metadata format, templates, royalties) have consistent spacing, headings, and surface treatment.",
-        "Form controls (inputs/selects/switches/buttons) look and behave consistently with other pages (focus rings, disabled states, helper text).",
-        "The metadata preview panel has a readable code style (monospace sizing/line-height) and aligns visually with the theme without feeling visually heavy."
-      ],
-      "file_operations": [
-        {
-          "path": "frontend/src/pages/Settings.tsx",
-          "operation": "modify",
-          "description": "Refine Settings panel surfaces, section spacing, and heading hierarchy to match the global theme; standardize form control focus/disabled/helper text styling via shared utilities; tune metadata preview panel monospace styling (size/line-height/background/border) for readability without visual heaviness. Preserve the existing left form + right preview layout and all Settings functionality. Use existing shadcn-ui components already in use (Input/Label/Textarea/Select/Switch/Separator/Alert/Button); verify the component's usage instructions before implementing."
-        },
-        {
-          "path": "frontend/src/index.css",
-          "operation": "modify",
-          "description": "Add/adjust shared utilities for form section cards/rows and code-preview blocks so Settings styling remains consistent and token-driven across the app."
+          "description": "Adjust the forged tokens grid card preview area so the token <img> is rendered smaller inside its aspect-square container (e.g., center it with padding and a reduced max width/height) while preserving object-contain behavior and keeping delete/hover interactions intact."
         }
       ]
     }

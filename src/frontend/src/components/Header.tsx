@@ -26,7 +26,7 @@ export default function Header({ currentView, onNavigate, currentProject, onBack
   ];
 
   return (
-    <header className="flex-shrink-0 bg-card/50 backdrop-blur-xl border-b border-border/50">
+    <header className="flex-shrink-0 bg-card border-b border-border">
       <div className="container mx-auto px-4 sm:px-6 py-3">
         <div className="flex items-center justify-between gap-4">
           <div className="flex items-center gap-4 min-w-0 flex-shrink-0">
@@ -35,16 +35,12 @@ export default function Header({ currentView, onNavigate, currentProject, onBack
                 variant="ghost"
                 size="sm"
                 onClick={onBackToDashboard}
-                className="text-foreground hover:text-foreground hover:bg-muted/50 font-medium px-3 h-9 text-sm focus-ring"
+                className="text-foreground hover:text-foreground hover:bg-muted font-semibold px-3 h-9 text-sm"
               >
                 ← Projects
               </Button>
             ) : (
-              <div>
-                <h1 className="text-base sm:text-lg font-semibold text-foreground truncate">
-                  Studio Art Engine
-                </h1>
-              </div>
+              <div className="h-9"></div>
             )}
           </div>
 
@@ -59,10 +55,10 @@ export default function Header({ currentView, onNavigate, currentProject, onBack
                       variant="ghost"
                       size="sm"
                       onClick={() => onNavigate(item.id as any)}
-                      className={`text-sm font-medium px-3 h-9 rounded-lg transition-all focus-ring ${
+                      className={`text-sm font-medium px-3 h-9 rounded-lg transition-all ${
                         isActive
-                          ? 'bg-primary/10 text-foreground'
-                          : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'
+                          ? 'bg-primary text-primary-foreground'
+                          : 'text-muted-foreground hover:text-foreground hover:bg-muted'
                       }`}
                     >
                       {item.label}
@@ -75,7 +71,7 @@ export default function Header({ currentView, onNavigate, currentProject, onBack
                 variant="ghost"
                 size="icon"
                 onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-                className="lg:hidden text-foreground hover:bg-muted/50 h-9 w-9 focus-ring"
+                className="lg:hidden text-foreground hover:bg-muted h-9 w-9"
               >
                 {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
               </Button>
@@ -96,7 +92,7 @@ export default function Header({ currentView, onNavigate, currentProject, onBack
         </div>
 
         {currentProject && mobileMenuOpen && (
-          <nav className="lg:hidden mt-3 pt-3 border-t border-border/50 flex flex-col gap-1">
+          <nav className="lg:hidden mt-3 pt-3 border-t border-border flex flex-col gap-1">
             {navItems.map((item) => {
               const isActive = currentView === item.id;
               return (
@@ -108,17 +104,17 @@ export default function Header({ currentView, onNavigate, currentProject, onBack
                     onNavigate(item.id as any);
                     setMobileMenuOpen(false);
                   }}
-                  className={`text-sm font-medium px-3 h-10 justify-start rounded-lg transition-all focus-ring ${
+                  className={`text-sm font-medium px-3 h-10 justify-start rounded-lg transition-all ${
                     isActive
-                      ? 'bg-primary/10 text-foreground'
-                      : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'
+                      ? 'bg-primary text-primary-foreground'
+                      : 'text-muted-foreground hover:text-foreground hover:bg-muted'
                   }`}
                 >
                   {item.label}
                 </Button>
               );
             })}
-            <div className="mt-2 pt-2 border-t border-border/50">
+            <div className="mt-2 pt-2 border-t border-border">
               <div className="flex items-center justify-between gap-3 px-3 py-2">
                 <div className="flex-1 min-w-0">
                   <div className="text-sm font-semibold text-foreground truncate">{currentProject.name}</div>

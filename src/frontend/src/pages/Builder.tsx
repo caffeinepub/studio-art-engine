@@ -273,12 +273,12 @@ export default function Builder({ project, onUpdateProject }: BuilderProps) {
                       key={token.id}
                       className="bg-card border border-border rounded-lg overflow-hidden group transition-all duration-200 hover:border-primary/50 relative"
                     >
-                      <div className="aspect-square bg-background relative">
+                      <div className="aspect-square bg-background relative flex items-center justify-center p-6">
                         {token.imageData && (
                           <img
                             src={token.imageData}
                             alt={token.name}
-                            className="w-full h-full object-contain"
+                            className="max-w-[70%] max-h-[70%] object-contain"
                             style={{
                               imageRendering: project.pixelArtMode ? 'pixelated' : 'auto',
                             }}

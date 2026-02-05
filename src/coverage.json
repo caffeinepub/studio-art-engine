@@ -1,153 +1,62 @@
 {
   "kind": "coverage_report",
   "version": "1.0",
-  "generatedAt": "2026-02-05T12:08:11.101Z",
+  "generatedAt": "2026-02-05T15:01:41.918Z",
   "sources": {
     "buildRequest": true,
     "implementationPlan": true
   },
   "requirements": {
-    "total": 10,
-    "implemented": 8,
+    "total": 3,
+    "implemented": 3,
     "items": [
       {
         "id": "REQ-1",
-        "summary": "Apply a coherent Apple HIG–inspired visual theme across the entire app (translucent surfaces, calm contrast, premium typography hierarchy) while preserving the existing page/section layout structure (Dashboard, Workshop, Rarity, Rules, Preview, Forge, Vault, Settings).",
+        "summary": "Remove the text label \"Studio Art Engine\" everywhere it appears in the UI, including the dashboard header branding and the browser document title.",
         "status": "implemented",
         "plannedFiles": [
-          "frontend/src/index.css",
-          "frontend/tailwind.config.js",
-          "frontend/src/App.tsx"
+          "frontend/src/components/Header.tsx",
+          "frontend/index.html"
         ],
         "matchedFiles": [
-          "frontend/src/index.css",
-          "frontend/tailwind.config.js"
-        ]
-      },
-      {
-        "id": "REQ-10",
-        "summary": "Refine Settings page layout polish (left form panel + right preview panel) to match the global theme, with improved spacing, consistent section styling, and predictable interactive states, without changing Settings functionality.",
-        "status": "implemented",
-        "plannedFiles": [
-          "frontend/src/pages/Settings.tsx",
-          "frontend/src/index.css"
-        ],
-        "matchedFiles": [
-          "frontend/src/index.css"
+          "frontend/src/components/Header.tsx",
+          "frontend/index.html"
         ]
       },
       {
         "id": "REQ-2",
-        "summary": "Unify interaction feedback and motion system across the app using the existing motion tokens and easing (e.g., --motion-hover/press/component/modal and --ease-apple), ensuring consistent hover/press/focus/disabled/loading states for buttons, cards, nav items, dialogs, and toggles.",
+        "summary": "Apply rounded corners only to the main NFT preview image on the Preview page (the large central preview), without changing corner styling for other NFT images elsewhere in the app.",
         "status": "implemented",
         "plannedFiles": [
-          "frontend/src/index.css",
-          "frontend/src/pages/Vault.tsx",
-          "frontend/src/components/Header.tsx"
+          "frontend/src/pages/Preview.tsx"
         ],
         "matchedFiles": [
-          "frontend/src/index.css",
-          "frontend/src/components/Header.tsx"
+          "frontend/src/pages/Preview.tsx"
         ]
       },
       {
         "id": "REQ-3",
-        "summary": "Standardize user-facing copy to a calm, premium, readable tone in English across the app (replace shouty ALL-CAPS toasts/labels/buttons with sentence case or title case as appropriate), without changing the underlying behavior.",
+        "summary": "On the Forge (Builder) page, make the forged token NFT preview image smaller within each forged token card while keeping the card layout intact.",
         "status": "implemented",
         "plannedFiles": [
-          "frontend/src/pages/Workshop.tsx",
-          "frontend/src/pages/Preview.tsx",
-          "frontend/src/pages/Builder.tsx",
-          "frontend/src/pages/Vault.tsx",
-          "frontend/src/components/SaveStatusIndicator.tsx"
+          "frontend/src/pages/Builder.tsx"
         ],
         "matchedFiles": [
-          "frontend/src/components/SaveStatusIndicator.tsx"
+          "frontend/src/pages/Builder.tsx"
         ]
-      },
-      {
-        "id": "REQ-4",
-        "summary": "Polish global navigation and header behavior for responsiveness and predictability: consistent active state styling, improved spacing/alignment, and mobile menu interactions that feel stable and premium.",
-        "status": "implemented",
-        "plannedFiles": [
-          "frontend/src/components/Header.tsx",
-          "frontend/src/components/SaveStatusIndicator.tsx",
-          "frontend/src/index.css"
-        ],
-        "matchedFiles": [
-          "frontend/src/components/Header.tsx",
-          "frontend/src/components/SaveStatusIndicator.tsx",
-          "frontend/src/index.css"
-        ]
-      },
-      {
-        "id": "REQ-5",
-        "summary": "Refine Dashboard UI for spacing, hierarchy, and interaction feedback (project cards, new project dialog, project settings dialog), keeping existing fields and flows intact.",
-        "status": "missing",
-        "plannedFiles": [
-          "frontend/src/pages/Dashboard.tsx",
-          "frontend/src/components/ConfirmDestructiveDialog.tsx"
-        ],
-        "matchedFiles": []
-      },
-      {
-        "id": "REQ-6",
-        "summary": "Refine Workshop UI for calmer typography and improved affordances (layers list, drag/reorder, rename, trait cards, upload), preserving all current functionality and layout regions (sidebar + main panel).",
-        "status": "implemented",
-        "plannedFiles": [
-          "frontend/src/pages/Workshop.tsx",
-          "frontend/src/index.css"
-        ],
-        "matchedFiles": [
-          "frontend/src/index.css"
-        ]
-      },
-      {
-        "id": "REQ-7",
-        "summary": "Refine Preview page UI to match the global theme (preview frame, generate button, pixel mode toggle panel) and ensure button/toggle feedback feels immediate and consistent.",
-        "status": "implemented",
-        "plannedFiles": [
-          "frontend/src/pages/Preview.tsx",
-          "frontend/src/index.css"
-        ],
-        "matchedFiles": [
-          "frontend/src/index.css"
-        ]
-      },
-      {
-        "id": "REQ-8",
-        "summary": "Refine Forge (Builder) page UI for consistent modal/panel surfaces, tab styling, selection states, and action feedback while preserving the existing Forge workflow and screen structure.",
-        "status": "implemented",
-        "plannedFiles": [
-          "frontend/src/pages/Builder.tsx",
-          "frontend/src/index.css"
-        ],
-        "matchedFiles": [
-          "frontend/src/index.css"
-        ]
-      },
-      {
-        "id": "REQ-9",
-        "summary": "Refine Vault UI for readability and reduced clutter (toolbar, filters sidebar, grid cards, detail modal, progress/loading areas), with consistent card styling, spacing, and feedback states across view modes and screen sizes.",
-        "status": "missing",
-        "plannedFiles": [
-          "frontend/src/pages/Vault.tsx",
-          "frontend/src/components/VaultViewModeToggle.tsx",
-          "frontend/src/components/VaultPublishingControls.tsx"
-        ],
-        "matchedFiles": []
       }
     ]
   },
   "changedFiles": [
     "build-request.json",
+    "caffeine.lock.json",
     "feature_evidence.json",
     "frontend-file-summaries.txt",
     "frontend-implementation-plan.json",
+    "frontend/index.html",
     "frontend/src/components/Header.tsx",
-    "frontend/src/components/SaveStatusIndicator.tsx",
-    "frontend/src/index.css",
-    "frontend/tailwind.config.js",
+    "frontend/src/pages/Builder.tsx",
+    "frontend/src/pages/Preview.tsx",
     "project_state.json",
     "scratch/component-selection.json",
     "spec.md",

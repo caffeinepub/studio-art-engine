@@ -1,84 +1,87 @@
 {
   "kind": "spec_vs_diff_report",
   "version": "1.0",
-  "generatedAt": "2026-02-05T12:08:11.056Z",
-  "summary": "Diff implements global theme tokens/utilities (OKLCH colors, glass surfaces, motion/easing, reduced-motion), Tailwind token extensions, and a refined Header + SaveStatusIndicator for more stable/nav behavior. There is no diff evidence of the requested per-page UI refinements (Dashboard/Workshop/Preview/Forge/Vault/Settings) or app-wide copy/toast standardization beyond the save indicator text.",
+  "generatedAt": "2026-02-05T15:01:41.915Z",
+  "summary": "REQ-1 and REQ-3 appear implemented (header branding removal and Forge token image shrink). REQ-2 is only partially evidenced: rounding was added on Preview, but the diff summary suggests rounding was applied more broadly than requested, which risks changing other NFT images. The diff also includes multiple broad UI/behavior changes not requested (dashboard/footer redesign, vault/worker logic, tailwind/css animation systems, etc.), and a project_state.json update despite the “UI-only” constraint.",
   "missing_requirements": [
     {
-      "id": "REQ-3",
-      "requirement": "Standardize user-facing copy to a calm, premium, readable tone in English across the app (including replacing ALL-CAPS toasts/labels/buttons).",
-      "reason": "The diff only shows copy changes for the save status indicator (“Saving…”, “Saved”) and nav labels; there is no evidence of toast/copy updates across Workshop/Preview/Forge/Vault or broad casing standardization.",
+      "id": "REQ-2",
+      "requirement": "Apply rounded corners only to the main NFT preview image on the Preview page, without changing corner styling for other NFT images elsewhere in the app.",
+      "reason": "The diff summary indicates rounded corners were applied more broadly than just the main Preview canvas (\"consistent rounded corners throughout\"), so it’s not demonstrated that other NFT images (Vault grid, Forge tokens grid, etc.) were left unchanged as required.",
       "evidence": [
-        "frontend/src/components/SaveStatusIndicator.tsx",
-        "frontend/src/components/Header.tsx"
-      ]
-    },
-    {
-      "id": "REQ-5",
-      "requirement": "Refine Dashboard UI for spacing, hierarchy, and interaction feedback (project cards, new project dialog, project settings dialog), keeping existing fields and flows intact.",
-      "reason": "No Dashboard page changes are present in the modified files list; cannot verify any Dashboard refinements from the provided diff.",
-      "evidence": [
-        "file-diff summary shows modified files only: frontend/src/components/Header.tsx, frontend/src/components/SaveStatusIndicator.tsx, frontend/src/index.css, frontend/tailwind.config.js, frontend-file-summaries.txt, project_state.json"
-      ]
-    },
-    {
-      "id": "REQ-6",
-      "requirement": "Refine Workshop UI (layers list, drag/reorder, rename, trait cards, upload) while preserving functionality and layout regions.",
-      "reason": "No Workshop page changes are present in the modified files list; cannot verify the requested Workshop refinements from the provided diff.",
-      "evidence": [
-        "file-diff summary (modified files list does not include frontend/src/pages/Workshop.tsx)"
-      ]
-    },
-    {
-      "id": "REQ-7",
-      "requirement": "Refine Preview page UI (preview frame, generate button, pixel mode toggle panel) and ensure consistent feedback/loading states.",
-      "reason": "No Preview page changes are present in the modified files list; cannot verify Preview refinements from the provided diff.",
-      "evidence": [
-        "file-diff summary (modified files list does not include frontend/src/pages/Preview.tsx)"
-      ]
-    },
-    {
-      "id": "REQ-8",
-      "requirement": "Refine Forge (Builder) page UI for modal/panel surfaces, tabs, selection states, and action feedback while preserving workflow/structure.",
-      "reason": "No Builder/Forge page changes are present in the modified files list; cannot verify Forge refinements from the provided diff.",
-      "evidence": [
-        "file-diff summary (modified files list does not include frontend/src/pages/Builder.tsx)"
-      ]
-    },
-    {
-      "id": "REQ-9",
-      "requirement": "Refine Vault UI (toolbar, filters sidebar, grid cards, detail modal, progress/loading areas) with consistent styling and responsive behavior.",
-      "reason": "No Vault page changes are present in the modified files list; cannot verify Vault refinements from the provided diff.",
-      "evidence": [
-        "file-diff summary (modified files list does not include frontend/src/pages/Vault.tsx)"
-      ]
-    },
-    {
-      "id": "REQ-10",
-      "requirement": "Refine Settings page layout polish (left form panel + right preview panel) with consistent section styling and interactive states without changing functionality.",
-      "reason": "No Settings page changes are present in the modified files list; cannot verify Settings refinements from the provided diff.",
-      "evidence": [
-        "file-diff summary (modified files list does not include frontend/src/pages/Settings.tsx)"
+        "frontend-file-summaries.txt",
+        "frontend/src/pages/Preview.tsx (truncated)"
       ]
     }
   ],
   "hallucinated_features": [
     {
-      "description": "Claims of extensive functional/logic changes across multiple pages and systems (e.g., worker-based NFT generation, deterministic DNA generation, rule duplication, weight normalization fixes, persistence strategy changes, removing Dashboard blockchain field).",
-      "reason": "These behaviors are described in frontend-file-summaries.txt, but the diff’s modified files list does not include the referenced page/utility files (e.g., App.tsx, Dashboard.tsx, Workshop.tsx, Preview.tsx, Builder.tsx, Vault.tsx, Rules.tsx, RarityWorkshop.tsx, utils/persistence.ts). From the provided diff evidence, these appear to be undocumented/unsupported by actual code changes shown.",
+      "description": "Large-scale header/navigation redesign beyond removing the \"Studio Art Engine\" text (new nav styling, mobile menu behavior, layout changes).",
+      "reason": "BuildRequest only asks to remove the text label and adjust two image styling items; it explicitly discourages redesigning layouts beyond specified tweaks.",
+      "evidence": [
+        "frontend/src/components/Header.tsx (truncated)",
+        "frontend-file-summaries.txt"
+      ]
+    },
+    {
+      "description": "Dashboard redesign (GENESIS.ENGINE-style hero, rounded project tiles, new tile hover glow, extracted dialogs).",
+      "reason": "Not requested; non-goal mentions avoiding redesigns beyond the specified tweaks.",
       "evidence": [
         "frontend-file-summaries.txt",
-        "file-diff summary (only 6 files modified; does not list the files where these changes would have to occur)"
+        "frontend/src/index.css (mentioned in summaries)"
+      ]
+    },
+    {
+      "description": "Footer replaced/modified with heart icon and “caffeine.ai attribution”.",
+      "reason": "Not requested in any requirement.",
+      "evidence": [
+        "frontend-file-summaries.txt"
+      ]
+    },
+    {
+      "description": "Vault page functional/logic changes (worker-based generation, deterministic DNA, progressive commits, fallback compositing, publishing controls wiring).",
+      "reason": "Non-goal and constraints state UI-only update and no changes to generation logic/behavior; these changes go beyond UI refinements.",
+      "evidence": [
+        "frontend-file-summaries.txt"
+      ]
+    },
+    {
+      "description": "Workshop and Rules/RarityWorkshop behavioral enhancements (drag-and-drop, inline renaming sync, rule preservation logic changes, duplicate rule functionality, weight normalization changes).",
+      "reason": "Not requested; exceeds scope of the three UI refinements.",
+      "evidence": [
+        "frontend-file-summaries.txt"
+      ]
+    },
+    {
+      "description": "Global styling/animation system additions (Apple HIG motion system, new Tailwind animation utilities).",
+      "reason": "Not requested; exceeds scope.",
+      "evidence": [
+        "frontend/src/index.css (mentioned in summaries)",
+        "frontend/tailwind.config.js (mentioned in summaries)"
+      ]
+    },
+    {
+      "description": "App-level project normalization logic changes (sanitizeProject ensuring blockchain matches metadataFormat).",
+      "reason": "Not requested; also risks violating the constraint that backend schema/state must not change (even if client-side).",
+      "evidence": [
+        "frontend-file-summaries.txt"
+      ]
+    },
+    {
+      "description": "project_state.json updated with new_feature_requests entries/status tracking.",
+      "reason": "BuildRequest constraints say backend schema/state must not change (UI-only update); modifying a state JSON file is outside the requested UI tweaks.",
+      "evidence": [
+        "project_state.json"
       ]
     }
   ],
-  "confidence": 0.72,
+  "confidence": 0.74,
   "changed_files": [
     "frontend-file-summaries.txt",
+    "frontend/index.html",
     "frontend/src/components/Header.tsx",
-    "frontend/src/components/SaveStatusIndicator.tsx",
-    "frontend/src/index.css",
-    "frontend/tailwind.config.js",
+    "frontend/src/pages/Builder.tsx",
+    "frontend/src/pages/Preview.tsx",
     "project_state.json"
   ]
 }

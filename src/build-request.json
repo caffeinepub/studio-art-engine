@@ -1,238 +1,74 @@
 {
   "kind": "build_request",
-  "title": "App-wide Apple HIG-style UI/UX refinement pass (visual, interaction, motion, copy)",
+  "title": "UI refinements: remove “Studio Art Engine”, round main Preview image corners, and shrink Forge token preview",
   "priority": "normal",
   "requirements": [
     {
       "id": "REQ-1",
-      "text": "Apply a coherent Apple HIG–inspired visual theme across the entire app (translucent surfaces, calm contrast, premium typography hierarchy) while preserving the existing page/section layout structure (Dashboard, Workshop, Rarity, Rules, Preview, Forge, Vault, Settings).",
+      "text": "Remove the text label \"Studio Art Engine\" everywhere it appears in the UI, including the dashboard header branding and the browser document title.",
       "target": "frontend",
       "source": {
         "messageIds": [
-          "msg-4",
-          "msg-6"
+          "recent-messages"
         ],
         "quotes": [
-          "Perform a full UI/UX and logic optimization across the entire application.",
-          "preserve the current layout structure of each section",
-          "deeper design direction (e.g., Apple‑style translucency, cards, depth, or motion system rewrite)"
+          "1.  removed everywhere it appears"
         ]
       },
       "acceptanceCriteria": [
-        "All pages share a consistent surface system (background, card, popover, borders) and typography scale (headings/body/captions) without changing navigation structure or removing existing features.",
-        "No page contains the current ‘mixed style’ patterns (e.g., some areas use heavy uppercase/black weights while others use sentence case) without an intentional, consistent system.",
-        "Visual theme changes are implemented via shared Tailwind tokens/utilities (e.g., in frontend/src/index.css and Tailwind classes), not one-off inline styles per component unless truly necessary."
+        "When no project is selected (Dashboard view), the header does not display \"Studio Art Engine\".",
+        "The HTML document <title> no longer contains \"Studio Art Engine\".",
+        "No other visible UI element contains the exact text \"Studio Art Engine\"."
       ]
     },
     {
       "id": "REQ-2",
-      "text": "Unify interaction feedback and motion system across the app using the existing motion tokens and easing (e.g., --motion-hover/press/component/modal and --ease-apple), ensuring consistent hover/press/focus/disabled/loading states for buttons, cards, nav items, dialogs, and toggles.",
+      "text": "Apply rounded corners only to the main NFT preview image on the Preview page (the large central preview), without changing corner styling for other NFT images elsewhere in the app.",
       "target": "frontend",
       "source": {
         "messageIds": [
-          "msg-4"
+          "recent-messages"
         ],
         "quotes": [
-          "Ensure the app feels smooth, predictable, and responsive at all times.",
-          "Unified motion system (Apple HIG–style).",
-          "User actions must always produce immediate, visible feedback."
+          "2. only the main preview shown in image 1"
         ]
       },
       "acceptanceCriteria": [
-        "Hover, press, and focus states feel consistent across primary/secondary/ghost/outline buttons, clickable cards, accordion triggers, and icon buttons.",
-        "All transitions use the same timing/easing family (Apple-like curve) and respect prefers-reduced-motion (no noticeable animations when reduced motion is enabled).",
-        "Loading and disabled states are visually distinct and consistent (e.g., ‘Generating…’, ‘Exporting…’, ‘Saving…’) without layout shift or jitter."
+        "On the Preview page, the rendered NFT preview (canvas/image area) has visibly rounded corners.",
+        "NFT images/previews in other areas (e.g., Vault grid, Forge tokens grid) do not change corner radius as part of this requirement."
       ]
     },
     {
       "id": "REQ-3",
-      "text": "Standardize user-facing copy to a calm, premium, readable tone in English across the app (replace shouty ALL-CAPS toasts/labels/buttons with sentence case or title case as appropriate), without changing the underlying behavior.",
+      "text": "On the Forge (Builder) page, make the forged token NFT preview image smaller within each forged token card while keeping the card layout intact.",
       "target": "frontend",
       "source": {
         "messageIds": [
-          "msg-4"
+          "recent-messages"
         ],
         "quotes": [
-          "Clean, minimalist interface with no redundant elements.",
-          "Clear visual hierarchy and readable typography.",
-          "Overall result: a calm, coherent, premium app experience with clear logic and zero friction."
+          "3. the NFT preview itself ( attact image)"
         ]
       },
       "acceptanceCriteria": [
-        "Toast messages throughout Workshop/Preview/Forge/Vault are no longer ALL-CAPS (e.g., “Layer added”, “Trait deleted”, “No valid combination after 100 attempts”).",
-        "Primary page headings and section labels use a consistent casing strategy (no random uppercase blocks) while preserving meaning.",
-        "No user-facing text is removed in a way that makes workflows unclear; copy edits only improve clarity/tone."
-      ]
-    },
-    {
-      "id": "REQ-4",
-      "text": "Polish global navigation and header behavior for responsiveness and predictability: consistent active state styling, improved spacing/alignment, and mobile menu interactions that feel stable and premium.",
-      "target": "frontend",
-      "source": {
-        "messageIds": [
-          "msg-4"
-        ],
-        "quotes": [
-          "Responsive layout across desktop, tablet, and mobile.",
-          "Navigation & Flow\n\nLogical progression between sections.\n\nNo unexpected page resets or blank states."
-        ]
-      },
-      "acceptanceCriteria": [
-        "Header alignment remains stable across view changes; no noticeable layout shifts when save status changes or when opening/closing the mobile menu.",
-        "Mobile navigation tap targets meet a comfortable minimum and have consistent feedback (hover/press/focus).",
-        "Active navigation item styling is consistent between desktop and mobile nav."
-      ]
-    },
-    {
-      "id": "REQ-5",
-      "text": "Refine Dashboard UI for spacing, hierarchy, and interaction feedback (project cards, new project dialog, project settings dialog), keeping existing fields and flows intact.",
-      "target": "frontend",
-      "source": {
-        "messageIds": [
-          "msg-4"
-        ],
-        "quotes": [
-          "Clean, minimalist interface with no redundant elements.",
-          "Balanced spacing, consistent alignment, no empty or wasted areas.",
-          "User actions must always produce immediate, visible feedback."
-        ]
-      },
-      "acceptanceCriteria": [
-        "Project cards have consistent padding, typography hierarchy, and hover states; action icons (settings/delete) are discoverable and accessible without feeling hidden or jumpy.",
-        "Dialogs (New project / Project settings) use consistent surface styling, spacing, and focus treatment matching the global theme.",
-        "Empty state (“No projects yet”) looks intentional and aligned with the rest of the theme."
-      ]
-    },
-    {
-      "id": "REQ-6",
-      "text": "Refine Workshop UI for calmer typography and improved affordances (layers list, drag/reorder, rename, trait cards, upload), preserving all current functionality and layout regions (sidebar + main panel).",
-      "target": "frontend",
-      "source": {
-        "messageIds": [
-          "msg-4",
-          "msg-6"
-        ],
-        "quotes": [
-          "Clean, minimalist interface with no redundant elements.",
-          "purely visual/interaction refinements (spacing, alignment, motion, flows",
-          "preserve the current layout structure of each section"
-        ]
-      },
-      "acceptanceCriteria": [
-        "Workshop sidebar (layers) has consistent item sizing, selection state, and drag affordance styling; rename/edit controls are aligned and do not visually ‘fight’ the drag handle.",
-        "Trait cards have consistent thumbnail framing, spacing, and action button styling; destructive actions remain clearly destructive.",
-        "Empty states (“No layers”, “Select layer”, “No traits”) match the app theme and don’t look like dead ends."
-      ]
-    },
-    {
-      "id": "REQ-7",
-      "text": "Refine Preview page UI to match the global theme (preview frame, generate button, pixel mode toggle panel) and ensure button/toggle feedback feels immediate and consistent.",
-      "target": "frontend",
-      "source": {
-        "messageIds": [
-          "msg-4"
-        ],
-        "quotes": [
-          "Ensure the app feels smooth, predictable, and responsive at all times.",
-          "User actions must always produce immediate, visible feedback."
-        ]
-      },
-      "acceptanceCriteria": [
-        "Preview’s custom-styled elements (frame gradients, button styles, toggle panel) are brought into the same design system as the rest of the app (shared tokens/utilities).",
-        "The ‘Generate random mix’ action clearly communicates loading/disabled state without jarring styling changes.",
-        "Pixel mode toggle area is aligned, readable, and consistent with other switch rows in the app."
-      ]
-    },
-    {
-      "id": "REQ-8",
-      "text": "Refine Forge (Builder) page UI for consistent modal/panel surfaces, tab styling, selection states, and action feedback while preserving the existing Forge workflow and screen structure.",
-      "target": "frontend",
-      "source": {
-        "messageIds": [
-          "msg-4",
-          "msg-6"
-        ],
-        "quotes": [
-          "Interaction & Feedback\n\nUnified motion system (Apple HIG–style).",
-          "purely visual/interaction refinements (spacing, alignment, motion, flows",
-          "preserve the current layout structure of each section"
-        ]
-      },
-      "acceptanceCriteria": [
-        "Forge modal uses the same modal/backdrop styling and motion system as other dialogs/modals in the app (consistent blur, elevation, corner radius, enter/exit feel).",
-        "Genesis trait selection tiles have a clear selected state and consistent hover/press behavior.",
-        "Direct injection queue items and remove buttons have consistent affordances and do not rely on ‘only appears on hover’ patterns on mobile."
-      ]
-    },
-    {
-      "id": "REQ-9",
-      "text": "Refine Vault UI for readability and reduced clutter (toolbar, filters sidebar, grid cards, detail modal, progress/loading areas), with consistent card styling, spacing, and feedback states across view modes and screen sizes.",
-      "target": "frontend",
-      "source": {
-        "messageIds": [
-          "msg-4"
-        ],
-        "quotes": [
-          "Clean, minimalist interface with no redundant elements.",
-          "Balanced spacing, consistent alignment, no empty or wasted areas.",
-          "Responsive layout across desktop, tablet, and mobile.",
-          "User actions must always produce immediate, visible feedback."
-        ]
-      },
-      "acceptanceCriteria": [
-        "Vault toolbar elements (publishing controls area, search, sort buttons, export) align cleanly and maintain consistent sizing across breakpoints.",
-        "NFT cards share consistent hover/press/focus states and typography; compact vs grid view modes feel like variants of the same system.",
-        "Detail modal styling matches the global theme (surface, border, spacing, typography) and retains clear primary/secondary actions."
-      ]
-    },
-    {
-      "id": "REQ-10",
-      "text": "Refine Settings page layout polish (left form panel + right preview panel) to match the global theme, with improved spacing, consistent section styling, and predictable interactive states, without changing Settings functionality.",
-      "target": "frontend",
-      "source": {
-        "messageIds": [
-          "msg-4",
-          "msg-6"
-        ],
-        "quotes": [
-          "Clean, minimalist interface with no redundant elements.",
-          "Clear visual hierarchy and readable typography.",
-          "purely visual/interaction refinements (spacing, alignment, motion, flows"
-        ]
-      },
-      "acceptanceCriteria": [
-        "Settings sections (Publishing status, How it works, Pinata JWT, Solana creators, Dimensions, Metadata format, templates, royalties) have consistent spacing, headings, and surface treatment.",
-        "Form controls (inputs/selects/switches/buttons) look and behave consistently with other pages (focus rings, disabled states, helper text).",
-        "The metadata preview panel has a readable code style (monospace sizing/line-height) and aligns visually with the theme without feeling visually heavy."
+        "In the \"FORGED TOKENS\" grid on the Forge page, each token image renders smaller than before (e.g., with padding/margins inside the square preview area), matching the intent of the provided reference.",
+        "Token image aspect ratio is preserved and remains centered within its preview area.",
+        "No functional behavior changes to forged token actions (e.g., delete)."
       ]
     }
   ],
   "constraints": [
-    "Do not change backend architecture or implement backend logic refactors; this pass is frontend-only visual/interaction refinement.",
-    "Preserve the current layout structure and navigation structure of each section (Dashboard, Workshop, Rarity, Rules, Preview, Forge, Vault, Settings).",
-    "Do not edit files under frontend/src/components/ui (compose existing shadcn components instead).",
-    "Do not edit files in frontend.immutablePaths: frontend/src/hooks/useInternetIdentity.ts, frontend/src/hooks/useInternetIdentity.tsx, frontend/src/hooks/useActor.ts, frontend/src/main.tsx, frontend/src/components/ui.",
-    "Use English for all user-facing text changes made as part of this pass."
+    "Do not modify files under frontend/src/components/ui (Shadcn components are read-only).",
+    "Do not edit immutable hook files listed in SYSTEM_CONTEXT (use composition/wrappers if needed).",
+    "Backend schema/state must not change (UI-only update)."
   ],
   "nonGoals": [
-    "Fixing known generation/rarity/worker/persistence logic issues (e.g., weight sums < 100, rarity mapping by names, normalizeProjects() wiping generatedNFTs, forged-token numbering edge cases).",
-    "Changing data models, adding new backend endpoints, or introducing new storage layers.",
-    "Re-architecting app navigation, adding new sections, or removing existing features/workflows."
+    "Changing rounded corners for all NFT images globally.",
+    "Altering Forge/Vault generation logic, metadata, or storage behavior.",
+    "Introducing new navigation items or redesigning layouts beyond the specified tweaks."
   ],
   "imageRequirements": {
     "required": [],
     "edits": []
-  },
-  "userProfileUpdate": {
-    "goalsToAdd": [],
-    "goalsToRemove": [],
-    "preferencesToAdd": [
-      "Prefer Apple HIG–style premium UI with translucency, depth, and unified motion; keep existing page structures; focus on visual/interaction refinements (including copy tone)."
-    ],
-    "preferencesToRemove": [],
-    "miscToAdd": [],
-    "miscToRemove": [],
-    "fieldsToSet": {},
-    "fieldsToDelete": []
   }
 }
