@@ -91,8 +91,9 @@ export default function Preview({ project, onUpdateProject }: PreviewProps) {
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
-    canvas.width = 800;
-    canvas.height = 800;
+    const size = project.settings.outputSize;
+    canvas.width = size;
+    canvas.height = size;
 
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
@@ -124,7 +125,9 @@ export default function Preview({ project, onUpdateProject }: PreviewProps) {
 
       const loadedImages = await Promise.all(imagePromises);
 
-      for (const item of loadedImages) {
+      // Draw layers in reverse order: lower layers first, higher layers last (on top)
+      for (let i = loadedImages.length - 1; i >= 0; i--) {
+        const item = loadedImages[i];
         if (!item) continue;
         const { img, layer } = item;
 
@@ -138,7 +141,7 @@ export default function Preview({ project, onUpdateProject }: PreviewProps) {
       console.error('Error rendering layers:', error);
       toast.error('RENDER ERROR');
     }
-  }, [selectedTraits, validLayers, pixelMode]);
+  }, [selectedTraits, validLayers, pixelMode, project.settings.outputSize]);
 
   const handlePixelModeToggle = useCallback((checked: boolean) => {
     setPixelMode(checked);

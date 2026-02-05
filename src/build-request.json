@@ -1,129 +1,75 @@
 {
   "kind": "build_request",
-  "title": "Chunked NFT collection generation with progress, cancel, and low-freeze safeguards for 10k–20k runs",
+  "title": "Stabilize header save badge layout + compact Vault publishing UI with hover tooltips",
   "priority": "normal",
   "requirements": [
     {
       "id": "REQ-1",
-      "text": "Update the Vault collection generation flow to run in chunks/batches (instead of one long tight loop) and explicitly yield to the UI between batches so the app remains responsive when generating collections larger than ~5,000 NFTs.",
+      "text": "Prevent the save-status badge (e.g., “Saving…”, “Saved”) displayed to the right of the project name in the header from causing any horizontal layout shift/jitter when it appears/disappears, while keeping it in the same position (right side of the project name) on desktop and in the mobile menu project header.",
       "target": "frontend",
       "source": {
         "messageIds": [
           "msg-4",
-          "msg-5"
+          "msg-6"
         ],
         "quotes": [
-          "Do it pls",
-          "implement chunked / batched collection generation with progressive commits, UI yielding to prevent freezes"
+          "Please fix the notification right next to the project name; it's making the navigation bar move, which is very annoying.",
+          "Stay in the same position (right side of project name) but simply stop shifting the layout"
         ]
       },
       "acceptanceCriteria": [
-        "Generating a collection of 10,000 NFTs does not cause the UI to freeze for extended periods; the browser remains interactive during generation.",
-        "Generation work yields to the event loop at least once per batch (e.g., via requestAnimationFrame, setTimeout(0), or equivalent) so progress updates and user input are processed."
+        "Toggling saveStatus between idle/saving/saved does not change the header’s overall width, spacing, or cause nav items to move on desktop.",
+        "Toggling saveStatus does not cause the mobile menu’s project header row (project name/blockchain/save status) to shift.",
+        "The save status remains visually located to the right of the project name (not moved to a different header area)."
       ]
     },
     {
       "id": "REQ-2",
-      "text": "Implement progressive commit during generation: after each batch, append the newly generated NFTs into the current project’s generatedNFTs via onUpdateProject so memory pressure is reduced (no large, growing in-function array that is only committed at the end), while preserving the existing replace-only model by clearing generatedNFTs once at the start of the run.",
-      "target": "frontend",
-      "source": {
-        "messageIds": [
-          "msg-5"
-        ],
-        "quotes": [
-          "progressive commits"
-        ]
-      },
-      "acceptanceCriteria": [
-        "At the start of a new generation run, the project.generatedNFTs list is cleared immediately (replace-only behavior remains).",
-        "During generation, project.generatedNFTs grows incrementally in batches (observable in UI item count) rather than only appearing at the end.",
-        "After completion, generatedNFTs are sorted by token id as they are today and lastGeneratedAt is updated."
-      ]
-    },
-    {
-      "id": "REQ-3",
-      "text": "Add an in-generation progress UI that shows both percentage and numeric progress (e.g., “3,250 / 10,000”) and provide a Cancel control that safely stops the current generation run without corrupting state.",
-      "target": "frontend",
-      "source": {
-        "messageIds": [
-          "msg-5"
-        ],
-        "quotes": [
-          "clear progress + cancel indicator"
-        ]
-      },
-      "acceptanceCriteria": [
-        "While generating, the UI shows a continuously updating progress indicator with both percent and counts generated/target.",
-        "A Cancel button is visible only while generation is in progress.",
-        "Cancel stops further generation quickly (within one batch) and leaves any already-generated NFTs intact and usable (can be viewed/exported).",
-        "After cancel, the Generate button becomes usable again without requiring a tab switch or navigation."
-      ]
-    },
-    {
-      "id": "REQ-4",
-      "text": "Add an optional low-memory/headless generation mode toggle in the Vault generation controls that minimizes UI and rendering work during generation (to improve reliability for 10k–20k runs). This mode must be optional and default to off.",
-      "target": "frontend",
-      "source": {
-        "messageIds": [
-          "msg-5"
-        ],
-        "quotes": [
-          "optional headless (no-preview, low-memory) mode"
-        ]
-      },
-      "acceptanceCriteria": [
-        "A user-facing toggle (English text) is available near the Generate control to enable/disable headless/low-memory mode.",
-        "When enabled, Vault avoids expensive live rendering during the run (e.g., suppress/placeholder the grid rendering while generating, or equivalent) while still generating NFTs.",
-        "When generation finishes or is canceled, normal Vault rendering resumes automatically."
-      ]
-    },
-    {
-      "id": "REQ-5",
-      "text": "Add Vault rendering safeguards for very large generatedNFTs lists so opening or staying on Vault during a large generation run does not lock the UI (e.g., avoid rendering thousands of <img> nodes during generation and/or provide a lightweight “Generating…” view).",
-      "target": "frontend",
-      "source": {
-        "messageIds": [
-          "msg-5"
-        ],
-        "quotes": [
-          "safeguard Vault rendering so large runs don’t lock the UI"
-        ]
-      },
-      "acceptanceCriteria": [
-        "During generation, Vault does not attempt to render the full grid of thumbnails in a way that causes noticeable lockups.",
-        "After generation completes, the Vault grid becomes usable and scrollable; thumbnails display as expected."
-      ]
-    },
-    {
-      "id": "REQ-6",
-      "text": "Ensure generation remains deterministic with respect to existing rules and uniqueness constraints: the chunked/progressive pipeline must still enforce rule validation (exclude/force) and DNA uniqueness, and must continue to integrate forged tokens into the final set as it does today.",
+      "text": "Redesign the Vault publishing instructions so they do not take up extra vertical space: remove the always-visible instructional text block under the Lock/Unlock/Upload buttons and replace it with hover tooltips on the Lock, Unlock, and Upload buttons that display the provided explanations.",
       "target": "frontend",
       "source": {
         "messageIds": [
           "msg-4",
-          "msg-5"
+          "msg-6"
         ],
         "quotes": [
-          "Chunked generation + progressive commit",
-          "10k–20k range can generate reliably"
+          "Redesign the VAULT page so that the instructions above don't take up too much space.\n(Lock: Prevents regeneration and enables upload.\nUnlock: Allows regeneration but clears upload status.\nUpload: Uploads images and metadata to IPFS via Pinata.)",
+          "hover tooltips (When you hover your mouse over the buttons (Lock, unlock, upload))"
         ]
       },
       "acceptanceCriteria": [
-        "Generated NFTs continue to respect project.rules via isValidCombination checks.",
-        "No duplicate DNA values are introduced within a run (uniqueness is maintained across batches).",
-        "Forged tokens are included as before and still reserve token numbers appropriately.",
-        "If the generator cannot reach targetCount within maxAttempts, the UI reports partial completion (existing warning behavior preserved), and the app remains responsive."
+        "The Vault page no longer shows the three-line help text block describing Lock/Unlock/Upload below the publishing controls.",
+        "Hovering each button shows a tooltip with exactly these meanings:\n- Lock: “Prevents regeneration and enables upload.”\n- Unlock: “Allows regeneration but clears upload status.”\n- Upload: “Uploads images and metadata to IPFS via Pinata.”",
+        "The tooltips work for all button states (enabled/disabled) without breaking existing click behaviors."
+      ]
+    },
+    {
+      "id": "REQ-3",
+      "text": "Make the Vault publishing status alert (including the green “Uploaded successfully!” message with CID) more compact to reduce vertical space while keeping the status meaning and CID readable.",
+      "target": "frontend",
+      "source": {
+        "messageIds": [
+          "msg-6"
+        ],
+        "quotes": [
+          "the green “Uploaded successfully!” alert also be made more compact"
+        ]
+      },
+      "acceptanceCriteria": [
+        "The status alert uses reduced padding/typography so it occupies noticeably less height than the current implementation.",
+        "In the uploaded state, the alert still clearly communicates “Uploaded successfully!” and displays the Metadata CID (as currently shown).",
+        "Other alert states (no generation, missing Pinata key, uploading progress, upload failed, locked-ready) remain understandable and functional in the compact layout."
       ]
     }
   ],
   "constraints": [
-    "Frontend immutable paths must not be edited: frontend/src/hooks/useInternetIdentity.ts, frontend/src/hooks/useInternetIdentity.tsx, frontend/src/hooks/useActor.ts, frontend/src/main.tsx, and anything under frontend/src/components/ui.",
-    "Backend must remain a single-actor Motoko canister; no additional backend services."
+    "Do not edit any files under frontend/src/components/ui (compose existing UI components only).",
+    "Keep the save-status indicator positioned to the right of the project name (do not relocate it to a different header region)."
   ],
   "nonGoals": [
-    "Do not add new backend persistence or blob-storage syncing as part of this change.",
-    "Do not change the metadata standard/chain-format behavior beyond what is necessary to keep generation working.",
-    "Do not redesign unrelated pages (Dashboard/Workshop/Rules/Rarity/Preview/Forge) as part of this performance fix."
+    "No backend (Motoko) changes.",
+    "No changes to the IPFS publishing logic, state machine, or Pinata API integration beyond UI presentation.",
+    "No redesign of the Vault browsing grid, filters, generation flow, or export behavior beyond the publishing controls/instructions/alert compactness."
   ],
   "imageRequirements": {
     "required": [],

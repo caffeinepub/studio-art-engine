@@ -7,6 +7,7 @@ import Rules from './pages/Rules';
 import Preview from './pages/Preview';
 import Builder from './pages/Builder';
 import Vault from './pages/Vault';
+import Settings from './pages/Settings';
 import Header from './components/Header';
 import Footer from './components/Footer';
 import ConfirmDestructiveDialog from './components/ConfirmDestructiveDialog';
@@ -14,6 +15,7 @@ import { toast } from 'sonner';
 import { atomicSave, loadCanonical, cleanupLegacyArtifacts, isStorageNearQuota } from './utils/persistence';
 
 export type Blockchain = 'ICP' | 'ETH' | 'SOL';
+export type MetadataFormat = 'solana' | 'ethereum' | 'icp';
 
 export interface Trait {
   id: string;
@@ -56,6 +58,38 @@ export interface GeneratedNFT {
   forgedTokenId?: string;
 }
 
+export type IPFSPublishingStatus = 
+  | 'not-ready'        // Missing Pinata key
+  | 'ready'            // Generated but not locked
+  | 'ready-to-upload'  // Locked, ready to upload
+  | 'uploading'        // Upload in progress
+  | 'uploaded'         // Successfully uploaded
+  | 'upload-failed';   // Upload failed
+
+export interface IPFSPublishingState {
+  status: IPFSPublishingStatus;
+  uploadProgress?: number;
+  errorMessage?: string;
+  imageDirCID?: string;
+  metadataCID?: string;
+}
+
+export interface SolanaCreator {
+  address: string;
+  share: number;
+}
+
+export interface ProjectSettings {
+  outputSize: number;
+  metadataFormat: MetadataFormat;
+  tokenNameTemplate: string;
+  tokenDescription: string;
+  startTokenNumberAtZero: boolean;
+  royaltiesPercent: number;
+  pinataApiKey?: string;
+  solanaCreators?: SolanaCreator[];
+}
+
 export interface Project {
   id: string;
   name: string;
@@ -69,10 +103,27 @@ export interface Project {
   generatedNFTs: GeneratedNFT[];
   createdAt: number;
   lastGeneratedAt?: number;
+  settings: ProjectSettings;
+  collectionLocked?: boolean;
+  ipfsPublishing?: IPFSPublishingState;
 }
 
-type View = 'dashboard' | 'workshop' | 'rarity' | 'rules' | 'preview' | 'builder' | 'vault';
+type View = 'dashboard' | 'workshop' | 'rarity' | 'rules' | 'preview' | 'builder' | 'vault' | 'settings';
 type SaveStatus = 'idle' | 'saving' | 'saved' | 'failed';
+
+// Default settings factory
+function getDefaultSettings(blockchain: Blockchain): ProjectSettings {
+  return {
+    outputSize: 800,
+    metadataFormat: blockchain === 'SOL' ? 'solana' : blockchain === 'ETH' ? 'ethereum' : 'icp',
+    tokenNameTemplate: '{{collection}} #{{id}}',
+    tokenDescription: '',
+    startTokenNumberAtZero: false,
+    royaltiesPercent: 5,
+    pinataApiKey: '',
+    solanaCreators: blockchain === 'SOL' ? [{ address: '', share: 100 }] : undefined,
+  };
+}
 
 // Validation and sanitization functions
 function validateProject(project: any): project is Project {
@@ -88,17 +139,59 @@ function validateProject(project: any): project is Project {
   if (!Array.isArray(project.customTokens)) return false;
   if (!Array.isArray(project.generatedNFTs)) return false;
   if (typeof project.createdAt !== 'number') return false;
+  if (!project.settings || typeof project.settings !== 'object') return false;
   return true;
 }
 
 function sanitizeProject(project: any): Project | null {
   try {
+    // Determine blockchain from metadataFormat if available, otherwise use stored blockchain
+    let blockchain: Blockchain = 'SOL';
+    if (project.settings?.metadataFormat) {
+      const formatToBlockchain: Record<MetadataFormat, Blockchain> = {
+        solana: 'SOL',
+        ethereum: 'ETH',
+        icp: 'ICP',
+      };
+      blockchain = formatToBlockchain[project.settings.metadataFormat] || 'SOL';
+    } else if (['ICP', 'ETH', 'SOL'].includes(project.blockchain)) {
+      blockchain = project.blockchain;
+    }
+    
+    // Migrate legacy outputWidth/outputHeight to outputSize (deterministic: use max)
+    let outputSize = 800;
+    if (project.settings) {
+      if (typeof project.settings.outputSize === 'number') {
+        outputSize = project.settings.outputSize;
+      } else if (typeof project.settings.outputWidth === 'number' || typeof project.settings.outputHeight === 'number') {
+        const width = parseInt(project.settings.outputWidth) || 800;
+        const height = parseInt(project.settings.outputHeight) || 800;
+        outputSize = Math.max(width, height);
+      }
+    }
+    
+    // Sanitize Solana creators
+    let solanaCreators: SolanaCreator[] | undefined = undefined;
+    if (blockchain === 'SOL') {
+      if (Array.isArray(project.settings?.solanaCreators) && project.settings.solanaCreators.length > 0) {
+        solanaCreators = project.settings.solanaCreators
+          .filter((c: any) => c && typeof c.address === 'string' && typeof c.share === 'number')
+          .map((c: any) => ({
+            address: String(c.address),
+            share: Math.max(0, Math.min(100, parseInt(c.share) || 0)),
+          }));
+      }
+      if (!solanaCreators || solanaCreators.length === 0) {
+        solanaCreators = [{ address: '', share: 100 }];
+      }
+    }
+    
     // Ensure all required fields exist with defaults
     const sanitized: Project = {
       id: String(project.id || Date.now()),
       name: String(project.name || 'Untitled Project'),
       symbol: String(project.symbol || 'NFT'),
-      blockchain: ['ICP', 'ETH', 'SOL'].includes(project.blockchain) ? project.blockchain : 'ICP',
+      blockchain,
       collectionSize: Math.max(1, parseInt(project.collectionSize) || 1000),
       pixelArtMode: Boolean(project.pixelArtMode),
       layers: Array.isArray(project.layers) ? project.layers.filter((l: any) => 
@@ -115,6 +208,28 @@ function sanitizeProject(project: any): Project | null {
       ) : [],
       createdAt: typeof project.createdAt === 'number' ? project.createdAt : Date.now(),
       lastGeneratedAt: typeof project.lastGeneratedAt === 'number' ? project.lastGeneratedAt : undefined,
+      collectionLocked: Boolean(project.collectionLocked),
+      ipfsPublishing: project.ipfsPublishing && typeof project.ipfsPublishing === 'object' ? {
+        status: ['not-ready', 'ready', 'ready-to-upload', 'uploading', 'uploaded', 'upload-failed'].includes(project.ipfsPublishing.status)
+          ? project.ipfsPublishing.status
+          : 'not-ready',
+        uploadProgress: typeof project.ipfsPublishing.uploadProgress === 'number' ? project.ipfsPublishing.uploadProgress : undefined,
+        errorMessage: typeof project.ipfsPublishing.errorMessage === 'string' ? project.ipfsPublishing.errorMessage : undefined,
+        imageDirCID: typeof project.ipfsPublishing.imageDirCID === 'string' ? project.ipfsPublishing.imageDirCID : undefined,
+        metadataCID: typeof project.ipfsPublishing.metadataCID === 'string' ? project.ipfsPublishing.metadataCID : undefined,
+      } : { status: 'not-ready' },
+      settings: project.settings && typeof project.settings === 'object' ? {
+        outputSize: Math.max(100, Math.min(4096, outputSize)),
+        metadataFormat: ['solana', 'ethereum', 'icp'].includes(project.settings.metadataFormat) 
+          ? project.settings.metadataFormat 
+          : (blockchain === 'SOL' ? 'solana' : blockchain === 'ETH' ? 'ethereum' : 'icp'),
+        tokenNameTemplate: String(project.settings.tokenNameTemplate || '{{collection}} #{{id}}'),
+        tokenDescription: String(project.settings.tokenDescription || ''),
+        startTokenNumberAtZero: Boolean(project.settings.startTokenNumberAtZero),
+        royaltiesPercent: Math.max(0, Math.min(100, parseFloat(project.settings.royaltiesPercent) || 5)),
+        pinataApiKey: typeof project.settings.pinataApiKey === 'string' ? project.settings.pinataApiKey : '',
+        solanaCreators,
+      } : getDefaultSettings(blockchain),
     };
 
     // Migrate old rule format
@@ -334,11 +449,17 @@ function App() {
     });
   }, []);
 
-  const createProject = useCallback((project: Omit<Project, 'id' | 'createdAt'>) => {
+  const createProject = useCallback((project: Omit<Project, 'id' | 'createdAt' | 'settings' | 'collectionLocked' | 'ipfsPublishing'> & { settings?: Partial<ProjectSettings> }) => {
     const newProject: Project = {
       ...project,
       id: `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
       createdAt: Date.now(),
+      collectionLocked: false,
+      ipfsPublishing: { status: 'not-ready' },
+      settings: {
+        ...getDefaultSettings(project.blockchain),
+        ...project.settings,
+      },
     };
 
     if (!validateProject(newProject)) {
@@ -445,6 +566,13 @@ function App() {
           
           {currentView === 'vault' && currentProject && (
             <Vault
+              project={currentProject}
+              onUpdateProject={updateCurrentProject}
+            />
+          )}
+          
+          {currentView === 'settings' && currentProject && (
+            <Settings
               project={currentProject}
               onUpdateProject={updateCurrentProject}
             />

@@ -51,8 +51,9 @@ export default function Builder({ project, onUpdateProject }: BuilderProps) {
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
-    canvas.width = 500;
-    canvas.height = 500;
+    const size = project.settings.outputSize;
+    canvas.width = size;
+    canvas.height = size;
 
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
@@ -60,7 +61,9 @@ export default function Builder({ project, onUpdateProject }: BuilderProps) {
       ctx.imageSmoothingEnabled = false;
     }
 
-    for (const layer of validLayers) {
+    // Draw layers in reverse order: lower layers first, higher layers last (on top)
+    for (let i = validLayers.length - 1; i >= 0; i--) {
+      const layer = validLayers[i];
       const traitId = selectedTraits[layer.id];
       if (!traitId) continue;
 
@@ -81,7 +84,7 @@ export default function Builder({ project, onUpdateProject }: BuilderProps) {
         img.src = trait.imageData;
       });
     }
-  }, [selectedTraits, activeTab, validLayers, project.pixelArtMode]);
+  }, [selectedTraits, activeTab, validLayers, project.pixelArtMode, project.settings.outputSize]);
 
   useEffect(() => {
     if (activeTab === 'genesis' && Object.keys(selectedTraits).length > 0) {
@@ -94,6 +97,13 @@ export default function Builder({ project, onUpdateProject }: BuilderProps) {
     if (!files) return;
 
     Array.from(files).forEach((file) => {
+      // Validate file type
+      const validTypes = ['image/png', 'image/jpeg', 'image/jpg', 'image/gif'];
+      if (!validTypes.includes(file.type)) {
+        toast.error(`UNSUPPORTED FORMAT: ${file.name}`);
+        return;
+      }
+
       const reader = new FileReader();
       reader.onload = (event) => {
         const newItem = {
@@ -137,8 +147,9 @@ export default function Builder({ project, onUpdateProject }: BuilderProps) {
     }
 
     const canvas = document.createElement('canvas');
-    canvas.width = 800;
-    canvas.height = 800;
+    const size = project.settings.outputSize;
+    canvas.width = size;
+    canvas.height = size;
     const ctx = canvas.getContext('2d');
     if (!ctx) {
       toast.error('CANVAS ERROR');
@@ -149,7 +160,9 @@ export default function Builder({ project, onUpdateProject }: BuilderProps) {
       ctx.imageSmoothingEnabled = false;
     }
 
-    for (const layer of validLayers) {
+    // Draw layers in reverse order: lower layers first, higher layers last (on top)
+    for (let i = validLayers.length - 1; i >= 0; i--) {
+      const layer = validLayers[i];
       const traitId = selectedTraits[layer.id];
       if (!traitId) continue;
 
@@ -361,9 +374,10 @@ export default function Builder({ project, onUpdateProject }: BuilderProps) {
 
             <div className="flex-1 overflow-y-auto px-4 sm:px-6 lg:px-8 pb-4 sm:pb-6">
               {activeTab === 'genesis' ? (
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 lg:gap-8 h-full">
-                  <div className="flex flex-col min-h-[400px] lg:min-h-[500px]">
-                    <div className="aspect-square bg-background rounded-lg border border-border shadow-[inset_0_0_30px_rgba(0,0,0,0.5)] overflow-hidden">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 lg:gap-8">
+                  {/* Sticky Preview Column */}
+                  <div className="flex flex-col">
+                    <div className="aspect-square bg-background rounded-lg border border-border shadow-[inset_0_0_30px_rgba(0,0,0,0.5)] overflow-hidden lg:sticky lg:top-4">
                       <canvas
                         ref={previewCanvasRef}
                         className="w-full h-full"
@@ -374,9 +388,10 @@ export default function Builder({ project, onUpdateProject }: BuilderProps) {
                     </div>
                   </div>
 
-                  <div className="overflow-y-auto pr-0 sm:pr-2 space-y-4 sm:space-y-6 min-h-[400px] lg:min-h-[500px]">
+                  {/* Scrollable Trait Selection Column */}
+                  <div className="space-y-4 sm:space-y-6 pb-4">
                     {validLayers.length === 0 ? (
-                      <div className="flex items-center justify-center h-full">
+                      <div className="flex items-center justify-center min-h-[400px]">
                         <p className="text-muted-foreground font-black uppercase tracking-tight text-xs sm:text-sm">
                           ADD LAYERS IN WORKSHOP FIRST
                         </p>
@@ -485,7 +500,7 @@ export default function Builder({ project, onUpdateProject }: BuilderProps) {
                     <input
                       ref={fileInputRef}
                       type="file"
-                      accept="image/*"
+                      accept=".png,.jpg,.jpeg,.gif,image/png,image/jpeg,image/gif"
                       multiple
                       onChange={handleFileSelect}
                       className="hidden"

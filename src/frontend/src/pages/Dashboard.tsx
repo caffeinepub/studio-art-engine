@@ -4,16 +4,15 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
 import { Settings, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useConfirmDestructive } from '@/hooks/useConfirmDestructive';
-import type { Project, Blockchain } from '../App';
+import type { Project } from '../App';
 
 interface DashboardProps {
   projects: Project[];
-  onCreateProject: (project: Omit<Project, 'id' | 'createdAt'>) => void;
+  onCreateProject: (project: Omit<Project, 'id' | 'createdAt' | 'settings'> & { settings?: Partial<Project['settings']> }) => void;
   onOpenProject: (id: string) => void;
   onDeleteProject: (id: string) => void;
   onUpdateProject: (projectId: string, updater: (project: Project) => Project) => void;
@@ -23,7 +22,6 @@ export default function Dashboard({ projects, onCreateProject, onOpenProject, on
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [name, setName] = useState('');
   const [symbol, setSymbol] = useState('');
-  const [blockchain, setBlockchain] = useState<Blockchain>('ICP');
   const [collectionSize, setCollectionSize] = useState('1000');
   const [pixelArtMode, setPixelArtMode] = useState(false);
 
@@ -31,7 +29,6 @@ export default function Dashboard({ projects, onCreateProject, onOpenProject, on
   const [editingProject, setEditingProject] = useState<Project | null>(null);
   const [editName, setEditName] = useState('');
   const [editSymbol, setEditSymbol] = useState('');
-  const [editBlockchain, setEditBlockchain] = useState<Blockchain>('ICP');
   const [editPixelArtMode, setEditPixelArtMode] = useState(false);
   const [editTokenCount, setEditTokenCount] = useState('');
 
@@ -40,10 +37,11 @@ export default function Dashboard({ projects, onCreateProject, onOpenProject, on
   const handleCreate = () => {
     if (!name || !symbol || !collectionSize) return;
     
+    // Default blockchain is derived from default metadata format (solana -> SOL)
     onCreateProject({
       name,
       symbol,
-      blockchain,
+      blockchain: 'SOL',
       collectionSize: parseInt(collectionSize),
       pixelArtMode,
       layers: [],
@@ -55,7 +53,6 @@ export default function Dashboard({ projects, onCreateProject, onOpenProject, on
     setIsCreateOpen(false);
     setName('');
     setSymbol('');
-    setBlockchain('ICP');
     setCollectionSize('1000');
     setPixelArtMode(false);
   };
@@ -64,7 +61,6 @@ export default function Dashboard({ projects, onCreateProject, onOpenProject, on
     setEditingProject(project);
     setEditName(project.name);
     setEditSymbol(project.symbol);
-    setEditBlockchain(project.blockchain);
     setEditPixelArtMode(project.pixelArtMode);
     setEditTokenCount(project.collectionSize.toString());
     setIsSettingsOpen(true);
@@ -83,7 +79,6 @@ export default function Dashboard({ projects, onCreateProject, onOpenProject, on
       ...p,
       name: editName,
       symbol: editSymbol,
-      blockchain: editBlockchain,
       pixelArtMode: editPixelArtMode,
       collectionSize: newTokenCount,
     }));
@@ -160,20 +155,6 @@ export default function Dashboard({ projects, onCreateProject, onOpenProject, on
                     </div>
                     
                     <div className="space-y-2">
-                      <Label htmlFor="blockchain" className="text-foreground font-medium text-sm">Blockchain</Label>
-                      <Select value={blockchain} onValueChange={(v) => setBlockchain(v as Blockchain)}>
-                        <SelectTrigger className="bg-background border border-border focus:border-primary font-medium h-10 rounded-lg">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent className="bg-card border border-border rounded-lg">
-                          <SelectItem value="ICP">ICP</SelectItem>
-                          <SelectItem value="ETH">ETH</SelectItem>
-                          <SelectItem value="SOL">SOL</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    
-                    <div className="space-y-2">
                       <Label htmlFor="size" className="text-foreground font-medium text-sm">Collection size</Label>
                       <Input
                         id="size"
@@ -231,7 +212,7 @@ export default function Dashboard({ projects, onCreateProject, onOpenProject, on
                         <div className="flex-1 min-w-0">
                           <CardTitle className="text-base mb-1 text-foreground font-semibold truncate">{project.name}</CardTitle>
                           <CardDescription className="text-xs text-muted-foreground font-medium">
-                            {project.symbol} • {project.blockchain}
+                            {project.symbol}
                           </CardDescription>
                         </div>
                         <div className="flex gap-1">
@@ -324,20 +305,6 @@ export default function Dashboard({ projects, onCreateProject, onOpenProject, on
                 placeholder="NFT"
                 className="bg-background border border-border focus:border-primary h-10 rounded-lg"
               />
-            </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="edit-blockchain" className="text-foreground font-medium text-sm">Blockchain</Label>
-              <Select value={editBlockchain} onValueChange={(v) => setEditBlockchain(v as Blockchain)}>
-                <SelectTrigger className="bg-background border border-border focus:border-primary font-medium h-10 rounded-lg">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent className="bg-card border border-border rounded-lg">
-                  <SelectItem value="ICP">ICP</SelectItem>
-                  <SelectItem value="ETH">ETH</SelectItem>
-                  <SelectItem value="SOL">SOL</SelectItem>
-                </SelectContent>
-              </Select>
             </div>
 
             <div className="space-y-2">

@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback, useRef } from 'react';
+import { useState, useMemo, useCallback, useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -10,8 +10,26 @@ import { Label } from '@/components/ui/label';
 import { Download, X, RefreshCw, Search, Filter } from 'lucide-react';
 import { toast } from 'sonner';
 import VaultViewModeToggle from '@/components/VaultViewModeToggle';
+import VaultPublishingControls from '@/components/VaultPublishingControls';
 import { yieldToUI } from '@/utils/yieldToUI';
 import type { Project, GeneratedNFT } from '../App';
+import type {
+  WorkerInputMessage,
+  WorkerOutputMessage,
+  GeneratedNFTData,
+  LayerData,
+  TraitData,
+  RuleData,
+  ForgedTokenData,
+} from '../utils/vaultGeneratorProtocol';
+import {
+  isProgressMessage,
+  isBatchResultMessage,
+  isCompleteMessage,
+  isCancelAckMessage,
+  isErrorMessage,
+  isCapabilityMessage,
+} from '../utils/vaultGeneratorProtocol';
 
 interface VaultProps {
   project: Project;
@@ -154,6 +172,11 @@ class SimpleZipCreator {
   }
 }
 
+// Generate deterministic DNA from ordered layer list
+function generateDNA(traits: Record<string, string>, layers: { id: string }[]): string {
+  return layers.map(layer => traits[layer.id] || '').join('-');
+}
+
 export default function Vault({ project, onUpdateProject }: VaultProps) {
   const [isGenerating, setIsGenerating] = useState(false);
   const [progress, setProgress] = useState(0);
@@ -169,7 +192,19 @@ export default function Vault({ project, onUpdateProject }: VaultProps) {
   
   const imageCache = useRef<ImageCache>({});
   const filterDebounceTimer = useRef<NodeJS.Timeout | null>(null);
-  const cancelGenerationRef = useRef(false);
+  const workerRef = useRef<Worker | null>(null);
+  const workerSupportsImageCompositing = useRef<boolean>(false);
+  const accumulatedNFTs = useRef<GeneratedNFT[]>([]);
+
+  // Cleanup worker on unmount
+  useEffect(() => {
+    return () => {
+      if (workerRef.current) {
+        workerRef.current.terminate();
+        workerRef.current = null;
+      }
+    };
+  }, []);
 
   // Build trait frequency map for rarity calculation
   const traitFrequencyMap = useMemo(() => {
@@ -472,10 +507,6 @@ export default function Vault({ project, onUpdateProject }: VaultProps) {
     return result;
   }, [project.generatedNFTs, project.layers, searchQuery, sortOption, activeFilters, getRarityInfo]);
 
-  const generateDNA = (traits: Record<string, string>): string => {
-    return Object.values(traits).join('-');
-  };
-
   const isValidCombination = useCallback(
     (traits: Record<string, string>): boolean => {
       for (const rule of project.rules) {
@@ -540,7 +571,9 @@ export default function Vault({ project, onUpdateProject }: VaultProps) {
 
     const loadedImages = await Promise.all(imagePromises);
 
-    for (const item of loadedImages) {
+    // Draw layers in reverse order: lower layers first, higher layers last (on top)
+    for (let i = loadedImages.length - 1; i >= 0; i--) {
+      const item = loadedImages[i];
       if (!item) continue;
       const { img, layer } = item;
 
@@ -601,7 +634,7 @@ export default function Vault({ project, onUpdateProject }: VaultProps) {
         }
       }
 
-      const dna = generateDNA(selectedTraits);
+      const dna = generateDNA(selectedTraits, project.layers);
       if (usedDNAs.has(dna)) continue;
       if (!isValidCombination(selectedTraits)) continue;
 
@@ -674,9 +707,44 @@ export default function Vault({ project, onUpdateProject }: VaultProps) {
   };
 
   const cancelGeneration = useCallback(() => {
-    cancelGenerationRef.current = true;
-    toast.info('Canceling generation...');
+    if (workerRef.current) {
+      workerRef.current.postMessage({ type: 'cancel' } as WorkerInputMessage);
+      toast.info('Canceling generation...');
+    }
   }, []);
+
+  // Fallback: composite images on main thread for NFTs without imageData
+  const compositeFallbackImages = async (nfts: GeneratedNFTData[]): Promise<GeneratedNFT[]> => {
+    const result: GeneratedNFT[] = [];
+    
+    for (let i = 0; i < nfts.length; i++) {
+      const nft = nfts[i];
+      
+      if (nft.imageData) {
+        // Already has image
+        result.push(nft as GeneratedNFT);
+      } else if (nft.selectedTraits) {
+        // Need to composite on main thread
+        try {
+          const imageData = await generateImage(nft.selectedTraits);
+          result.push({
+            ...nft,
+            imageData,
+          } as GeneratedNFT);
+        } catch (error) {
+          console.error('Fallback compositing error:', error);
+          // Skip this NFT
+        }
+      }
+      
+      // Yield periodically to keep UI responsive
+      if (i % 50 === 0) {
+        await yieldToUI();
+      }
+    }
+    
+    return result;
+  };
 
   const generateCollection = async () => {
     const currentSortOption = sortOption;
@@ -687,7 +755,7 @@ export default function Vault({ project, onUpdateProject }: VaultProps) {
     setIsGenerating(true);
     setProgress(0);
     setGeneratedCount(0);
-    cancelGenerationRef.current = false;
+    accumulatedNFTs.current = [];
 
     const validLayers = project.layers.filter((l) => l.traits.length > 0);
     if (validLayers.length === 0) {
@@ -703,169 +771,180 @@ export default function Vault({ project, onUpdateProject }: VaultProps) {
         generatedNFTs: [],
       }));
 
-      const existingForgedTokens = project.customTokens.map((customToken) => {
-        return {
-          customToken,
-          imageData: customToken.imageData || '',
-        };
-      });
-      
-      const allTokenNumbers: number[] = [];
-      for (let i = 1; i <= project.collectionSize; i++) {
-        allTokenNumbers.push(i);
-      }
-      
-      const shuffledNumbers = [...allTokenNumbers].sort(() => Math.random() - 0.5);
-      
-      const forgedTokens: GeneratedNFT[] = existingForgedTokens.map((token, index) => {
-        const newTokenNumber = shuffledNumbers[index];
-        
-        const metadata = {
-          name: `${project.name} #${newTokenNumber}`,
-          description: `${project.name} - Custom 1-of-1`,
-          image: `${newTokenNumber}.png`,
-          attributes: [{ trait_type: 'Type', value: '1-of-1' }],
-        };
-
-        if (project.blockchain === 'SOL') {
-          Object.assign(metadata, {
-            symbol: project.symbol,
-            seller_fee_basis_points: 500,
-            creators: [{ address: 'YOUR_WALLET_ADDRESS', share: 100 }],
-          });
-        }
-
-        return {
-          id: newTokenNumber,
-          dna: `forged-${token.customToken.id}`,
-          imageData: token.imageData,
-          metadata,
-          isForged: true,
-          forgedTokenId: token.customToken.id,
-        } as GeneratedNFT;
+      // Create and start worker
+      workerRef.current = new Worker(new URL('../workers/vaultGenerator.worker.ts', import.meta.url), {
+        type: 'module',
       });
 
-      // Commit forged tokens immediately
-      if (forgedTokens.length > 0) {
-        onUpdateProject((p) => ({
-          ...p,
-          generatedNFTs: [...forgedTokens],
-        }));
-        setGeneratedCount(forgedTokens.length);
-        setProgress((forgedTokens.length / project.collectionSize) * 100);
-      }
+      // Setup worker message handler
+      workerRef.current.onmessage = async (event: MessageEvent<WorkerOutputMessage>) => {
+        const message = event.data;
 
-      const usedTokenNumbers = new Set(forgedTokens.map(t => t.id));
-      const availableNumbers: number[] = shuffledNumbers.filter(num => !usedTokenNumbers.has(num));
-
-      const usedDNAs = new Set<string>(forgedTokens.map(t => t.dna));
-      const targetCount = project.collectionSize;
-
-      let attempts = 0;
-      const maxAttempts = targetCount * 100;
-      let availableIndex = 0;
-      let currentBatch: GeneratedNFT[] = [];
-      
-      // Configurable batch size - smaller for large collections
-      const batchSize = targetCount > 5000 ? 100 : targetCount > 1000 ? 250 : 500;
-
-      while (currentBatch.length + forgedTokens.length < targetCount && attempts < maxAttempts && availableIndex < availableNumbers.length) {
-        // Check for cancellation
-        if (cancelGenerationRef.current) {
-          toast.warning(`Generation canceled at ${currentBatch.length + forgedTokens.length} NFTs`);
-          break;
-        }
-
-        attempts++;
-
-        const selectedTraits: Record<string, string> = {};
-        for (const layer of validLayers) {
-          const random = Math.random() * 100;
-          let cumulative = 0;
-          for (const trait of layer.traits) {
-            cumulative += trait.weight;
-            if (random <= cumulative) {
-              selectedTraits[layer.id] = trait.id;
-              break;
-            }
+        if (isCapabilityMessage(message)) {
+          workerSupportsImageCompositing.current = message.payload.supportsImageCompositing;
+          if (!message.payload.supportsImageCompositing) {
+            console.log('Worker does not support image compositing, will use main-thread fallback');
           }
-        }
-
-        const dna = generateDNA(selectedTraits);
-        if (usedDNAs.has(dna)) continue;
-        if (!isValidCombination(selectedTraits)) continue;
-
-        usedDNAs.add(dna);
-
-        try {
-          const imageData = await generateImage(selectedTraits);
-          const tokenNumber = availableNumbers[availableIndex];
-          availableIndex++;
+        } else if (isProgressMessage(message)) {
+          setGeneratedCount(message.payload.generatedCount);
+          setProgress(message.payload.percentage);
+        } else if (isBatchResultMessage(message)) {
+          let batchNFTs: GeneratedNFT[];
           
-          const metadata = createMetadata(tokenNumber, selectedTraits);
-
-          currentBatch.push({
-            id: tokenNumber,
-            dna,
-            imageData,
-            metadata,
-            isForged: false,
-          });
-
-          const totalGenerated = forgedTokens.length + currentBatch.length;
-          setGeneratedCount(totalGenerated);
-          setProgress((totalGenerated / targetCount) * 100);
-
-          // Commit batch and yield to UI
-          if (currentBatch.length >= batchSize) {
-            onUpdateProject((p) => ({
-              ...p,
-              generatedNFTs: [...forgedTokens, ...currentBatch],
-            }));
-            
-            // Yield to UI to keep browser responsive
-            await yieldToUI();
-            
-            // Don't clear batch - keep accumulating for final sort
+          // Check if we need fallback compositing
+          if (!message.payload.supportsImageCompositing) {
+            batchNFTs = await compositeFallbackImages(message.payload.nfts);
+          } else {
+            batchNFTs = message.payload.nfts as GeneratedNFT[];
           }
-        } catch (error) {
-          console.error('Error generating NFT:', error);
+          
+          // Accumulate NFTs
+          accumulatedNFTs.current.push(...batchNFTs);
+          
+          // Progressive commit to project state
+          onUpdateProject((p) => ({
+            ...p,
+            generatedNFTs: [...accumulatedNFTs.current],
+          }));
+        } else if (isCompleteMessage(message)) {
+          // Final commit with sorted NFTs
+          const allGeneratedNFTs = [...accumulatedNFTs.current];
+          allGeneratedNFTs.sort((a, b) => a.id - b.id);
+
+          onUpdateProject((p) => ({
+            ...p,
+            generatedNFTs: allGeneratedNFTs,
+            lastGeneratedAt: Date.now(),
+          }));
+
+          setSortOption(currentSortOption);
+          setSearchQuery(currentSearchQuery);
+          setActiveFilters(currentActiveFilters);
+          setViewMode(currentViewMode);
+
+          if (allGeneratedNFTs.length < project.collectionSize) {
+            toast.warning(`Generated ${allGeneratedNFTs.length} of ${project.collectionSize}`);
+          } else {
+            toast.success(`Generated ${allGeneratedNFTs.length} NFTs`);
+          }
+
+          // Cleanup
+          if (workerRef.current) {
+            workerRef.current.terminate();
+            workerRef.current = null;
+          }
+          imageCache.current = {};
+          accumulatedNFTs.current = [];
+          setIsGenerating(false);
+          setProgress(0);
+          setGeneratedCount(0);
+        } else if (isCancelAckMessage(message)) {
+          toast.warning(`Generation canceled at ${accumulatedNFTs.current.length} NFTs`);
+
+          // Cleanup
+          if (workerRef.current) {
+            workerRef.current.terminate();
+            workerRef.current = null;
+          }
+          imageCache.current = {};
+          accumulatedNFTs.current = [];
+          setIsGenerating(false);
+          setProgress(0);
+          setGeneratedCount(0);
+        } else if (isErrorMessage(message)) {
+          toast.error(message.payload.message);
+          console.error('Worker error:', message.payload.details);
+
+          // Cleanup
+          if (workerRef.current) {
+            workerRef.current.terminate();
+            workerRef.current = null;
+          }
+          imageCache.current = {};
+          accumulatedNFTs.current = [];
+          setIsGenerating(false);
+          setProgress(0);
+          setGeneratedCount(0);
         }
-      }
+      };
 
-      // Final commit with all NFTs sorted by token id
-      const allGeneratedNFTs = [...forgedTokens, ...currentBatch];
-      allGeneratedNFTs.sort((a, b) => a.id - b.id);
+      workerRef.current.onerror = (error) => {
+        console.error('Worker error:', error);
+        toast.error('Generation failed');
+        
+        if (workerRef.current) {
+          workerRef.current.terminate();
+          workerRef.current = null;
+        }
+        imageCache.current = {};
+        accumulatedNFTs.current = [];
+        setIsGenerating(false);
+        setProgress(0);
+        setGeneratedCount(0);
+      };
 
-      onUpdateProject((p) => ({
-        ...p,
-        generatedNFTs: allGeneratedNFTs,
-        lastGeneratedAt: Date.now(),
+      // Prepare data for worker
+      const layers: LayerData[] = project.layers.map(layer => ({
+        id: layer.id,
+        name: layer.name,
+        traits: layer.traits.map(trait => ({
+          id: trait.id,
+          name: trait.name,
+          weight: trait.weight,
+          imageData: trait.imageData,
+        })),
+        opacity: layer.opacity,
+        blendMode: layer.blendMode,
       }));
 
-      setSortOption(currentSortOption);
-      setSearchQuery(currentSearchQuery);
-      setActiveFilters(currentActiveFilters);
-      setViewMode(currentViewMode);
-      
-      if (cancelGenerationRef.current) {
-        // Already showed cancel message
-      } else if (allGeneratedNFTs.length < targetCount) {
-        toast.warning(`Generated ${allGeneratedNFTs.length} of ${targetCount}`);
-      } else {
-        toast.success(`Generated ${allGeneratedNFTs.length} NFTs`);
-      }
+      const rules: RuleData[] = project.rules.map(rule => ({
+        type: rule.type,
+        primaryTrait: {
+          layerId: rule.primaryTrait.layerId,
+          traitId: rule.primaryTrait.traitId,
+        },
+        incompatibleTraits: rule.incompatibleTraits.map(t => ({
+          layerId: t.layerId,
+          traitId: t.traitId,
+        })),
+      }));
+
+      const forgedTokens: ForgedTokenData[] = project.customTokens.map(token => ({
+        id: token.id,
+        imageData: token.imageData || '',
+      }));
+
+      const batchSize = project.collectionSize > 5000 ? 100 : project.collectionSize > 1000 ? 250 : 500;
+
+      // Start generation
+      workerRef.current.postMessage({
+        type: 'start',
+        payload: {
+          layers,
+          rules,
+          forgedTokens,
+          collectionSize: project.collectionSize,
+          projectName: project.name,
+          blockchain: project.blockchain,
+          symbol: project.symbol,
+          pixelArtMode: project.pixelArtMode,
+          batchSize,
+        },
+      } as WorkerInputMessage);
+
     } catch (error) {
       console.error('Generation error:', error);
       toast.error('Generation failed');
-    } finally {
-      // Clear image cache at end of generation (success or failure)
-      imageCache.current = {};
       
+      if (workerRef.current) {
+        workerRef.current.terminate();
+        workerRef.current = null;
+      }
+      imageCache.current = {};
+      accumulatedNFTs.current = [];
       setIsGenerating(false);
       setProgress(0);
       setGeneratedCount(0);
-      cancelGenerationRef.current = false;
     }
   };
 
@@ -1074,107 +1153,113 @@ export default function Vault({ project, onUpdateProject }: VaultProps) {
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
         {/* Toolbar */}
         <div className="px-4 lg:px-6 py-3 border-b border-border bg-background flex-shrink-0">
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-            {/* Search */}
-            <div className="w-full sm:flex-1 sm:max-w-sm">
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                <Input
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="Search collection..."
-                  className="pl-9 h-9 bg-muted/30 border-border text-foreground placeholder:text-muted-foreground focus-ring"
-                />
-              </div>
-            </div>
+          <div className="flex flex-col gap-3">
+            {/* Publishing Controls */}
+            <VaultPublishingControls project={project} onUpdateProject={onUpdateProject} />
 
-            {/* Controls */}
-            <div className="flex items-center gap-2 w-full sm:w-auto">
-              <VaultViewModeToggle viewMode={viewMode} onViewModeChange={setViewMode} />
-              
-              <div className="hidden sm:block w-px h-6 bg-border" />
-
-              <div className="flex items-center gap-1">
-                <Button
-                  variant={sortOption === 'index' ? 'default' : 'ghost'}
-                  size="sm"
-                  onClick={() => setSortOption('index')}
-                  className="h-8 px-3 text-[10px] font-semibold uppercase tracking-wide focus-ring"
-                >
-                  Index
-                </Button>
-                <Button
-                  variant={sortOption === 'rarity' ? 'default' : 'ghost'}
-                  size="sm"
-                  onClick={() => setSortOption('rarity')}
-                  className="h-8 px-3 text-[10px] font-semibold uppercase tracking-wide focus-ring"
-                >
-                  Rarity
-                </Button>
-                <Button
-                  variant={sortOption === 'common' ? 'default' : 'ghost'}
-                  size="sm"
-                  onClick={() => setSortOption('common')}
-                  className="h-8 px-3 text-[10px] font-semibold uppercase tracking-wide focus-ring"
-                >
-                  Common
-                </Button>
-              </div>
-
-              <Button
-                onClick={exportCollection}
-                disabled={isExporting || project.generatedNFTs.length === 0}
-                variant="outline"
-                size="sm"
-                className="h-8 px-3 text-[10px] font-semibold uppercase tracking-wide focus-ring"
-              >
-                <Download className="w-3.5 h-3.5 mr-1.5" />
-                Export
-              </Button>
-            </div>
-          </div>
-
-          {/* Active Filters */}
-          {activeFilters.size > 0 && (
-            <div className="mt-3 flex items-center gap-2 p-2 bg-muted/30 border border-border rounded-lg">
-              <span className="text-[10px] font-medium text-foreground flex-1">
-                Active filters: {Array.from(activeFilters.values()).map(f => f.traitName).join(', ')}
-              </span>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={clearAllFilters}
-                className="h-6 px-2 text-[10px] font-semibold focus-ring"
-              >
-                Clear
-              </Button>
-            </div>
-          )}
-
-          {/* Progress */}
-          {(isGenerating || isExporting) && (
-            <div className="mt-3 space-y-1.5">
-              <div className="flex items-center justify-between">
-                <div className="text-[10px] text-muted-foreground font-medium">
-                  {isGenerating 
-                    ? `Generating: ${generatedCount} / ${project.collectionSize} (${Math.round(progress)}%)`
-                    : `${Math.round(progress)}%`
-                  }
+            {/* Search and View Controls */}
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+              {/* Search */}
+              <div className="w-full sm:flex-1 sm:max-w-sm">
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                  <Input
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    placeholder="Search collection..."
+                    className="pl-9 h-9 bg-muted/30 border-border text-foreground placeholder:text-muted-foreground focus-ring"
+                  />
                 </div>
-                {isGenerating && (
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={cancelGeneration}
-                    className="h-6 px-2 text-[10px] font-semibold focus-ring"
-                  >
-                    Cancel
-                  </Button>
-                )}
               </div>
-              <Progress value={progress} className="h-1" />
+
+              {/* Controls */}
+              <div className="flex items-center gap-2 w-full sm:w-auto">
+                <VaultViewModeToggle viewMode={viewMode} onViewModeChange={setViewMode} />
+                
+                <div className="hidden sm:block w-px h-6 bg-border" />
+
+                <div className="flex items-center gap-1">
+                  <Button
+                    variant={sortOption === 'index' ? 'default' : 'ghost'}
+                    size="sm"
+                    onClick={() => setSortOption('index')}
+                    className="h-8 px-3 text-[10px] font-semibold uppercase tracking-wide focus-ring"
+                  >
+                    Index
+                  </Button>
+                  <Button
+                    variant={sortOption === 'rarity' ? 'default' : 'ghost'}
+                    size="sm"
+                    onClick={() => setSortOption('rarity')}
+                    className="h-8 px-3 text-[10px] font-semibold uppercase tracking-wide focus-ring"
+                  >
+                    Rarity
+                  </Button>
+                  <Button
+                    variant={sortOption === 'common' ? 'default' : 'ghost'}
+                    size="sm"
+                    onClick={() => setSortOption('common')}
+                    className="h-8 px-3 text-[10px] font-semibold uppercase tracking-wide focus-ring"
+                  >
+                    Common
+                  </Button>
+                </div>
+
+                <Button
+                  onClick={exportCollection}
+                  disabled={isExporting || project.generatedNFTs.length === 0}
+                  variant="outline"
+                  size="sm"
+                  className="h-8 px-3 text-[10px] font-semibold uppercase tracking-wide focus-ring"
+                >
+                  <Download className="w-3.5 h-3.5 mr-1.5" />
+                  Export
+                </Button>
+              </div>
             </div>
-          )}
+
+            {/* Active Filters */}
+            {activeFilters.size > 0 && (
+              <div className="flex items-center gap-2 p-2 bg-muted/30 border border-border rounded-lg">
+                <span className="text-[10px] font-medium text-foreground flex-1">
+                  Active filters: {Array.from(activeFilters.values()).map(f => f.traitName).join(', ')}
+                </span>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={clearAllFilters}
+                  className="h-6 px-2 text-[10px] font-semibold focus-ring"
+                >
+                  Clear
+                </Button>
+              </div>
+            )}
+
+            {/* Progress */}
+            {(isGenerating || isExporting) && (
+              <div className="space-y-1.5">
+                <div className="flex items-center justify-between">
+                  <div className="text-[10px] text-muted-foreground font-medium">
+                    {isGenerating 
+                      ? `Generating: ${generatedCount} / ${project.collectionSize} (${Math.round(progress)}%)`
+                      : `${Math.round(progress)}%`
+                    }
+                  </div>
+                  {isGenerating && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={cancelGeneration}
+                      className="h-6 px-2 text-[10px] font-semibold focus-ring"
+                    >
+                      Cancel
+                    </Button>
+                  )}
+                </div>
+                <Progress value={progress} className="h-1" />
+              </div>
+            )}
+          </div>
         </div>
 
         {/* Grid Area */}

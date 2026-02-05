@@ -1,27 +1,37 @@
-// Non-intrusive save status indicator component
+// Non-intrusive save status indicator with fixed width to prevent layout shift
 
 interface SaveStatusIndicatorProps {
   status: 'idle' | 'saving' | 'saved' | 'failed';
 }
 
 export default function SaveStatusIndicator({ status }: SaveStatusIndicatorProps) {
-  if (status === 'idle' || status === 'failed') return null;
-
   const statusConfig = {
+    idle: {
+      text: '',
+      className: 'opacity-0',
+    },
     saving: {
       text: 'Saving…',
-      className: 'text-muted-foreground',
+      className: 'text-muted-foreground opacity-100',
     },
     saved: {
       text: 'Saved',
-      className: 'text-success',
+      className: 'text-success opacity-100',
+    },
+    failed: {
+      text: '',
+      className: 'opacity-0',
     },
   };
 
   const config = statusConfig[status];
 
   return (
-    <div className={`text-xs font-black tracking-wider uppercase ${config.className} smooth-transition`}>
+    <div 
+      className={`text-xs font-black tracking-wider uppercase smooth-transition min-w-[60px] text-right ${config.className}`}
+      aria-live="polite"
+      aria-atomic="true"
+    >
       {config.text}
     </div>
   );

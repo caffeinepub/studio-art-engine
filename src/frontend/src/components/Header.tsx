@@ -6,7 +6,7 @@ import SaveStatusIndicator from './SaveStatusIndicator';
 
 interface HeaderProps {
   currentView: string;
-  onNavigate: (view: 'dashboard' | 'workshop' | 'rarity' | 'rules' | 'preview' | 'builder' | 'vault') => void;
+  onNavigate: (view: 'dashboard' | 'workshop' | 'rarity' | 'rules' | 'preview' | 'builder' | 'vault' | 'settings') => void;
   currentProject?: Project;
   onBackToDashboard: () => void;
   saveStatus?: 'idle' | 'saving' | 'saved' | 'failed';
@@ -22,6 +22,7 @@ export default function Header({ currentView, onNavigate, currentProject, onBack
     { id: 'preview', label: 'Preview' },
     { id: 'builder', label: 'Forge' },
     { id: 'vault', label: 'Vault' },
+    { id: 'settings', label: 'Settings' },
   ];
 
   return (

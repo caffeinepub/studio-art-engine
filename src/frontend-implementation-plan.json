@@ -1,106 +1,63 @@
 {
   "kind": "implementation_plan",
   "version": "1.0",
-  "title": "Vault chunked NFT generation with progress, cancel, and large-run rendering safeguards",
+  "title": "Stabilize header save badge + compact Vault publishing UI with hover tooltips",
   "requirements": [
     {
       "id": "REQ-1",
-      "summary": "Chunk Vault collection generation into batches and yield to the UI between batches to prevent freezes on 10k+ runs.",
+      "summary": "Stabilize save-status badge sizing so it never causes header or mobile menu layout shift while remaining to the right of the project name.",
       "acceptanceCriteria": [
-        "Generating a collection of 10,000 NFTs does not cause the UI to freeze for extended periods; the browser remains interactive during generation.",
-        "Generation work yields to the event loop at least once per batch (e.g., via requestAnimationFrame, setTimeout(0), or equivalent) so progress updates and user input are processed."
+        "Toggling saveStatus between idle/saving/saved does not change the header’s overall width, spacing, or cause nav items to move on desktop.",
+        "Toggling saveStatus does not cause the mobile menu’s project header row (project name/blockchain/save status) to shift.",
+        "The save status remains visually located to the right of the project name (not moved to a different header area)."
       ],
       "file_operations": [
         {
-          "path": "frontend/src/utils/yieldToUI.ts",
-          "operation": "create",
-          "description": "Add a small utility to yield execution back to the browser event loop (e.g., requestAnimationFrame/setTimeout) so long-running generation can remain responsive."
+          "path": "frontend/src/components/SaveStatusIndicator.tsx",
+          "operation": "modify",
+          "description": "Render a non-jittering save-status slot by always reserving consistent inline space (e.g., fixed/min width and height) and toggling visibility/opacity instead of mounting/unmounting when status is idle; keep text aligned and readable for saving/saved."
         },
         {
-          "path": "frontend/src/pages/Vault.tsx",
+          "path": "frontend/src/components/Header.tsx",
           "operation": "modify",
-          "description": "Refactor generateCollection to run in configurable batches and await a yield-to-UI helper after each batch so state updates, rendering, and user interactions are processed between batches."
+          "description": "Ensure both desktop header project row and mobile menu project header row treat the SaveStatusIndicator as a fixed-size element to the right of the project name (e.g., consistent flex behavior and no reflow when status changes)."
         }
       ]
     },
     {
       "id": "REQ-2",
-      "summary": "Progressively commit generated NFTs to the project after each batch via onUpdateProject, clearing once at start and sorting/updating timestamp at end.",
+      "summary": "Replace always-visible Vault publishing instruction text with hover tooltips on Lock/Unlock/Upload buttons without changing publishing behaviors.",
       "acceptanceCriteria": [
-        "At the start of a new generation run, the project.generatedNFTs list is cleared immediately (replace-only behavior remains).",
-        "During generation, project.generatedNFTs grows incrementally in batches (observable in UI item count) rather than only appearing at the end.",
-        "After completion, generatedNFTs are sorted by token id as they are today and lastGeneratedAt is updated."
+        "The Vault page no longer shows the three-line help text block describing Lock/Unlock/Upload below the publishing controls.",
+        "Hovering each button shows a tooltip with exactly these meanings:\n- Lock: “Prevents regeneration and enables upload.”\n- Unlock: “Allows regeneration but clears upload status.”\n- Upload: “Uploads images and metadata to IPFS via Pinata.”",
+        "The tooltips work for all button states (enabled/disabled) without breaking existing click behaviors."
       ],
       "file_operations": [
         {
-          "path": "frontend/src/pages/Vault.tsx",
+          "path": "frontend/src/components/HoverTooltip.tsx",
+          "operation": "create",
+          "description": "Create a small, self-contained hover/focus tooltip wrapper component (outside frontend/src/components/ui) that can show explanatory text when hovering/focusing a wrapped control, including when the wrapped button is disabled."
+        },
+        {
+          "path": "frontend/src/components/VaultPublishingControls.tsx",
           "operation": "modify",
-          "description": "Change generation state handling to: (1) clear generatedNFTs once at run start; (2) commit forged tokens immediately; (3) append each batch’s newly generated NFTs via onUpdateProject without accumulating a large in-function array; (4) on completion, perform a final onUpdateProject to sort by token id and set lastGeneratedAt."
+          "description": "Remove the always-visible help text block and wrap the Lock, Unlock, and Upload buttons with the new HoverTooltip so each shows the exact required tooltip copy; ensure wrapper hover works even when the button is disabled and does not alter existing click/disable logic."
         }
       ]
     },
     {
       "id": "REQ-3",
-      "summary": "Add in-generation progress UI (percent + counts) and a Cancel control that stops generation within one batch while keeping already-generated NFTs usable.",
+      "summary": "Make the Vault publishing status alert more compact while keeping the status meaning and CID readable across all states.",
       "acceptanceCriteria": [
-        "While generating, the UI shows a continuously updating progress indicator with both percent and counts generated/target.",
-        "A Cancel button is visible only while generation is in progress.",
-        "Cancel stops further generation quickly (within one batch) and leaves any already-generated NFTs intact and usable (can be viewed/exported).",
-        "After cancel, the Generate button becomes usable again without requiring a tab switch or navigation."
+        "The status alert uses reduced padding/typography so it occupies noticeably less height than the current implementation.",
+        "In the uploaded state, the alert still clearly communicates “Uploaded successfully!” and displays the Metadata CID (as currently shown).",
+        "Other alert states (no generation, missing Pinata key, uploading progress, upload failed, locked-ready) remain understandable and functional in the compact layout."
       ],
       "file_operations": [
         {
-          "path": "frontend/src/pages/Vault.tsx",
+          "path": "frontend/src/components/VaultPublishingControls.tsx",
           "operation": "modify",
-          "description": "Add generation-run control state (e.g., a cancel ref/run id) and UI elements to display percent plus “generated / target” counts during generation, and a Cancel button shown only while generating that requests cancellation and is checked between batches so the run stops safely."
-        }
-      ]
-    },
-    {
-      "id": "REQ-4",
-      "summary": "Add an optional headless/low-memory mode toggle near Vault generation controls to reduce rendering work during 10k–20k runs (default off).",
-      "acceptanceCriteria": [
-        "A user-facing toggle (English text) is available near the Generate control to enable/disable headless/low-memory mode.",
-        "When enabled, Vault avoids expensive live rendering during the run (e.g., suppress/placeholder the grid rendering while generating, or equivalent) while still generating NFTs.",
-        "When generation finishes or is canceled, normal Vault rendering resumes automatically."
-      ],
-      "file_operations": [
-        {
-          "path": "frontend/src/pages/Vault.tsx",
-          "operation": "modify",
-          "description": "Add a headless/low-memory mode toggle (default off) to the Vault generation controls and use it to suppress expensive preview rendering while a run is in progress; ensure normal rendering is restored automatically on completion/cancel."
-        }
-      ]
-    },
-    {
-      "id": "REQ-5",
-      "summary": "Add Vault rendering safeguards so large generatedNFTs lists (and in-progress runs) do not lock the UI from rendering thousands of thumbnails.",
-      "acceptanceCriteria": [
-        "During generation, Vault does not attempt to render the full grid of thumbnails in a way that causes noticeable lockups.",
-        "After generation completes, the Vault grid becomes usable and scrollable; thumbnails display as expected."
-      ],
-      "file_operations": [
-        {
-          "path": "frontend/src/pages/Vault.tsx",
-          "operation": "modify",
-          "description": "Implement large-list rendering safeguards: during generation show a lightweight “Generating…” view (and avoid mapping thousands of <img> nodes), and for very large collections gate thumbnail rendering with a lightweight mode (e.g., render-limited/paged thumbnails or a user-controlled ‘show thumbnails’ action) to keep the UI responsive."
-        }
-      ]
-    },
-    {
-      "id": "REQ-6",
-      "summary": "Preserve determinism, rules validation, uniqueness, and forged-token integration across the chunked/progressive generation pipeline (including partial completion warnings).",
-      "acceptanceCriteria": [
-        "Generated NFTs continue to respect project.rules via isValidCombination checks.",
-        "No duplicate DNA values are introduced within a run (uniqueness is maintained across batches).",
-        "Forged tokens are included as before and still reserve token numbers appropriately.",
-        "If the generator cannot reach targetCount within maxAttempts, the UI reports partial completion (existing warning behavior preserved), and the app remains responsive."
-      ],
-      "file_operations": [
-        {
-          "path": "frontend/src/pages/Vault.tsx",
-          "operation": "modify",
-          "description": "Ensure the batched generator maintains a single run-scoped uniqueness set across batches, continues to apply isValidCombination checks, integrates forged tokens up-front with reserved token numbers, and preserves partial-completion warning behavior when maxAttempts is reached—while still yielding to the UI between batches."
+          "description": "Adjust the status alert layout to be denser (reduced padding, smaller typography, tighter gap) while keeping icon + message clear; ensure the uploaded message still displays “Uploaded successfully!” and the Metadata CID in a readable, wrap-friendly way; preserve clarity for all other publishing states."
         }
       ]
     }
