@@ -4,26 +4,27 @@
 
 @layer base {
   :root {
-    --background: 10 10 10;
-    --foreground: 255 255 255;
-    --card: 18 18 18;
-    --card-foreground: 255 255 255;
-    --popover: 18 18 18;
-    --popover-foreground: 255 255 255;
-    --primary: 102 102 102;
-    --primary-foreground: 255 255 255;
-    --secondary: 38 38 38;
-    --secondary-foreground: 255 255 255;
-    --muted: 38 38 38;
-    --muted-foreground: 163 163 163;
-    --accent: 136 136 136;
-    --accent-foreground: 255 255 255;
-    --destructive: 82 82 82;
-    --destructive-foreground: 255 255 255;
-    --border: 38 38 38;
-    --input: 38 38 38;
-    --ring: 102 102 102;
-    --radius: 0.5rem;
+    /* Apple HIG-inspired OKLCH color system */
+    --background: oklch(0.12 0 0);
+    --foreground: oklch(0.98 0 0);
+    --card: oklch(0.15 0 0);
+    --card-foreground: oklch(0.98 0 0);
+    --popover: oklch(0.16 0 0);
+    --popover-foreground: oklch(0.98 0 0);
+    --primary: oklch(0.55 0 0);
+    --primary-foreground: oklch(0.98 0 0);
+    --secondary: oklch(0.20 0 0);
+    --secondary-foreground: oklch(0.98 0 0);
+    --muted: oklch(0.22 0 0);
+    --muted-foreground: oklch(0.60 0 0);
+    --accent: oklch(0.65 0 0);
+    --accent-foreground: oklch(0.98 0 0);
+    --destructive: oklch(0.50 0.15 25);
+    --destructive-foreground: oklch(0.98 0 0);
+    --border: oklch(0.22 0 0);
+    --input: oklch(0.22 0 0);
+    --ring: oklch(0.55 0 0);
+    --radius: 0.75rem;
     
     /* Apple HIG Motion System - Universal Timing */
     --motion-hover: 120ms;
@@ -42,12 +43,13 @@
   }
   body {
     @apply bg-background text-foreground;
-    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+    font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', 'Roboto', 'Helvetica Neue', sans-serif;
     font-feature-settings: "cv11", "ss01";
     font-optical-sizing: auto;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     text-rendering: optimizeLegibility;
+    letter-spacing: -0.01em;
   }
   
   @media (prefers-reduced-motion: reduce) {
@@ -62,24 +64,52 @@
 }
 
 @layer utilities {
-  .sharp-shadow {
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+  /* Apple HIG Surface System */
+  .glass-surface {
+    background: oklch(0.15 0 0 / 0.7);
+    backdrop-filter: blur(20px) saturate(180%);
+    border: 1px solid oklch(0.25 0 0 / 0.5);
   }
   
-  .sharp-shadow-hover {
-    transition: box-shadow var(--motion-hover) var(--ease-apple), 
-                transform var(--motion-hover) var(--ease-apple);
+  .glass-card {
+    background: oklch(0.16 0 0 / 0.85);
+    backdrop-filter: blur(16px) saturate(160%);
+    border: 1px solid oklch(0.24 0 0 / 0.6);
   }
   
-  .sharp-shadow-hover:hover {
-    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.5);
-    transform: translateY(-2px);
+  .elevated-surface {
+    box-shadow: 
+      0 1px 3px oklch(0 0 0 / 0.12),
+      0 1px 2px oklch(0 0 0 / 0.24);
   }
   
-  .sharp-shadow-lg {
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+  .elevated-surface-lg {
+    box-shadow: 
+      0 10px 30px oklch(0 0 0 / 0.3),
+      0 1px 8px oklch(0 0 0 / 0.2);
   }
   
+  /* Interaction States */
+  .interactive-base {
+    transition: all var(--motion-hover) var(--ease-apple);
+  }
+  
+  .interactive-base:hover:not(:disabled) {
+    transform: translateY(-1px);
+  }
+  
+  .interactive-base:active:not(:disabled) {
+    transform: scale(0.98);
+    transition: transform var(--motion-press) var(--ease-apple);
+  }
+  
+  /* Focus Ring - Apple Style */
+  .focus-ring {
+    @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background;
+    transition: box-shadow var(--motion-hover) var(--ease-apple);
+  }
+  
+  /* Smooth Transitions */
   .smooth-transition {
     transition: all var(--motion-hover) var(--ease-apple);
   }
@@ -88,10 +118,11 @@
     transition: all var(--motion-hover) var(--ease-apple);
   }
 
-  .smooth-hover:hover {
+  .smooth-hover:hover:not(:disabled) {
     transform: translateY(-1px);
   }
 
+  /* Mobile Touch Targets */
   @media (max-width: 768px) {
     button, a, [role="button"] {
       min-height: 44px;
@@ -99,15 +130,16 @@
     }
   }
 
+  /* Rarity Slider - Apple Style */
   .rarity-slider [role="slider"] {
-    background: rgb(255, 255, 255);
-    border: 2px solid rgb(136, 136, 136);
+    background: oklch(0.98 0 0);
+    border: 2px solid oklch(0.55 0 0);
     transition: all var(--motion-hover) var(--ease-apple);
   }
 
   .rarity-slider [role="slider"]:hover {
     transform: scale(1.15);
-    box-shadow: 0 0 0 6px rgba(136, 136, 136, 0.15);
+    box-shadow: 0 0 0 6px oklch(0.55 0 0 / 0.15);
   }
 
   .rarity-slider [role="slider"]:active {
@@ -119,14 +151,34 @@
     opacity: 0.5;
     cursor: not-allowed;
   }
-  
-  .focus-ring {
-    @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background;
-  }
 
   /* Vault NFT Card - Edge-to-edge artwork */
   .vault-nft-card img {
     display: block;
+  }
+  
+  /* Form Section Cards */
+  .form-section-card {
+    @apply bg-card/50 border border-border rounded-xl p-4;
+  }
+  
+  /* Code Preview Block */
+  .code-preview {
+    @apply bg-muted/30 border border-border rounded-lg p-4 font-mono text-xs leading-relaxed;
+  }
+  
+  /* List Item - Draggable */
+  .draggable-item {
+    @apply cursor-move transition-all duration-hover;
+  }
+  
+  .draggable-item:hover {
+    @apply border-primary/50;
+  }
+  
+  /* Thumbnail Frame */
+  .thumbnail-frame {
+    @apply bg-muted/30 border border-border rounded-lg overflow-hidden;
   }
 }
 
@@ -223,7 +275,7 @@
   transition: all var(--motion-hover) var(--ease-apple);
 }
 
-.card-hover:hover {
+.card-hover:hover:not(:disabled) {
   transform: translateY(-2px);
 }
 
@@ -232,7 +284,7 @@
 }
 
 .skeleton {
-  background: linear-gradient(90deg, rgba(255,255,255,0.05) 25%, rgba(255,255,255,0.1) 50%, rgba(255,255,255,0.05) 75%);
+  background: linear-gradient(90deg, oklch(0.15 0 0 / 0.05) 25%, oklch(0.15 0 0 / 0.1) 50%, oklch(0.15 0 0 / 0.05) 75%);
   background-size: 1000px 100%;
   animation: shimmer 2s infinite;
 }
@@ -243,9 +295,9 @@ button:active:not(:disabled) {
   transition: transform var(--motion-press) var(--ease-apple);
 }
 
-/* Modal Backdrop */
+/* Modal Backdrop - Apple Style */
 .modal-backdrop {
-  backdrop-filter: blur(24px);
-  background: rgba(0, 0, 0, 0.85);
+  backdrop-filter: blur(24px) saturate(180%);
+  background: oklch(0 0 0 / 0.75);
   animation: fade-in var(--motion-modal) var(--ease-apple);
 }

@@ -1,7 +1,7 @@
 {
   "schemaVersion": "1.0.0",
-  "projectStateVersion": 42,
-  "summary": "Studio Art Engine is a React + TypeScript single-page generative NFT art tool with a streamlined Pinata-only IPFS publishing workflow. Blockchain selection is no longer set in the project table; it is derived from the Settings “metadata format” selection (with ICP shown as disabled/coming soon). IPFS uploading remains gated behind “Lock collection”; once locked, the app uploads images + metadata to IPFS, injects resulting CIDs into token metadata, and enables one-click export with finalized IPFS URIs, with Settings showing upload state plus a step-by-step mini guide for non-technical users.",
+  "projectStateVersion": 55,
+  "summary": "Studio Art Engine will undergo an app-wide UI/UX optimization pass focused strictly on visual and interaction refinements (spacing, alignment, typography/hierarchy, responsive layout, navigation flow polish, immediate feedback, and a unified Apple HIG–style motion system), while preserving the existing section/page layout structures; this pass may include a deeper Apple-style design direction (e.g., translucency, cards, depth, motion system rewrite) but excludes internal logic refactors and known-issue fixes.",
   "existing_features": [
     {
       "id": "IF-1",
@@ -490,26 +490,123 @@
       "version": 1
     },
     {
-      "id": "feature-prevent-the-save-status-badge-e-g-saving-saved-displayed-to-the-right-of-the-project-name-in-the-header-from-causing-any-horizontal-layout-shift-jitter-when-it-appears-disappears-while-keeping-it-in-the-same-position-right-side-of-the-project-name-on-desktop-and-in-the-mobile-menu-project-header",
-      "title": "Prevent the save-status badge (e.g., “Saving…”, “Saved”) displayed to the right of the project name in the header from causing any horizontal layout shift/jitter when it appears/disappears, while keeping it in the same position (right side of the project name) on desktop and in the mobile menu project header.",
+      "id": "IF-42",
+      "title": "Header project-name notification badge no longer causes layout shift",
+      "synonyms": [
+        "Header badge jitter fix",
+        "Stable header notification layout",
+        "AR-13 fix"
+      ],
+      "description": "Adjusts the header’s project-name notification/badge layout so it does not change the navigation bar’s width/position when appearing or updating, preventing visible jitter/shift.",
+      "reqIds": [
+        "AR-13"
+      ],
+      "version": 1
+    },
+    {
+      "id": "IF-43",
+      "title": "Vault publishing UI copy and success alert condensed for reduced vertical space",
+      "synonyms": [
+        "Compact Vault publishing instructions",
+        "Compact Uploaded successfully alert",
+        "AR-14/AR-16 Vault UI"
+      ],
+      "description": "Reduces the vertical space consumed by Vault publishing instructions and makes the green “Uploaded successfully!” alert more compact, while keeping concise explanatory copy for Lock/Unlock/Upload behaviors.",
+      "reqIds": [
+        "AR-14",
+        "AR-16"
+      ],
+      "version": 1
+    },
+    {
+      "id": "IF-44",
+      "title": "Header SaveStatusIndicator placed to the right of project name without shifting navigation",
+      "synonyms": [
+        "AR-17 fix",
+        "Saving indicator no nav shift",
+        "Stable header layout with save status"
+      ],
+      "description": "Adjusts Header layout so the “Saving…” / “Saved” status indicator can appear to the right of the active project name without causing the navigation bar buttons to shift or move.",
+      "reqIds": [
+        "AR-17"
+      ],
+      "version": 1
+    },
+    {
+      "id": "IF-45",
+      "title": "Settings/Publishing note about Pinata free-plan suitability for collection size",
+      "synonyms": [
+        "AR-16 note",
+        "Pinata plan limit warning",
+        "Publishing capacity guidance"
+      ],
+      "description": "Adds a small Settings/Publishing guidance note warning that Pinata’s free plan is generally suitable only for small–medium collections and that large collections likely require upgrading to a paid plan.",
+      "reqIds": [
+        "AR-16"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-apply-a-coherent-apple-hig-inspired-visual-theme-across-the-entire-app-translucent-surfaces-calm-contrast-premium-typography-hierarchy-while-preserving-the-existing-page-section-layout-structure-dashboard-workshop-rarity-rules-preview-forge-vault-settings",
+      "title": "Apply a coherent Apple HIG–inspired visual theme across the entire app (translucent surfaces, calm contrast, premium typography hierarchy) while preserving the existing page/section layout structure (Dashboard, Workshop, Rarity, Rules, Preview, Forge, Vault, Settings).",
       "reqIds": [
         "REQ-1"
       ],
       "version": 1
     },
     {
-      "id": "feature-redesign-the-vault-publishing-instructions-so-they-do-not-take-up-extra-vertical-space-remove-the-always-visible-instructional-text-block-under-the-lock-unlock-upload-buttons-and-replace-it-with-hover-tooltips-on-the-lock-unlock-and-upload-buttons-that-display-the-provided-explanations",
-      "title": "Redesign the Vault publishing instructions so they do not take up extra vertical space: remove the always-visible instructional text block under the Lock/Unlock/Upload buttons and replace it with hover tooltips on the Lock, Unlock, and Upload buttons that display the provided explanations.",
+      "id": "feature-unify-interaction-feedback-and-motion-system-across-the-app-using-the-existing-motion-tokens-and-easing-e-g-motion-hover-press-component-modal-and-ease-apple-ensuring-consistent-hover-press-focus-disabled-loading-states-for-buttons-cards-nav-items-dialogs-and-toggles",
+      "title": "Unify interaction feedback and motion system across the app using the existing motion tokens and easing (e.g., --motion-hover/press/component/modal and --ease-apple), ensuring consistent hover/press/focus/disabled/loading states for buttons, cards, nav items, dialogs, and toggles.",
       "reqIds": [
         "REQ-2"
       ],
       "version": 1
     },
     {
-      "id": "feature-make-the-vault-publishing-status-alert-including-the-green-uploaded-successfully-message-with-cid-more-compact-to-reduce-vertical-space-while-keeping-the-status-meaning-and-cid-readable",
-      "title": "Make the Vault publishing status alert (including the green “Uploaded successfully!” message with CID) more compact to reduce vertical space while keeping the status meaning and CID readable.",
+      "id": "feature-standardize-user-facing-copy-to-a-calm-premium-readable-tone-in-english-across-the-app-replace-shouty-all-caps-toasts-labels-buttons-with-sentence-case-or-title-case-as-appropriate-without-changing-the-underlying-behavior",
+      "title": "Standardize user-facing copy to a calm, premium, readable tone in English across the app (replace shouty ALL-CAPS toasts/labels/buttons with sentence case or title case as appropriate), without changing the underlying behavior.",
       "reqIds": [
         "REQ-3"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-polish-global-navigation-and-header-behavior-for-responsiveness-and-predictability-consistent-active-state-styling-improved-spacing-alignment-and-mobile-menu-interactions-that-feel-stable-and-premium",
+      "title": "Polish global navigation and header behavior for responsiveness and predictability: consistent active state styling, improved spacing/alignment, and mobile menu interactions that feel stable and premium.",
+      "reqIds": [
+        "REQ-4"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-refine-workshop-ui-for-calmer-typography-and-improved-affordances-layers-list-drag-reorder-rename-trait-cards-upload-preserving-all-current-functionality-and-layout-regions-sidebar-main-panel",
+      "title": "Refine Workshop UI for calmer typography and improved affordances (layers list, drag/reorder, rename, trait cards, upload), preserving all current functionality and layout regions (sidebar + main panel).",
+      "reqIds": [
+        "REQ-6"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-refine-preview-page-ui-to-match-the-global-theme-preview-frame-generate-button-pixel-mode-toggle-panel-and-ensure-button-toggle-feedback-feels-immediate-and-consistent",
+      "title": "Refine Preview page UI to match the global theme (preview frame, generate button, pixel mode toggle panel) and ensure button/toggle feedback feels immediate and consistent.",
+      "reqIds": [
+        "REQ-7"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-refine-forge-builder-page-ui-for-consistent-modal-panel-surfaces-tab-styling-selection-states-and-action-feedback-while-preserving-the-existing-forge-workflow-and-screen-structure",
+      "title": "Refine Forge (Builder) page UI for consistent modal/panel surfaces, tab styling, selection states, and action feedback while preserving the existing Forge workflow and screen structure.",
+      "reqIds": [
+        "REQ-8"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-refine-settings-page-layout-polish-left-form-panel-right-preview-panel-to-match-the-global-theme-with-improved-spacing-consistent-section-styling-and-predictable-interactive-states-without-changing-settings-functionality",
+      "title": "Refine Settings page layout polish (left form panel + right preview panel) to match the global theme, with improved spacing, consistent section styling, and predictable interactive states, without changing Settings functionality.",
+      "reqIds": [
+        "REQ-10"
       ],
       "version": 1
     }
@@ -522,21 +619,25 @@
       "status": "pending"
     },
     {
-      "id": "AR-13",
-      "summary": "Fix the header notification/badge next to the project name so it does not cause the navigation bar to shift/move (layout stability).",
+      "id": "AR-46",
+      "summary": "App-wide UI/UX + logic optimization pass to ensure smooth/predictable/responsive behavior, remove broken/dead/inconsistent flows, simplify UI (minimal/redundant-free), improve spacing/typography/hierarchy, ensure responsive layout (desktop/tablet/mobile), add immediate visible feedback for actions, and unify motion system (Apple HIG-style) for a calm premium experience",
       "reqIds": [],
       "status": "pending"
     },
     {
-      "id": "AR-14",
-      "summary": "Redesign the Vault page so the publishing instructions above the controls take up less vertical space; include concise copy explaining Lock/Unlock/Upload behaviors (Lock prevents regeneration + enables upload; Unlock allows regeneration but clears upload status; Upload sends images+metadata to IPFS via Pinata).",
-      "reqIds": [],
+      "id": "AR-51",
+      "summary": "Refine Dashboard UI for spacing, hierarchy, and interaction feedback (project cards, new project dialog, project settings dialog), keeping existing fields and flows intact.",
+      "reqIds": [
+        "REQ-5"
+      ],
       "status": "pending"
     },
     {
-      "id": "AR-16",
-      "summary": "Make the Vault green “Uploaded successfully!” alert more compact (reduced vertical space) to match the streamlined publishing UI.",
-      "reqIds": [],
+      "id": "AR-55",
+      "summary": "Refine Vault UI for readability and reduced clutter (toolbar, filters sidebar, grid cards, detail modal, progress/loading areas), with consistent card styling, spacing, and feedback states across view modes and screen sizes.",
+      "reqIds": [
+        "REQ-9"
+      ],
       "status": "pending"
     }
   ],
@@ -560,10 +661,9 @@
     "Settings page keeps a localSettings state initialized only on mount; switching projects while Settings remains mounted can show stale values until remount.",
     "Worker forged-token numbering ignores CustomToken.tokenNumber and assigns shuffled token IDs; if customTokens.length > collectionSize, forged IDs can become undefined and produce invalid NFTs/metadata.",
     "Direct Injection upload validation is strict (png/jpeg/gif only), but Workshop trait upload accepts any image/*; behavior differs across upload entry points.",
-    "Export ZIP/PNG assumes generatedNFT.imageData is present and PNG; if imageData is missing/corrupted, export can fail (limited user-facing diagnostics beyond a toast).",
-    "Header notification next to project name causes navigation bar layout shift/jitter."
+    "Export ZIP/PNG assumes generatedNFT.imageData is present and PNG; if imageData is missing/corrupted, export can fail (limited user-facing diagnostics beyond a toast)."
   ],
-  "isFixRequest": true,
+  "isFixRequest": false,
   "gameProjectType": "none",
   "projectName": "Studio Art Engine",
   "clarification_mode": "pro",

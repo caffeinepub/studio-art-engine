@@ -1,49 +1,84 @@
 {
   "kind": "spec_vs_diff_report",
   "version": "1.0",
-  "generatedAt": "2026-02-05T10:50:48.827Z",
-  "summary": "REQ-1 appears implemented by giving SaveStatusIndicator a fixed minimum width to prevent header jitter. REQ-2 and REQ-3 cannot be confirmed from the truncated VaultPublishingControls diff (tooltip wiring/removal of instruction block and compact alert styling are not shown). The diff also introduces unrelated documented changes (in summary/state files) that were not requested.",
+  "generatedAt": "2026-02-05T12:08:11.056Z",
+  "summary": "Diff implements global theme tokens/utilities (OKLCH colors, glass surfaces, motion/easing, reduced-motion), Tailwind token extensions, and a refined Header + SaveStatusIndicator for more stable/nav behavior. There is no diff evidence of the requested per-page UI refinements (Dashboard/Workshop/Preview/Forge/Vault/Settings) or app-wide copy/toast standardization beyond the save indicator text.",
   "missing_requirements": [
     {
-      "id": "REQ-2",
-      "requirement": "Remove the always-visible Lock/Unlock/Upload instructional text block and replace it with hover tooltips on the Lock, Unlock, and Upload buttons with the specified text; tooltips must work even when buttons are disabled.",
-      "reason": "Although a HoverTooltip component was added and imported into VaultPublishingControls, the provided diff excerpt is truncated before showing the buttons being wrapped with tooltips, the exact tooltip strings, or the removal of the existing help text block.",
+      "id": "REQ-3",
+      "requirement": "Standardize user-facing copy to a calm, premium, readable tone in English across the app (including replacing ALL-CAPS toasts/labels/buttons).",
+      "reason": "The diff only shows copy changes for the save status indicator (“Saving…”, “Saved”) and nav labels; there is no evidence of toast/copy updates across Workshop/Preview/Forge/Vault or broad casing standardization.",
       "evidence": [
-        "frontend/src/components/HoverTooltip.tsx",
-        "frontend/src/components/VaultPublishingControls.tsx"
+        "frontend/src/components/SaveStatusIndicator.tsx",
+        "frontend/src/components/Header.tsx"
       ]
     },
     {
-      "id": "REQ-3",
-      "requirement": "Make the Vault publishing status alert more compact (reduced padding/typography) while keeping all states understandable and preserving the uploaded-success message and Metadata CID readability.",
-      "reason": "VaultPublishingControls imports Alert/AlertDescription, but the diff excerpt is truncated before any alert markup/styling changes are visible, so compactness and preservation of uploaded/CID display cannot be verified.",
+      "id": "REQ-5",
+      "requirement": "Refine Dashboard UI for spacing, hierarchy, and interaction feedback (project cards, new project dialog, project settings dialog), keeping existing fields and flows intact.",
+      "reason": "No Dashboard page changes are present in the modified files list; cannot verify any Dashboard refinements from the provided diff.",
       "evidence": [
-        "frontend/src/components/VaultPublishingControls.tsx"
+        "file-diff summary shows modified files only: frontend/src/components/Header.tsx, frontend/src/components/SaveStatusIndicator.tsx, frontend/src/index.css, frontend/tailwind.config.js, frontend-file-summaries.txt, project_state.json"
+      ]
+    },
+    {
+      "id": "REQ-6",
+      "requirement": "Refine Workshop UI (layers list, drag/reorder, rename, trait cards, upload) while preserving functionality and layout regions.",
+      "reason": "No Workshop page changes are present in the modified files list; cannot verify the requested Workshop refinements from the provided diff.",
+      "evidence": [
+        "file-diff summary (modified files list does not include frontend/src/pages/Workshop.tsx)"
+      ]
+    },
+    {
+      "id": "REQ-7",
+      "requirement": "Refine Preview page UI (preview frame, generate button, pixel mode toggle panel) and ensure consistent feedback/loading states.",
+      "reason": "No Preview page changes are present in the modified files list; cannot verify Preview refinements from the provided diff.",
+      "evidence": [
+        "file-diff summary (modified files list does not include frontend/src/pages/Preview.tsx)"
+      ]
+    },
+    {
+      "id": "REQ-8",
+      "requirement": "Refine Forge (Builder) page UI for modal/panel surfaces, tabs, selection states, and action feedback while preserving workflow/structure.",
+      "reason": "No Builder/Forge page changes are present in the modified files list; cannot verify Forge refinements from the provided diff.",
+      "evidence": [
+        "file-diff summary (modified files list does not include frontend/src/pages/Builder.tsx)"
+      ]
+    },
+    {
+      "id": "REQ-9",
+      "requirement": "Refine Vault UI (toolbar, filters sidebar, grid cards, detail modal, progress/loading areas) with consistent styling and responsive behavior.",
+      "reason": "No Vault page changes are present in the modified files list; cannot verify Vault refinements from the provided diff.",
+      "evidence": [
+        "file-diff summary (modified files list does not include frontend/src/pages/Vault.tsx)"
+      ]
+    },
+    {
+      "id": "REQ-10",
+      "requirement": "Refine Settings page layout polish (left form panel + right preview panel) with consistent section styling and interactive states without changing functionality.",
+      "reason": "No Settings page changes are present in the modified files list; cannot verify Settings refinements from the provided diff.",
+      "evidence": [
+        "file-diff summary (modified files list does not include frontend/src/pages/Settings.tsx)"
       ]
     }
   ],
   "hallucinated_features": [
     {
-      "description": "Large-scale UI/feature changes described across many frontend files (e.g., redesigned Header, removed blockchain field from dashboard/settings dialogs, major changes to multiple pages).",
-      "reason": "The BuildRequest is limited to stabilizing save badge layout and compacting Vault publishing UI (tooltips + compact alert). The diff includes a modified documentation-like summary file claiming broad redesigns that were not requested and are not supported by the actual modified-file list.",
+      "description": "Claims of extensive functional/logic changes across multiple pages and systems (e.g., worker-based NFT generation, deterministic DNA generation, rule duplication, weight normalization fixes, persistence strategy changes, removing Dashboard blockchain field).",
+      "reason": "These behaviors are described in frontend-file-summaries.txt, but the diff’s modified files list does not include the referenced page/utility files (e.g., App.tsx, Dashboard.tsx, Workshop.tsx, Preview.tsx, Builder.tsx, Vault.tsx, Rules.tsx, RarityWorkshop.tsx, utils/persistence.ts). From the provided diff evidence, these appear to be undocumented/unsupported by actual code changes shown.",
       "evidence": [
-        "frontend-file-summaries.txt"
-      ]
-    },
-    {
-      "description": "Change in product/project state description emphasizing blockchain derivation from metadata format and other workflow guidance updates.",
-      "reason": "Not requested; the BuildRequest explicitly limits scope to header save-status layout and Vault publishing UI compactness without changing publishing logic/state machine beyond presentation.",
-      "evidence": [
-        "project_state.json"
+        "frontend-file-summaries.txt",
+        "file-diff summary (only 6 files modified; does not list the files where these changes would have to occur)"
       ]
     }
   ],
-  "confidence": 0.62,
+  "confidence": 0.72,
   "changed_files": [
     "frontend-file-summaries.txt",
-    "frontend/src/components/HoverTooltip.tsx",
+    "frontend/src/components/Header.tsx",
     "frontend/src/components/SaveStatusIndicator.tsx",
-    "frontend/src/components/VaultPublishingControls.tsx",
+    "frontend/src/index.css",
+    "frontend/tailwind.config.js",
     "project_state.json"
   ]
 }

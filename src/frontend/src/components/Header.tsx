@@ -26,22 +26,22 @@ export default function Header({ currentView, onNavigate, currentProject, onBack
   ];
 
   return (
-    <header className="flex-shrink-0 bg-card border-b border-border">
+    <header className="flex-shrink-0 bg-card/50 backdrop-blur-xl border-b border-border/50">
       <div className="container mx-auto px-4 sm:px-6 py-3">
         <div className="flex items-center justify-between gap-4">
-          <div className="flex items-center gap-4 min-w-0 flex-1 lg:flex-initial">
+          <div className="flex items-center gap-4 min-w-0 flex-shrink-0">
             {currentProject ? (
               <Button
                 variant="ghost"
                 size="sm"
                 onClick={onBackToDashboard}
-                className="text-foreground hover:text-foreground hover:bg-muted font-semibold px-3 h-9 text-sm"
+                className="text-foreground hover:text-foreground hover:bg-muted/50 font-medium px-3 h-9 text-sm focus-ring"
               >
                 ← Projects
               </Button>
             ) : (
               <div>
-                <h1 className="text-base sm:text-lg font-bold text-foreground truncate">
+                <h1 className="text-base sm:text-lg font-semibold text-foreground truncate">
                   Studio Art Engine
                 </h1>
               </div>
@@ -50,7 +50,7 @@ export default function Header({ currentView, onNavigate, currentProject, onBack
 
           {currentProject && (
             <>
-              <nav className="hidden lg:flex items-center gap-1">
+              <nav className="hidden lg:flex items-center gap-1 flex-1">
                 {navItems.map((item) => {
                   const isActive = currentView === item.id;
                   return (
@@ -59,10 +59,10 @@ export default function Header({ currentView, onNavigate, currentProject, onBack
                       variant="ghost"
                       size="sm"
                       onClick={() => onNavigate(item.id as any)}
-                      className={`text-sm font-medium px-3 h-9 rounded-lg transition-all ${
+                      className={`text-sm font-medium px-3 h-9 rounded-lg transition-all focus-ring ${
                         isActive
-                          ? 'bg-primary text-primary-foreground'
-                          : 'text-muted-foreground hover:text-foreground hover:bg-muted'
+                          ? 'bg-primary/10 text-foreground'
+                          : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'
                       }`}
                     >
                       {item.label}
@@ -75,7 +75,7 @@ export default function Header({ currentView, onNavigate, currentProject, onBack
                 variant="ghost"
                 size="icon"
                 onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-                className="lg:hidden text-foreground hover:bg-muted h-9 w-9"
+                className="lg:hidden text-foreground hover:bg-muted/50 h-9 w-9 focus-ring"
               >
                 {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
               </Button>
@@ -83,8 +83,8 @@ export default function Header({ currentView, onNavigate, currentProject, onBack
           )}
 
           {currentProject && (
-            <div className="hidden lg:flex items-center gap-3 text-right">
-              <div className="flex-1 min-w-0">
+            <div className="hidden lg:flex items-center gap-3 text-right flex-shrink-0">
+              <div className="min-w-0">
                 <div className="text-sm font-semibold text-foreground truncate">{currentProject.name}</div>
                 <div className="text-xs text-muted-foreground font-medium">
                   {currentProject.blockchain}
@@ -96,7 +96,7 @@ export default function Header({ currentView, onNavigate, currentProject, onBack
         </div>
 
         {currentProject && mobileMenuOpen && (
-          <nav className="lg:hidden mt-3 pt-3 border-t border-border flex flex-col gap-1">
+          <nav className="lg:hidden mt-3 pt-3 border-t border-border/50 flex flex-col gap-1">
             {navItems.map((item) => {
               const isActive = currentView === item.id;
               return (
@@ -108,17 +108,17 @@ export default function Header({ currentView, onNavigate, currentProject, onBack
                     onNavigate(item.id as any);
                     setMobileMenuOpen(false);
                   }}
-                  className={`text-sm font-medium px-3 h-10 justify-start rounded-lg transition-all ${
+                  className={`text-sm font-medium px-3 h-10 justify-start rounded-lg transition-all focus-ring ${
                     isActive
-                      ? 'bg-primary text-primary-foreground'
-                      : 'text-muted-foreground hover:text-foreground hover:bg-muted'
+                      ? 'bg-primary/10 text-foreground'
+                      : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'
                   }`}
                 >
                   {item.label}
                 </Button>
               );
             })}
-            <div className="mt-2 pt-2 border-t border-border">
+            <div className="mt-2 pt-2 border-t border-border/50">
               <div className="flex items-center justify-between gap-3 px-3 py-2">
                 <div className="flex-1 min-w-0">
                   <div className="text-sm font-semibold text-foreground truncate">{currentProject.name}</div>

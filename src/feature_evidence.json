@@ -2,10 +2,11 @@
   "kind": "feature_evidence_report",
   "features": [
     {
-      "featureId": "feature-prevent-the-save-status-badge-e-g-saving-saved-displayed-to-the-right-of-the-project-name-in-the-header-from-causing-any-horizontal-layout-shift-jitter-when-it-appears-disappears-while-keeping-it-in-the-same-position-right-side-of-the-project-name-on-desktop-and-in-the-mobile-menu-project-header",
-      "featureTitle": "Prevent the save-status badge (e.g., “Saving…”, “Saved”) displayed to the right of the project name in the header from causing any horizontal layout shift/jitter when it appears/disappears, while keeping it in the same position (right side of the project name) on desktop and in the mobile menu project header.",
+      "featureId": "feature-apply-a-coherent-apple-hig-inspired-visual-theme-across-the-entire-app-translucent-surfaces-calm-contrast-premium-typography-hierarchy-while-preserving-the-existing-page-section-layout-structure-dashboard-workshop-rarity-rules-preview-forge-vault-settings",
+      "featureTitle": "Apply a coherent Apple HIG–inspired visual theme across the entire app (translucent surfaces, calm contrast, premium typography hierarchy) while preserving the existing page/section layout structure (Dashboard, Workshop, Rarity, Rules, Preview, Forge, Vault, Settings).",
       "files": [
-        "frontend/src/components/SaveStatusIndicator.tsx"
+        "frontend/src/index.css",
+        "frontend/tailwind.config.js"
       ],
       "components": [
         "blob-storage@4.0.0",
@@ -21,11 +22,11 @@
       "confidence": "high"
     },
     {
-      "featureId": "feature-redesign-the-vault-publishing-instructions-so-they-do-not-take-up-extra-vertical-space-remove-the-always-visible-instructional-text-block-under-the-lock-unlock-upload-buttons-and-replace-it-with-hover-tooltips-on-the-lock-unlock-and-upload-buttons-that-display-the-provided-explanations",
-      "featureTitle": "Redesign the Vault publishing instructions so they do not take up extra vertical space: remove the always-visible instructional text block under the Lock/Unlock/Upload buttons and replace it with hover tooltips on the Lock, Unlock, and Upload buttons that display the provided explanations.",
+      "featureId": "feature-unify-interaction-feedback-and-motion-system-across-the-app-using-the-existing-motion-tokens-and-easing-e-g-motion-hover-press-component-modal-and-ease-apple-ensuring-consistent-hover-press-focus-disabled-loading-states-for-buttons-cards-nav-items-dialogs-and-toggles",
+      "featureTitle": "Unify interaction feedback and motion system across the app using the existing motion tokens and easing (e.g., --motion-hover/press/component/modal and --ease-apple), ensuring consistent hover/press/focus/disabled/loading states for buttons, cards, nav items, dialogs, and toggles.",
       "files": [
-        "frontend/src/components/HoverTooltip.tsx",
-        "frontend/src/components/VaultPublishingControls.tsx"
+        "frontend/src/components/Header.tsx",
+        "frontend/src/index.css"
       ],
       "components": [
         "blob-storage@4.0.0",
@@ -41,10 +42,10 @@
       "confidence": "high"
     },
     {
-      "featureId": "feature-make-the-vault-publishing-status-alert-including-the-green-uploaded-successfully-message-with-cid-more-compact-to-reduce-vertical-space-while-keeping-the-status-meaning-and-cid-readable",
-      "featureTitle": "Make the Vault publishing status alert (including the green “Uploaded successfully!” message with CID) more compact to reduce vertical space while keeping the status meaning and CID readable.",
+      "featureId": "feature-standardize-user-facing-copy-to-a-calm-premium-readable-tone-in-english-across-the-app-replace-shouty-all-caps-toasts-labels-buttons-with-sentence-case-or-title-case-as-appropriate-without-changing-the-underlying-behavior",
+      "featureTitle": "Standardize user-facing copy to a calm, premium, readable tone in English across the app (replace shouty ALL-CAPS toasts/labels/buttons with sentence case or title case as appropriate), without changing the underlying behavior.",
       "files": [
-        "frontend/src/components/VaultPublishingControls.tsx"
+        "frontend/src/components/SaveStatusIndicator.tsx"
       ],
       "components": [
         "blob-storage@4.0.0",
@@ -56,6 +57,103 @@
       ],
       "testIds": [
         "REQ-3"
+      ],
+      "confidence": "high"
+    },
+    {
+      "featureId": "feature-polish-global-navigation-and-header-behavior-for-responsiveness-and-predictability-consistent-active-state-styling-improved-spacing-alignment-and-mobile-menu-interactions-that-feel-stable-and-premium",
+      "featureTitle": "Polish global navigation and header behavior for responsiveness and predictability: consistent active state styling, improved spacing/alignment, and mobile menu interactions that feel stable and premium.",
+      "files": [
+        "frontend/src/components/Header.tsx",
+        "frontend/src/components/SaveStatusIndicator.tsx",
+        "frontend/src/index.css"
+      ],
+      "components": [
+        "blob-storage@4.0.0",
+        "core-infrastructure@1.0.2",
+        "shadcn-ui@1.0.0",
+        "build-template-react@1.0.0",
+        "initial-app@1.0.0",
+        "github-export-icp-cli@1.0.0"
+      ],
+      "testIds": [
+        "REQ-4"
+      ],
+      "confidence": "high"
+    },
+    {
+      "featureId": "feature-refine-workshop-ui-for-calmer-typography-and-improved-affordances-layers-list-drag-reorder-rename-trait-cards-upload-preserving-all-current-functionality-and-layout-regions-sidebar-main-panel",
+      "featureTitle": "Refine Workshop UI for calmer typography and improved affordances (layers list, drag/reorder, rename, trait cards, upload), preserving all current functionality and layout regions (sidebar + main panel).",
+      "files": [
+        "frontend/src/index.css"
+      ],
+      "components": [
+        "blob-storage@4.0.0",
+        "core-infrastructure@1.0.2",
+        "shadcn-ui@1.0.0",
+        "build-template-react@1.0.0",
+        "initial-app@1.0.0",
+        "github-export-icp-cli@1.0.0"
+      ],
+      "testIds": [
+        "REQ-6"
+      ],
+      "confidence": "high"
+    },
+    {
+      "featureId": "feature-refine-preview-page-ui-to-match-the-global-theme-preview-frame-generate-button-pixel-mode-toggle-panel-and-ensure-button-toggle-feedback-feels-immediate-and-consistent",
+      "featureTitle": "Refine Preview page UI to match the global theme (preview frame, generate button, pixel mode toggle panel) and ensure button/toggle feedback feels immediate and consistent.",
+      "files": [
+        "frontend/src/index.css"
+      ],
+      "components": [
+        "blob-storage@4.0.0",
+        "core-infrastructure@1.0.2",
+        "shadcn-ui@1.0.0",
+        "build-template-react@1.0.0",
+        "initial-app@1.0.0",
+        "github-export-icp-cli@1.0.0"
+      ],
+      "testIds": [
+        "REQ-7"
+      ],
+      "confidence": "high"
+    },
+    {
+      "featureId": "feature-refine-forge-builder-page-ui-for-consistent-modal-panel-surfaces-tab-styling-selection-states-and-action-feedback-while-preserving-the-existing-forge-workflow-and-screen-structure",
+      "featureTitle": "Refine Forge (Builder) page UI for consistent modal/panel surfaces, tab styling, selection states, and action feedback while preserving the existing Forge workflow and screen structure.",
+      "files": [
+        "frontend/src/index.css"
+      ],
+      "components": [
+        "blob-storage@4.0.0",
+        "core-infrastructure@1.0.2",
+        "shadcn-ui@1.0.0",
+        "build-template-react@1.0.0",
+        "initial-app@1.0.0",
+        "github-export-icp-cli@1.0.0"
+      ],
+      "testIds": [
+        "REQ-8"
+      ],
+      "confidence": "high"
+    },
+    {
+      "featureId": "feature-refine-settings-page-layout-polish-left-form-panel-right-preview-panel-to-match-the-global-theme-with-improved-spacing-consistent-section-styling-and-predictable-interactive-states-without-changing-settings-functionality",
+      "featureTitle": "Refine Settings page layout polish (left form panel + right preview panel) to match the global theme, with improved spacing, consistent section styling, and predictable interactive states, without changing Settings functionality.",
+      "files": [
+        "frontend/src/index.css"
+      ],
+      "components": [
+        "blob-storage@4.0.0",
+        "core-infrastructure@1.0.2",
+        "shadcn-ui@1.0.0",
+        "build-template-react@1.0.0",
+        "initial-app@1.0.0",
+        "github-export-icp-cli@1.0.0"
+      ],
+      "testIds": [
+        "REQ-10"
       ],
       "confidence": "high"
     }

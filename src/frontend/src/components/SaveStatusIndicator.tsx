@@ -16,7 +16,7 @@ export default function SaveStatusIndicator({ status }: SaveStatusIndicatorProps
     },
     saved: {
       text: 'Saved',
-      className: 'text-success opacity-100',
+      className: 'text-accent opacity-100',
     },
     failed: {
       text: '',
@@ -28,7 +28,7 @@ export default function SaveStatusIndicator({ status }: SaveStatusIndicatorProps
 
   return (
     <div 
-      className={`text-xs font-black tracking-wider uppercase smooth-transition min-w-[60px] text-right ${config.className}`}
+      className={`text-xs font-medium smooth-transition w-[60px] text-right flex-shrink-0 ${config.className}`}
       aria-live="polite"
       aria-atomic="true"
     >

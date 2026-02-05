@@ -7,7 +7,7 @@ import { Switch } from '@/components/ui/switch';
 import { Separator } from '@/components/ui/separator';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
-import { CheckCircle2, XCircle, Loader2, Plus, Trash2, AlertTriangle } from 'lucide-react';
+import { CheckCircle2, XCircle, Loader2, Plus, Trash2, AlertTriangle, Info } from 'lucide-react';
 import PinataKeyGuideDialog from '@/components/PinataKeyGuideDialog';
 import { usePinataKeyValidation } from '@/hooks/usePinataKeyValidation';
 import type { Project, MetadataFormat, SolanaCreator, Blockchain } from '../App';
@@ -317,6 +317,15 @@ export default function Settings({ project, onUpdateProject }: SettingsProps) {
                     )}
                   </div>
                 )}
+
+                {/* Pinata Free Plan Limit Warning */}
+                <Alert className="bg-blue-50 dark:bg-blue-950/20 border-blue-200 dark:border-blue-800">
+                  <Info className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+                  <AlertDescription className="text-xs text-blue-800 dark:text-blue-300 ml-2">
+                    <strong>Note:</strong> Pinata's free plan is suitable for small to medium-sized collections. 
+                    For large collections, you may need to upgrade to a paid Pinata plan to ensure sufficient storage and bandwidth.
+                  </AlertDescription>
+                </Alert>
 
                 <PinataKeyGuideDialog />
               </div>
