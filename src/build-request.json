@@ -1,71 +1,88 @@
 {
   "kind": "build_request",
-  "title": "UI refinements: remove “Studio Art Engine”, round main Preview image corners, and shrink Forge token preview",
+  "title": "Redesign Projects dashboard to match uploaded reference (GENESIS.ENGINE style) while keeping existing project actions",
   "priority": "normal",
   "requirements": [
     {
       "id": "REQ-1",
-      "text": "Remove the text label \"Studio Art Engine\" everywhere it appears in the UI, including the dashboard header branding and the browser document title.",
+      "text": "Redesign the Projects dashboard page (frontend/src/pages/Dashboard.tsx) to fully replace the current layout and visual style to match the uploaded reference (image-42.png) and the referenced video, while preserving existing project functionality (create, open, edit/settings, delete).",
       "target": "frontend",
       "source": {
         "messageIds": [
-          "recent-messages"
+          "msg-6",
+          "msg-8",
+          "msg-10",
+          "msg-12"
         ],
         "quotes": [
-          "1.  removed everywhere it appears"
+          "Redesign and adjust the Project Management page to match the layout, flow, and interaction style shown in the attached reference video, image.",
+          "1. follow the uploaded image and video",
+          "2. new layout fully replace the current Projects dashboard, but the functions remain the same.",
+          "3. yes"
         ]
       },
       "acceptanceCriteria": [
-        "When no project is selected (Dashboard view), the header does not display \"Studio Art Engine\".",
-        "The HTML document <title> no longer contains \"Studio Art Engine\".",
-        "No other visible UI element contains the exact text \"Studio Art Engine\"."
+        "The dashboard route/view still shows the list of projects and supports: create project, open project, edit project settings, and delete project (same callbacks/behavior as before).",
+        "The page header/hero area visually matches the reference: large typographic wordmark treatment, subdued supporting copy, and an overall dark, minimal, high-contrast aesthetic.",
+        "Project cards are redesigned to match the reference card style: large rounded tiles, subtle borders/shadows, subdued secondary text, and hover-driven emphasis.",
+        "A dedicated 'Start new project' tile exists in the grid as a dashed-outline/placeholder style tile with a centered plus icon and label similar to the reference, and triggers the existing create-project dialog when clicked.",
+        "Card content matches the reference’s intent by showing key project fields in the card (at minimum: blockchain/protocol tag, project name, unit count/collection size, and an initialized/created date derived from createdAt).",
+        "Per-card actions for settings/edit and delete remain available and do not trigger open-project when clicked (stopPropagation preserved).",
+        "Animations/interactions are updated to match the reference’s flow: subtle fade/scale in on load and a clear hover state on tiles without harming performance or accessibility.",
+        "All user-facing strings introduced/modified by this redesign are in English."
       ]
     },
     {
       "id": "REQ-2",
-      "text": "Apply rounded corners only to the main NFT preview image on the Preview page (the large central preview), without changing corner styling for other NFT images elsewhere in the app.",
+      "text": "Update the create-project and project-settings dialogs used from the dashboard to visually match the new Projects dashboard style (dark, minimal, rounded, subdued borders), without changing their underlying validation logic or data shape.",
       "target": "frontend",
       "source": {
         "messageIds": [
-          "recent-messages"
+          "msg-6",
+          "msg-10"
         ],
         "quotes": [
-          "2. only the main preview shown in image 1"
+          "Redesign and adjust the Project Management page to match the layout, flow, and interaction style shown in the attached reference video, image.",
+          "2. new layout fully replace the current Projects dashboard, but the functions remain the same."
         ]
       },
       "acceptanceCriteria": [
-        "On the Preview page, the rendered NFT preview (canvas/image area) has visibly rounded corners.",
-        "NFT images/previews in other areas (e.g., Vault grid, Forge tokens grid) do not change corner radius as part of this requirement."
+        "The New Project dialog still creates a project with the same fields and defaults as before and navigates into the project as before.",
+        "The Project settings dialog still edits name, symbol, collection size, and pixel art mode as before.",
+        "Dialog styling (background, borders, typography, spacing, control shapes) is consistent with the redesigned dashboard and uses existing shadcn components (composed, not modified in-place)."
       ]
     },
     {
       "id": "REQ-3",
-      "text": "On the Forge (Builder) page, make the forged token NFT preview image smaller within each forged token card while keeping the card layout intact.",
+      "text": "Ensure the redesigned Projects dashboard layout is responsive and preserves usability across breakpoints (mobile, tablet, desktop), matching the reference grid feel (large tiles, generous spacing) while keeping the existing header/navigation behavior intact.",
       "target": "frontend",
       "source": {
         "messageIds": [
-          "recent-messages"
+          "msg-6",
+          "msg-10"
         ],
         "quotes": [
-          "3. the NFT preview itself ( attact image)"
+          "Redesign and adjust the Project Management page to match the layout, flow, and interaction style shown in the attached reference video, image.",
+          "2. new layout fully replace the current Projects dashboard, but the functions remain the same."
         ]
       },
       "acceptanceCriteria": [
-        "In the \"FORGED TOKENS\" grid on the Forge page, each token image renders smaller than before (e.g., with padding/margins inside the square preview area), matching the intent of the provided reference.",
-        "Token image aspect ratio is preserved and remains centered within its preview area.",
-        "No functional behavior changes to forged token actions (e.g., delete)."
+        "On small screens, tiles stack cleanly (1 column) and the hero/header typography scales down without overflow or clipping.",
+        "On medium/large screens, tiles present as a grid similar to the reference with consistent gaps and alignment.",
+        "No changes are required to frontend/src/components/Header.tsx behavior; navigating into/out of projects remains unchanged."
       ]
     }
   ],
   "constraints": [
-    "Do not modify files under frontend/src/components/ui (Shadcn components are read-only).",
-    "Do not edit immutable hook files listed in SYSTEM_CONTEXT (use composition/wrappers if needed).",
-    "Backend schema/state must not change (UI-only update)."
+    "Do not remove or change the existing project actions/callbacks wired from App.tsx (onCreateProject, onOpenProject, onUpdateProject, onDeleteProject).",
+    "Frontend immutable paths must not be edited: frontend/src/hooks/useInternetIdentity.ts, frontend/src/hooks/useInternetIdentity.tsx, frontend/src/hooks/useActor.ts, frontend/src/main.tsx, frontend/src/components/ui.",
+    "Keep the app as a single-page React app; no new routes/framework changes.",
+    "Use English for any user-facing text introduced or modified."
   ],
   "nonGoals": [
-    "Changing rounded corners for all NFT images globally.",
-    "Altering Forge/Vault generation logic, metadata, or storage behavior.",
-    "Introducing new navigation items or redesigning layouts beyond the specified tweaks."
+    "Implementing new backend storage or changing the Motoko backend.",
+    "Adding new project fields beyond what is already stored (aside from deriving display fields like initialized date from createdAt).",
+    "Changing non-dashboard pages’ layouts beyond what is necessary for shared visual consistency of dialogs invoked from the dashboard."
   ],
   "imageRequirements": {
     "required": [],

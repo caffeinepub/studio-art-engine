@@ -1,7 +1,7 @@
 {
   "kind": "coverage_report",
   "version": "1.0",
-  "generatedAt": "2026-02-05T15:01:41.918Z",
+  "generatedAt": "2026-02-05T14:38:02.620Z",
   "sources": {
     "buildRequest": true,
     "implementationPlan": true
@@ -12,51 +12,62 @@
     "items": [
       {
         "id": "REQ-1",
-        "summary": "Remove the text label \"Studio Art Engine\" everywhere it appears in the UI, including the dashboard header branding and the browser document title.",
+        "summary": "Redesign the Projects dashboard page (frontend/src/pages/Dashboard.tsx) to fully replace the current layout and visual style to match the uploaded reference (image-42.png) and the referenced video, while preserving existing project functionality (create, open, edit/settings, delete).",
         "status": "implemented",
         "plannedFiles": [
-          "frontend/src/components/Header.tsx",
-          "frontend/index.html"
+          "frontend/src/pages/Dashboard.tsx",
+          "frontend/src/components/dashboard/ProjectTile.tsx",
+          "frontend/src/components/dashboard/NewProjectTile.tsx",
+          "frontend/src/index.css"
         ],
         "matchedFiles": [
-          "frontend/src/components/Header.tsx",
-          "frontend/index.html"
+          "frontend/src/pages/Dashboard.tsx",
+          "frontend/src/components/dashboard/ProjectTile.tsx",
+          "frontend/src/components/dashboard/NewProjectTile.tsx",
+          "frontend/src/index.css"
         ]
       },
       {
         "id": "REQ-2",
-        "summary": "Apply rounded corners only to the main NFT preview image on the Preview page (the large central preview), without changing corner styling for other NFT images elsewhere in the app.",
+        "summary": "Update the create-project and project-settings dialogs used from the dashboard to visually match the new Projects dashboard style (dark, minimal, rounded, subdued borders), without changing their underlying validation logic or data shape.",
         "status": "implemented",
         "plannedFiles": [
-          "frontend/src/pages/Preview.tsx"
+          "frontend/src/components/dashboard/CreateProjectDialog.tsx",
+          "frontend/src/components/dashboard/ProjectSettingsDialog.tsx",
+          "frontend/src/pages/Dashboard.tsx"
         ],
         "matchedFiles": [
-          "frontend/src/pages/Preview.tsx"
+          "frontend/src/components/dashboard/CreateProjectDialog.tsx",
+          "frontend/src/components/dashboard/ProjectSettingsDialog.tsx",
+          "frontend/src/pages/Dashboard.tsx"
         ]
       },
       {
         "id": "REQ-3",
-        "summary": "On the Forge (Builder) page, make the forged token NFT preview image smaller within each forged token card while keeping the card layout intact.",
+        "summary": "Ensure the redesigned Projects dashboard layout is responsive and preserves usability across breakpoints (mobile, tablet, desktop), matching the reference grid feel (large tiles, generous spacing) while keeping the existing header/navigation behavior intact.",
         "status": "implemented",
         "plannedFiles": [
-          "frontend/src/pages/Builder.tsx"
+          "frontend/src/pages/Dashboard.tsx",
+          "frontend/src/components/dashboard/ProjectTile.tsx"
         ],
         "matchedFiles": [
-          "frontend/src/pages/Builder.tsx"
+          "frontend/src/pages/Dashboard.tsx",
+          "frontend/src/components/dashboard/ProjectTile.tsx"
         ]
       }
     ]
   },
   "changedFiles": [
     "build-request.json",
-    "caffeine.lock.json",
     "feature_evidence.json",
     "frontend-file-summaries.txt",
     "frontend-implementation-plan.json",
-    "frontend/index.html",
-    "frontend/src/components/Header.tsx",
-    "frontend/src/pages/Builder.tsx",
-    "frontend/src/pages/Preview.tsx",
+    "frontend/src/components/dashboard/CreateProjectDialog.tsx",
+    "frontend/src/components/dashboard/NewProjectTile.tsx",
+    "frontend/src/components/dashboard/ProjectSettingsDialog.tsx",
+    "frontend/src/components/dashboard/ProjectTile.tsx",
+    "frontend/src/index.css",
+    "frontend/src/pages/Dashboard.tsx",
     "project_state.json",
     "scratch/component-selection.json",
     "spec.md",

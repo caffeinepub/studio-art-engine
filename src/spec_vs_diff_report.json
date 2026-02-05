@@ -1,87 +1,64 @@
 {
   "kind": "spec_vs_diff_report",
   "version": "1.0",
-  "generatedAt": "2026-02-05T15:01:41.915Z",
-  "summary": "REQ-1 and REQ-3 appear implemented (header branding removal and Forge token image shrink). REQ-2 is only partially evidenced: rounding was added on Preview, but the diff summary suggests rounding was applied more broadly than requested, which risks changing other NFT images. The diff also includes multiple broad UI/behavior changes not requested (dashboard/footer redesign, vault/worker logic, tailwind/css animation systems, etc.), and a project_state.json update despite the “UI-only” constraint.",
+  "generatedAt": "2026-02-05T14:38:02.569Z",
+  "summary": "Dashboard and dialog components were added/redesigned toward a dark GENESIS.ENGINE-style UI with project tiles, a dashed new-project tile, and per-card settings/delete actions. However, the diff summary also indicates unrelated redesigns/feature changes across Header/Footer and multiple non-dashboard pages that were not requested and may violate the constraint to avoid changing non-dashboard layouts/behavior.",
   "missing_requirements": [
     {
       "id": "REQ-2",
-      "requirement": "Apply rounded corners only to the main NFT preview image on the Preview page, without changing corner styling for other NFT images elsewhere in the app.",
-      "reason": "The diff summary indicates rounded corners were applied more broadly than just the main Preview canvas (\"consistent rounded corners throughout\"), so it’s not demonstrated that other NFT images (Vault grid, Forge tokens grid, etc.) were left unchanged as required.",
+      "requirement": "Update the create-project and project-settings dialogs used from the dashboard to visually match the new Projects dashboard style (dark, minimal, rounded, subdued borders), without changing their underlying validation logic or data shape.",
+      "reason": "Dialog styling is present, but the diff for ProjectSettingsDialog is truncated and does not show the full footer/actions or complete behavior; cannot confirm it fully preserves existing validation/flow (e.g., save/close behavior) while matching the new style end-to-end.",
       "evidence": [
-        "frontend-file-summaries.txt",
-        "frontend/src/pages/Preview.tsx (truncated)"
+        "frontend/src/components/dashboard/ProjectSettingsDialog.tsx (truncated)"
       ]
     }
   ],
   "hallucinated_features": [
     {
-      "description": "Large-scale header/navigation redesign beyond removing the \"Studio Art Engine\" text (new nav styling, mobile menu behavior, layout changes).",
-      "reason": "BuildRequest only asks to remove the text label and adjust two image styling items; it explicitly discourages redesigning layouts beyond specified tweaks.",
+      "description": "Redesigned navigation header (sentence-case labels, cleaner mobile menu, rearranged nav items, layout changes to prevent horizontal shift).",
+      "reason": "BuildRequest explicitly states no changes are required to Header behavior and focuses changes on the dashboard + its dialogs; header redesign is not requested.",
       "evidence": [
-        "frontend/src/components/Header.tsx (truncated)",
-        "frontend-file-summaries.txt"
+        "frontend-file-summaries.txt (mentions \"frontend/src/components/Header.tsx\": redesigned navigation header...)"
       ]
     },
     {
-      "description": "Dashboard redesign (GENESIS.ENGINE-style hero, rounded project tiles, new tile hover glow, extracted dialogs).",
-      "reason": "Not requested; non-goal mentions avoiding redesigns beyond the specified tweaks.",
+      "description": "Minimalist footer with attribution changes.",
+      "reason": "Footer changes were not requested (scope is dashboard + related dialogs; avoid changing non-dashboard pages/layouts beyond shared dialog consistency).",
       "evidence": [
-        "frontend-file-summaries.txt",
-        "frontend/src/index.css (mentioned in summaries)"
+        "frontend-file-summaries.txt (mentions \"frontend/src/components/Footer.tsx\": Minimalist footer...)"
       ]
     },
     {
-      "description": "Footer replaced/modified with heart icon and “caffeine.ai attribution”.",
-      "reason": "Not requested in any requirement.",
+      "description": "Extensive feature/layout changes across multiple non-dashboard pages (Workshop/Preview/Builder/Vault/Rules/RarityWorkshop) including new behaviors (drag-and-drop, render order enforcement, worker generation details, publishing controls, etc.).",
+      "reason": "BuildRequest non-goals/constraints restrict changes to the Projects dashboard and dialog visual consistency; these page-level behavioral changes are out of scope and not requested.",
       "evidence": [
-        "frontend-file-summaries.txt"
+        "frontend-file-summaries.txt (summaries for \"frontend/src/pages/Workshop.tsx\", \"Preview.tsx\", \"Builder.tsx\", \"Vault.tsx\", \"Rules.tsx\", \"RarityWorkshop.tsx\")"
       ]
     },
     {
-      "description": "Vault page functional/logic changes (worker-based generation, deterministic DNA, progressive commits, fallback compositing, publishing controls wiring).",
-      "reason": "Non-goal and constraints state UI-only update and no changes to generation logic/behavior; these changes go beyond UI refinements.",
+      "description": "Tailwind configuration changes adding an 'Apple HIG motion system integration' and comprehensive animation utilities.",
+      "reason": "Not requested by the BuildRequest (which only requires dashboard responsiveness/animations consistent with reference). This is extra global infrastructure work beyond stated requirements.",
       "evidence": [
-        "frontend-file-summaries.txt"
+        "frontend-file-summaries.txt (mentions \"frontend/tailwind.config.js\": Apple HIG motion system integration...)"
       ]
     },
     {
-      "description": "Workshop and Rules/RarityWorkshop behavioral enhancements (drag-and-drop, inline renaming sync, rule preservation logic changes, duplicate rule functionality, weight normalization changes).",
-      "reason": "Not requested; exceeds scope of the three UI refinements.",
+      "description": "New placeholder hook file 'frontend/src/hooks/useQueries.ts' described as empty placeholder.",
+      "reason": "Not requested; also introduces new unused/placeholder module outside dashboard redesign scope.",
       "evidence": [
-        "frontend-file-summaries.txt"
-      ]
-    },
-    {
-      "description": "Global styling/animation system additions (Apple HIG motion system, new Tailwind animation utilities).",
-      "reason": "Not requested; exceeds scope.",
-      "evidence": [
-        "frontend/src/index.css (mentioned in summaries)",
-        "frontend/tailwind.config.js (mentioned in summaries)"
-      ]
-    },
-    {
-      "description": "App-level project normalization logic changes (sanitizeProject ensuring blockchain matches metadataFormat).",
-      "reason": "Not requested; also risks violating the constraint that backend schema/state must not change (even if client-side).",
-      "evidence": [
-        "frontend-file-summaries.txt"
-      ]
-    },
-    {
-      "description": "project_state.json updated with new_feature_requests entries/status tracking.",
-      "reason": "BuildRequest constraints say backend schema/state must not change (UI-only update); modifying a state JSON file is outside the requested UI tweaks.",
-      "evidence": [
-        "project_state.json"
+        "frontend-file-summaries.txt (mentions \"frontend/src/hooks/useQueries.ts\": Empty placeholder file...)"
       ]
     }
   ],
-  "confidence": 0.74,
+  "confidence": 0.62,
   "changed_files": [
     "frontend-file-summaries.txt",
-    "frontend/index.html",
-    "frontend/src/components/Header.tsx",
-    "frontend/src/pages/Builder.tsx",
-    "frontend/src/pages/Preview.tsx",
+    "frontend/src/components/dashboard/CreateProjectDialog.tsx",
+    "frontend/src/components/dashboard/NewProjectTile.tsx",
+    "frontend/src/components/dashboard/ProjectSettingsDialog.tsx",
+    "frontend/src/components/dashboard/ProjectTile.tsx",
+    "frontend/src/index.css",
+    "frontend/src/pages/Dashboard.tsx",
     "project_state.json"
   ]
 }

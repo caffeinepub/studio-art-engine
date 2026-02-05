@@ -2,11 +2,13 @@
   "kind": "feature_evidence_report",
   "features": [
     {
-      "featureId": "feature-remove-the-text-label-studio-art-engine-everywhere-it-appears-in-the-ui-including-the-dashboard-header-branding-and-the-browser-document-title",
-      "featureTitle": "Remove the text label \"Studio Art Engine\" everywhere it appears in the UI, including the dashboard header branding and the browser document title.",
+      "featureId": "feature-redesign-the-projects-dashboard-page-frontend-src-pages-dashboard-tsx-to-fully-replace-the-current-layout-and-visual-style-to-match-the-uploaded-reference-image-42-png-and-the-referenced-video-while-preserving-existing-project-functionality-create-open-edit-settings-delete",
+      "featureTitle": "Redesign the Projects dashboard page (frontend/src/pages/Dashboard.tsx) to fully replace the current layout and visual style to match the uploaded reference (image-42.png) and the referenced video, while preserving existing project functionality (create, open, edit/settings, delete).",
       "files": [
-        "frontend/index.html",
-        "frontend/src/components/Header.tsx"
+        "frontend/src/components/dashboard/NewProjectTile.tsx",
+        "frontend/src/components/dashboard/ProjectTile.tsx",
+        "frontend/src/index.css",
+        "frontend/src/pages/Dashboard.tsx"
       ],
       "components": [
         "blob-storage@4.0.0",
@@ -22,10 +24,12 @@
       "confidence": "high"
     },
     {
-      "featureId": "feature-apply-rounded-corners-only-to-the-main-nft-preview-image-on-the-preview-page-the-large-central-preview-without-changing-corner-styling-for-other-nft-images-elsewhere-in-the-app",
-      "featureTitle": "Apply rounded corners only to the main NFT preview image on the Preview page (the large central preview), without changing corner styling for other NFT images elsewhere in the app.",
+      "featureId": "feature-update-the-create-project-and-project-settings-dialogs-used-from-the-dashboard-to-visually-match-the-new-projects-dashboard-style-dark-minimal-rounded-subdued-borders-without-changing-their-underlying-validation-logic-or-data-shape",
+      "featureTitle": "Update the create-project and project-settings dialogs used from the dashboard to visually match the new Projects dashboard style (dark, minimal, rounded, subdued borders), without changing their underlying validation logic or data shape.",
       "files": [
-        "frontend/src/pages/Preview.tsx"
+        "frontend/src/components/dashboard/CreateProjectDialog.tsx",
+        "frontend/src/components/dashboard/ProjectSettingsDialog.tsx",
+        "frontend/src/pages/Dashboard.tsx"
       ],
       "components": [
         "blob-storage@4.0.0",
@@ -41,10 +45,11 @@
       "confidence": "high"
     },
     {
-      "featureId": "feature-on-the-forge-builder-page-make-the-forged-token-nft-preview-image-smaller-within-each-forged-token-card-while-keeping-the-card-layout-intact",
-      "featureTitle": "On the Forge (Builder) page, make the forged token NFT preview image smaller within each forged token card while keeping the card layout intact.",
+      "featureId": "feature-ensure-the-redesigned-projects-dashboard-layout-is-responsive-and-preserves-usability-across-breakpoints-mobile-tablet-desktop-matching-the-reference-grid-feel-large-tiles-generous-spacing-while-keeping-the-existing-header-navigation-behavior-intact",
+      "featureTitle": "Ensure the redesigned Projects dashboard layout is responsive and preserves usability across breakpoints (mobile, tablet, desktop), matching the reference grid feel (large tiles, generous spacing) while keeping the existing header/navigation behavior intact.",
       "files": [
-        "frontend/src/pages/Builder.tsx"
+        "frontend/src/components/dashboard/ProjectTile.tsx",
+        "frontend/src/pages/Dashboard.tsx"
       ],
       "components": [
         "blob-storage@4.0.0",

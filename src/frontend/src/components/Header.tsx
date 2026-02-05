@@ -40,7 +40,11 @@ export default function Header({ currentView, onNavigate, currentProject, onBack
                 ← Projects
               </Button>
             ) : (
-              <div className="h-9"></div>
+              <div>
+                <h1 className="text-base sm:text-lg font-bold text-foreground truncate">
+                  Studio Art Engine
+                </h1>
+              </div>
             )}
           </div>
 
