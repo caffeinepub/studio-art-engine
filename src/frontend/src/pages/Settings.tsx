@@ -44,6 +44,9 @@ export default function Settings({ project, onUpdateProject }: SettingsProps) {
     const blockchainMap: Record<MetadataFormat, Blockchain> = {
       solana: 'SOL',
       ethereum: 'ETH',
+      polygon: 'POLYGON',
+      bnb: 'BNB',
+      base: 'BASE',
       icp: 'ICP',
     };
     
@@ -472,8 +475,11 @@ export default function Settings({ project, onUpdateProject }: SettingsProps) {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="solana">Solana</SelectItem>
-                    <SelectItem value="ethereum">Ethereum</SelectItem>
+                    <SelectItem value="ethereum">Ethereum (ERC-721)</SelectItem>
+                    <SelectItem value="polygon">Polygon (ERC-721)</SelectItem>
+                    <SelectItem value="base">Base (ERC-721)</SelectItem>
+                    <SelectItem value="bnb">BNB Chain (BEP-721)</SelectItem>
+                    <SelectItem value="solana">Solana (Metaplex)</SelectItem>
                     <SelectItem value="icp" disabled>ICP (coming soon)</SelectItem>
                   </SelectContent>
                 </Select>

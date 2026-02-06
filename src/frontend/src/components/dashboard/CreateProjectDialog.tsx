@@ -45,7 +45,7 @@ export default function CreateProjectDialog({ open, onOpenChange, onCreate }: Cr
         <DialogHeader>
           <DialogTitle className="text-xl font-semibold text-foreground">New project</DialogTitle>
           <DialogDescription className="text-muted-foreground text-sm">
-            Configure your collection settings
+            Configure your collection settings. Default format: Ethereum (ERC-721)
           </DialogDescription>
         </DialogHeader>
         
@@ -108,4 +108,3 @@ export default function CreateProjectDialog({ open, onOpenChange, onCreate }: Cr
     </Dialog>
   );
 }
-

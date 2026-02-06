@@ -69,8 +69,11 @@ export function buildMetadataPreview(
     };
   }
 
-  if (settings.metadataFormat === 'ethereum') {
-    // Ethereum metadata does not include seller_fee_basis_points
+  // ERC-721 standard (Ethereum, Polygon, Base, BNB Chain)
+  if (settings.metadataFormat === 'ethereum' || 
+      settings.metadataFormat === 'polygon' || 
+      settings.metadataFormat === 'base' || 
+      settings.metadataFormat === 'bnb') {
     return {
       ...baseMetadata,
     };
@@ -141,8 +144,11 @@ export function buildMetadataForNFT(
     };
   }
 
-  if (settings.metadataFormat === 'ethereum') {
-    // Ethereum metadata does not include seller_fee_basis_points
+  // ERC-721 standard (Ethereum, Polygon, Base, BNB Chain)
+  if (settings.metadataFormat === 'ethereum' || 
+      settings.metadataFormat === 'polygon' || 
+      settings.metadataFormat === 'base' || 
+      settings.metadataFormat === 'bnb') {
     return {
       ...baseMetadata,
     };

@@ -1,64 +1,67 @@
 {
   "schemaVersion": "1.0.0",
   "projectStateVersion": 3,
-  "summary": "Optimize the app by drastically reducing frontend bundle size and adding simple Tailwind/React motion effects to selected UI components (e.g., buttons and modal).",
+  "summary": "Studio Art Engine: an NFT collection generator focused on layer-based creation, rarity/rules, preview, and export; expanding multi-chain metadata export with Ethereum (ERC-721) as the default format.",
   "architectural_notes": [
-    "Target bundle-size reduction via frontend build optimization (code-splitting, tree-shaking, dependency trimming).",
-    "Use simple Tailwind/React-based motion effects (avoid heavy animation libraries) applied only to selected UI components (buttons, modal, etc.)."
+    "Blockchain selector should include Ethereum/Polygon/Base/BNB (export-only) and default new projects to Ethereum (ERC-721).",
+    "Users can change the target chain later during metadata generation/export (default is not locked-in).",
+    "Cardano (CIP-25) and Tezos (FA2) options/support should be removed."
   ],
-  "known_issues": [
-    "Build/application creation failed during attempt; retry requested."
-  ],
-  "isFixRequest": true,
-  "existing_features": [
-    {
-      "id": "feature-reduce-the-frontend-javascript-bundle-size-by-approximately-90-compared-to-the-current-baseline-focusing-on-production-build-output-js-shipped-to-the-browser",
-      "title": "Reduce the frontend JavaScript bundle size by approximately 90% compared to the current baseline, focusing on production build output (JS shipped to the browser).",
-      "reqIds": [
-        "REQ-1"
-      ],
-      "version": 1
-    },
-    {
-      "id": "feature-implement-bundle-size-optimizations-by-removing-or-replacing-unnecessary-heavy-frontend-dependencies-eliminating-unused-code-and-ensuring-large-features-are-code-split-lazy-loaded-where-appropriate-without-adding-new-third-party-animation-libraries",
-      "title": "Implement bundle-size optimizations by removing or replacing unnecessary/heavy frontend dependencies, eliminating unused code, and ensuring large features are code-split/lazy-loaded where appropriate (without adding new third-party animation libraries).",
-      "reqIds": [
-        "REQ-2"
-      ],
-      "version": 1
-    },
-    {
-      "id": "feature-make-the-ui-feel-more-dynamic-using-simple-tailwind-css-react-based-motion-effects-applied-only-to-selected-components-e-g-buttons-and-modals-keeping-animations-subtle-and-performance-friendly",
-      "title": "Make the UI feel more dynamic using simple Tailwind/CSS/React-based motion effects applied only to selected components (e.g., buttons and modals), keeping animations subtle and performance-friendly.",
-      "reqIds": [
-        "REQ-3"
-      ],
-      "version": 1
-    },
-    {
-      "id": "feature-resolve-the-previous-build-failure-by-ensuring-the-project-builds-successfully-end-to-end-after-the-changes-development-and-production-build",
-      "title": "Resolve the previous build failure by ensuring the project builds successfully end-to-end after the changes (development and production build).",
-      "reqIds": [
-        "REQ-4"
-      ],
-      "version": 1
-    }
-  ],
+  "known_issues": [],
+  "isFixRequest": false,
+  "existing_features": [],
   "new_feature_requests": [
     {
       "id": "AR-1",
-      "summary": "Reduce frontend bundle size by ~90% (bundle optimization).",
+      "summary": "Add full export-only metadata support for Polygon (ERC-721), Base (ERC-721), and BNB Chain (BEP-721)",
       "reqIds": [],
       "status": "pending"
     },
     {
       "id": "AR-2",
-      "summary": "Add simple Tailwind/React-based motion effects to selected components (buttons, modal, etc.).",
+      "summary": "Change default new collection chain/metadata format from Solana (Metaplex) to Ethereum (ERC-721); allow users to switch chain later during metadata generation",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-3",
+      "summary": "Remove Cardano (CIP-25) and Tezos (FA2) chain options/support from export selector",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-4",
+      "summary": "Planned: Full ICP-native storage of NFTs (images + metadata + assets stored in canister storage)",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-5",
+      "summary": "Planned: Project-level cloud sync so artwork/collections persist across sessions",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-6",
+      "summary": "Planned: Optional on-chain metadata publishing",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-7",
+      "summary": "Planned: Built-in IPFS pinning automation",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-8",
+      "summary": "Planned: Advanced rarity analytics and collection-grade statistical reports",
       "reqIds": [],
       "status": "pending"
     }
   ],
-  "projectName": "Retry build: reduce frontend bundle size and add subtle motion to selected UI components",
+  "gameProjectType": "none",
+  "projectName": "Studio Art Engine",
   "clarification_mode": "instant",
   "clarification_rounds": 0
 }

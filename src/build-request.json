@@ -1,109 +1,12 @@
 {
   "kind": "build_request",
-  "title": "Retry build: reduce frontend bundle size and add subtle motion to selected UI components",
+  "title": "Untitled request",
   "priority": "normal",
-  "requirements": [
-    {
-      "id": "REQ-1",
-      "text": "Reduce the frontend JavaScript bundle size by approximately 90% compared to the current baseline, focusing on production build output (JS shipped to the browser).",
-      "target": "frontend",
-      "source": {
-        "messageIds": [
-          "recent-messages"
-        ],
-        "quotes": [
-          "Reduce the overall app size by 90% of its current size.",
-          "1. frontend size"
-        ]
-      },
-      "acceptanceCriteria": [
-        "A baseline production build size (JS payload) is measured and recorded before changes.",
-        "After optimizations, the production JS payload is reduced by ~90% versus the recorded baseline (or the closest achievable reduction is documented with a clear breakdown of remaining largest contributors).",
-        "The app continues to function as before (no broken navigation or core workflows)."
-      ]
-    },
-    {
-      "id": "REQ-2",
-      "text": "Implement bundle-size optimizations by removing or replacing unnecessary/heavy frontend dependencies, eliminating unused code, and ensuring large features are code-split/lazy-loaded where appropriate (without adding new third-party animation libraries).",
-      "target": "frontend",
-      "source": {
-        "messageIds": [
-          "recent-messages"
-        ],
-        "quotes": [
-          "Reduce the overall app size by 90% of its current size.",
-          "2. simple Tailwind/React-based motion effects"
-        ]
-      },
-      "acceptanceCriteria": [
-        "No new animation libraries (e.g., Lottie, Framer Motion) are added.",
-        "Large non-critical UI routes/components are loaded via code-splitting (lazy loading) when it meaningfully reduces initial bundle size.",
-        "No runtime errors are introduced in the browser console during typical use."
-      ]
-    },
-    {
-      "id": "REQ-3",
-      "text": "Make the UI feel more dynamic using simple Tailwind/CSS/React-based motion effects applied only to selected components (e.g., buttons and modals), keeping animations subtle and performance-friendly.",
-      "target": "frontend",
-      "source": {
-        "messageIds": [
-          "recent-messages"
-        ],
-        "quotes": [
-          "Make the app more dynamic (for example, use animated icons).",
-          "2. simple Tailwind/React-based motion effects",
-          "3. only certain parts (buttons, modal, etc.)"
-        ]
-      },
-      "acceptanceCriteria": [
-        "Buttons provide immediate visual press feedback (e.g., subtle scale/translate and transition) and consistent hover/focus transitions.",
-        "Modals animate in/out with a subtle slide+scale and a softened backdrop effect, without jarring motion.",
-        "At least one set of commonly used icon buttons uses lightweight animated SVG/CSS (no external animation libraries) to convey interactivity."
-      ]
-    },
-    {
-      "id": "REQ-4",
-      "text": "Resolve the previous build failure by ensuring the project builds successfully end-to-end after the changes (development and production build).",
-      "target": "both",
-      "source": {
-        "messageIds": [
-          "recent-messages"
-        ],
-        "quotes": [
-          "❌ Application creation unsuccessful",
-          "try again pls"
-        ]
-      },
-      "acceptanceCriteria": [
-        "`npm`/frontend build completes successfully without errors.",
-        "Backend canister compilation succeeds without errors.",
-        "The deployed app loads and the main pages render and function (Dashboard and project editing flows)."
-      ]
-    }
-  ],
-  "constraints": [
-    "Use English for any user-facing text.",
-    "Do not modify files under frontend/src/components/ui (compose instead).",
-    "Do not modify files in frontend immutablePaths: frontend/src/hooks/useInternetIdentity.ts, frontend/src/hooks/useInternetIdentity.tsx, frontend/src/hooks/useActor.ts, frontend/src/main.tsx, frontend/src/components/ui.",
-    "Backend must remain a single Motoko actor (all logic in backend/main.mo); only add backend/migration.mo if an upgrade/state migration is required."
-  ],
-  "nonGoals": [
-    "Do not apply motion/animation changes globally across the entire UI; limit to selected parts such as buttons and modals.",
-    "Do not introduce Lottie/Framer Motion or other third-party animation frameworks.",
-    "Do not add external databases or non-Motoko backend services."
-  ],
+  "requirements": [],
+  "constraints": [],
+  "nonGoals": [],
   "imageRequirements": {
     "required": [],
     "edits": []
-  },
-  "userProfileUpdate": {
-    "goalsToAdd": [],
-    "goalsToRemove": [],
-    "preferencesToAdd": [],
-    "preferencesToRemove": [],
-    "miscToAdd": [],
-    "miscToRemove": [],
-    "fieldsToSet": {},
-    "fieldsToDelete": []
   }
 }

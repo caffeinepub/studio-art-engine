@@ -16,8 +16,8 @@ const Builder = lazy(() => import('./pages/Builder'));
 const Vault = lazy(() => import('./pages/Vault'));
 const Settings = lazy(() => import('./pages/Settings'));
 
-export type Blockchain = 'ICP' | 'ETH' | 'SOL';
-export type MetadataFormat = 'solana' | 'ethereum' | 'icp';
+export type Blockchain = 'ICP' | 'ETH' | 'SOL' | 'POLYGON' | 'BNB' | 'BASE';
+export type MetadataFormat = 'solana' | 'ethereum' | 'polygon' | 'bnb' | 'base' | 'icp';
 
 export interface Trait {
   id: string;
@@ -114,9 +114,18 @@ type View = 'dashboard' | 'workshop' | 'rarity' | 'rules' | 'preview' | 'builder
 type SaveStatus = 'idle' | 'saving' | 'saved' | 'failed';
 
 function getDefaultSettings(blockchain: Blockchain): ProjectSettings {
+  const metadataFormatMap: Record<Blockchain, MetadataFormat> = {
+    SOL: 'solana',
+    ETH: 'ethereum',
+    POLYGON: 'polygon',
+    BNB: 'bnb',
+    BASE: 'base',
+    ICP: 'icp',
+  };
+
   return {
     outputSize: 800,
-    metadataFormat: blockchain === 'SOL' ? 'solana' : blockchain === 'ETH' ? 'ethereum' : 'icp',
+    metadataFormat: metadataFormatMap[blockchain],
     tokenNameTemplate: '{{collection}} #{{id}}',
     tokenDescription: '',
     startTokenNumberAtZero: false,
@@ -131,7 +140,7 @@ function validateProject(project: any): project is Project {
   if (typeof project.id !== 'string' || !project.id) return false;
   if (typeof project.name !== 'string' || !project.name) return false;
   if (typeof project.symbol !== 'string') return false;
-  if (!['ICP', 'ETH', 'SOL'].includes(project.blockchain)) return false;
+  if (!['ICP', 'ETH', 'SOL', 'POLYGON', 'BNB', 'BASE'].includes(project.blockchain)) return false;
   if (typeof project.collectionSize !== 'number' || project.collectionSize < 1) return false;
   if (typeof project.pixelArtMode !== 'boolean') return false;
   if (!Array.isArray(project.layers)) return false;
@@ -145,15 +154,18 @@ function validateProject(project: any): project is Project {
 
 function sanitizeProject(project: any): Project | null {
   try {
-    let blockchain: Blockchain = 'SOL';
+    let blockchain: Blockchain = 'ETH';
     if (project.settings?.metadataFormat) {
       const formatToBlockchain: Record<MetadataFormat, Blockchain> = {
         solana: 'SOL',
         ethereum: 'ETH',
+        polygon: 'POLYGON',
+        bnb: 'BNB',
+        base: 'BASE',
         icp: 'ICP',
       };
-      blockchain = formatToBlockchain[project.settings.metadataFormat] || 'SOL';
-    } else if (['ICP', 'ETH', 'SOL'].includes(project.blockchain)) {
+      blockchain = formatToBlockchain[project.settings.metadataFormat] || 'ETH';
+    } else if (['ICP', 'ETH', 'SOL', 'POLYGON', 'BNB', 'BASE'].includes(project.blockchain)) {
       blockchain = project.blockchain;
     }
     
@@ -216,9 +228,9 @@ function sanitizeProject(project: any): Project | null {
       } : { status: 'not-ready' },
       settings: project.settings && typeof project.settings === 'object' ? {
         outputSize: Math.max(100, Math.min(4096, outputSize)),
-        metadataFormat: ['solana', 'ethereum', 'icp'].includes(project.settings.metadataFormat) 
+        metadataFormat: ['solana', 'ethereum', 'polygon', 'bnb', 'base', 'icp'].includes(project.settings.metadataFormat) 
           ? project.settings.metadataFormat 
-          : (blockchain === 'SOL' ? 'solana' : blockchain === 'ETH' ? 'ethereum' : 'icp'),
+          : (blockchain === 'SOL' ? 'solana' : blockchain === 'POLYGON' ? 'polygon' : blockchain === 'BNB' ? 'bnb' : blockchain === 'BASE' ? 'base' : blockchain === 'ICP' ? 'icp' : 'ethereum'),
         tokenNameTemplate: String(project.settings.tokenNameTemplate || '{{collection}} #{{id}}'),
         tokenDescription: String(project.settings.tokenDescription || ''),
         startTokenNumberAtZero: Boolean(project.settings.startTokenNumberAtZero),
