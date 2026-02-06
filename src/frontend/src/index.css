@@ -25,13 +25,11 @@
     --ring: 102 102 102;
     --radius: 0.5rem;
     
-    /* Apple HIG Motion System - Universal Timing */
     --motion-hover: 120ms;
     --motion-press: 90ms;
     --motion-component: 300ms;
     --motion-modal: 700ms;
     
-    /* Universal Easing Curve */
     --ease-apple: cubic-bezier(0.16, 1, 0.3, 1);
   }
 }
@@ -58,6 +56,21 @@
       animation-iteration-count: 1 !important;
       transition-duration: 0.01ms !important;
     }
+  }
+
+  input:not([type="button"]):not([type="submit"]):not([type="reset"]),
+  textarea,
+  select {
+    transition: border-color var(--motion-hover) var(--ease-apple),
+                box-shadow var(--motion-hover) var(--ease-apple),
+                background-color var(--motion-hover) var(--ease-apple);
+  }
+
+  input:focus,
+  textarea:focus,
+  select:focus {
+    transition: border-color var(--motion-component) var(--ease-apple),
+                box-shadow var(--motion-component) var(--ease-apple);
   }
 }
 
@@ -122,25 +135,76 @@
   
   .focus-ring {
     @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background;
+    transition: box-shadow var(--motion-hover) var(--ease-apple);
   }
 
-  /* Vault NFT Card - Edge-to-edge artwork */
   .vault-nft-card img {
     display: block;
   }
 
-  /* Dashboard tile hover glow effect */
   .tile-hover-glow {
     transition: box-shadow var(--motion-component) var(--ease-apple),
-                border-color var(--motion-component) var(--ease-apple);
+                border-color var(--motion-component) var(--ease-apple),
+                transform var(--motion-hover) var(--ease-apple);
   }
 
   .tile-hover-glow:hover {
     box-shadow: 0 0 24px rgba(102, 102, 102, 0.15);
   }
+
+  /* Scoped motion classes for buttons */
+  .motion-button {
+    transition: transform var(--motion-press) var(--ease-apple),
+                background-color var(--motion-hover) var(--ease-apple),
+                border-color var(--motion-hover) var(--ease-apple),
+                color var(--motion-hover) var(--ease-apple),
+                box-shadow var(--motion-hover) var(--ease-apple),
+                opacity var(--motion-hover) var(--ease-apple);
+    will-change: transform;
+  }
+
+  .motion-button:active:not(:disabled) {
+    transform: scale(0.98);
+    transition: transform var(--motion-press) var(--ease-apple);
+  }
+
+  .motion-button:hover:not(:disabled) {
+    transition: transform var(--motion-hover) var(--ease-apple),
+                background-color var(--motion-hover) var(--ease-apple),
+                border-color var(--motion-hover) var(--ease-apple),
+                color var(--motion-hover) var(--ease-apple),
+                box-shadow var(--motion-hover) var(--ease-apple),
+                opacity var(--motion-hover) var(--ease-apple);
+  }
+
+  /* Scoped motion classes for icon buttons */
+  .motion-icon-button {
+    transition: transform var(--motion-hover) var(--ease-apple),
+                opacity var(--motion-hover) var(--ease-apple);
+    will-change: transform;
+  }
+
+  .motion-icon-button:hover:not(:disabled) {
+    transform: scale(1.1);
+  }
+
+  .motion-icon-button:active:not(:disabled) {
+    transform: scale(0.95);
+    transition: transform var(--motion-press) var(--ease-apple);
+  }
+
+  /* Scoped modal motion classes */
+  .motion-modal-overlay {
+    backdrop-filter: blur(24px);
+    background: rgba(0, 0, 0, 0.85);
+    animation: fade-in var(--motion-modal) var(--ease-apple);
+  }
+
+  .motion-modal-content {
+    animation: modal-slide-scale var(--motion-modal) var(--ease-apple);
+  }
 }
 
-/* Apple HIG Global Motion System Keyframes */
 @keyframes page-transition {
   from {
     opacity: 0;
@@ -212,7 +276,17 @@
   }
 }
 
-/* Apple HIG Motion Classes */
+@keyframes modal-slide-scale {
+  from {
+    opacity: 0;
+    transform: translateY(20px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
 .page-transition {
   animation: page-transition var(--motion-component) var(--ease-apple);
 }
@@ -247,15 +321,30 @@
   animation: shimmer 2s infinite;
 }
 
-/* Button Press Animation */
-button:active:not(:disabled) {
-  transform: scale(0.98);
-  transition: transform var(--motion-press) var(--ease-apple);
-}
-
-/* Modal Backdrop */
 .modal-backdrop {
   backdrop-filter: blur(24px);
   background: rgba(0, 0, 0, 0.85);
   animation: fade-in var(--motion-modal) var(--ease-apple);
+}
+
+[data-radix-dialog-overlay],
+[data-radix-alert-dialog-overlay] {
+  backdrop-filter: blur(24px) !important;
+  background: rgba(0, 0, 0, 0.85) !important;
+  animation: fade-in var(--motion-modal) var(--ease-apple) !important;
+}
+
+[data-radix-dialog-content],
+[data-radix-alert-dialog-content] {
+  animation: modal-slide-scale var(--motion-modal) var(--ease-apple) !important;
+}
+
+[data-state="open"][data-radix-dialog-overlay],
+[data-state="open"][data-radix-alert-dialog-overlay] {
+  animation: fade-in var(--motion-modal) var(--ease-apple);
+}
+
+[data-state="open"][data-radix-dialog-content],
+[data-state="open"][data-radix-alert-dialog-content] {
+  animation: modal-slide-scale var(--motion-modal) var(--ease-apple);
 }

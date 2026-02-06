@@ -1,88 +1,154 @@
 {
   "kind": "implementation_plan",
   "version": "1.0",
-  "title": "Projects dashboard redesign (GENESIS.ENGINE style) with preserved project actions",
+  "title": "Frontend bundle slimming and targeted subtle motion",
   "requirements": [
     {
       "id": "REQ-1",
-      "summary": "Fully redesign the Projects dashboard layout and project tiles to match the GENESIS.ENGINE reference while preserving create/open/edit/delete behaviors.",
+      "summary": "Measure and record baseline production JS payload, then reduce shipped JS by ~90% while keeping core flows working.",
       "acceptanceCriteria": [
-        "The dashboard route/view still shows the list of projects and supports: create project, open project, edit project settings, and delete project (same callbacks/behavior as before).",
-        "The page header/hero area visually matches the reference: large typographic wordmark treatment, subdued supporting copy, and an overall dark, minimal, high-contrast aesthetic.",
-        "Project cards are redesigned to match the reference card style: large rounded tiles, subtle borders/shadows, subdued secondary text, and hover-driven emphasis.",
-        "A dedicated 'Start new project' tile exists in the grid as a dashed-outline/placeholder style tile with a centered plus icon and label similar to the reference, and triggers the existing create-project dialog when clicked.",
-        "Card content matches the reference’s intent by showing key project fields in the card (at minimum: blockchain/protocol tag, project name, unit count/collection size, and an initialized/created date derived from createdAt).",
-        "Per-card actions for settings/edit and delete remain available and do not trigger open-project when clicked (stopPropagation preserved).",
-        "Animations/interactions are updated to match the reference’s flow: subtle fade/scale in on load and a clear hover state on tiles without harming performance or accessibility.",
-        "All user-facing strings introduced/modified by this redesign are in English."
+        "A baseline production build size (JS payload) is measured and recorded before changes.",
+        "After optimizations, the production JS payload is reduced by ~90% versus the recorded baseline (or the closest achievable reduction is documented with a clear breakdown of remaining largest contributors).",
+        "The app continues to function as before (no broken navigation or core workflows)."
       ],
       "file_operations": [
         {
-          "path": "frontend/src/pages/Dashboard.tsx",
-          "operation": "modify",
-          "description": "Replace the current dashboard layout with a GENESIS.ENGINE-style hero and grid, rework project rendering to use a clickable tile/card (open on tile click), include a dedicated dashed 'Start new project' tile that opens the existing create dialog, and show required project fields (blockchain tag, name, collection size, initialized date derived from createdAt) while preserving the existing callbacks (onCreateProject/onOpenProject/onUpdateProject/onDeleteProject). Use shadcn-ui components (e.g., Dialog, Button) for structure and interactions; verify the component's usage instructions before implementing."
-        },
-        {
-          "path": "frontend/src/components/dashboard/ProjectTile.tsx",
+          "path": "frontend/docs/bundle-size-report.md",
           "operation": "create",
-          "description": "Create a reusable project tile component to match the reference card style (large rounded tile, subtle border/shadow, subdued secondary text, clear hover emphasis) and to safely host per-tile actions (settings/delete) that stopPropagation so tile click still opens the project. Use shadcn-ui Button for icon actions and consistent focus/keyboard states; verify the component's usage instructions before implementing."
+          "description": "Add a lightweight, repo-tracked bundle size report template with sections for baseline measurement, post-change measurement, and a table of largest JS contributors (record actual values during implementation)."
         },
         {
-          "path": "frontend/src/components/dashboard/NewProjectTile.tsx",
-          "operation": "create",
-          "description": "Create a dedicated dashed-outline 'Start new project' tile component with centered plus icon/label that triggers the existing create-project dialog open state. Ensure keyboard accessibility (button semantics) and reference-like hover feedback. Use shadcn-ui Button (or button semantics) for consistent focus styling; verify the component's usage instructions before implementing."
-        },
-        {
-          "path": "frontend/src/index.css",
+          "path": "frontend/src/App.tsx",
           "operation": "modify",
-          "description": "Add minimal global utility classes to support the reference dashboard visuals and interactions (e.g., wordmark/hero typography treatment, tile hover glow/border emphasis, subtle fade/scale-in variants) while respecting prefers-reduced-motion behavior already defined."
+          "description": "Introduce route/view-level code splitting using React.lazy/Suspense so non-initial views (e.g., Vault/Builder/Preview/Rules/Settings/Rarity/Workshop as appropriate) are loaded on demand; keep Dashboard and project editing flow functional."
+        },
+        {
+          "path": "frontend/src/components/icons/index.tsx",
+          "operation": "create",
+          "description": "Create a tiny local icon set (inline SVG React components) to replace heavy icon dependencies across the app, focusing on the most frequently used icons first (navigation, modal controls, toolbars)."
+        },
+        {
+          "path": "frontend/src/components/Header.tsx",
+          "operation": "modify",
+          "description": "Replace lucide-react icon imports with local inline SVG icons to reduce shipped JS, preserving the existing header behavior and navigation."
+        },
+        {
+          "path": "frontend/src/components/Footer.tsx",
+          "operation": "modify",
+          "description": "Replace lucide-react Heart icon with a local inline SVG icon to reduce shipped JS while preserving the footer layout and link behavior."
         }
       ]
     },
     {
       "id": "REQ-2",
-      "summary": "Restyle the create-project and project-settings dialogs to match the redesigned dashboard aesthetic without changing validation logic or data shape.",
+      "summary": "Optimize bundle size by removing/replacing heavy dependencies, deleting unused code, and ensuring large features are lazy-loaded (without adding animation libraries).",
       "acceptanceCriteria": [
-        "The New Project dialog still creates a project with the same fields and defaults as before and navigates into the project as before.",
-        "The Project settings dialog still edits name, symbol, collection size, and pixel art mode as before.",
-        "Dialog styling (background, borders, typography, spacing, control shapes) is consistent with the redesigned dashboard and uses existing shadcn components (composed, not modified in-place)."
+        "No new animation libraries (e.g., Lottie, Framer Motion) are added.",
+        "Large non-critical UI routes/components are loaded via code-splitting (lazy loading) when it meaningfully reduces initial bundle size.",
+        "No runtime errors are introduced in the browser console during typical use."
       ],
       "file_operations": [
         {
-          "path": "frontend/src/components/dashboard/CreateProjectDialog.tsx",
-          "operation": "create",
-          "description": "Extract the New Project dialog into a dedicated component that preserves the existing field set, defaults, and submit handler behavior, while updating styling to the new dark/minimal/rounded look by composing existing shadcn-ui Dialog, Input, Label, Switch, and Button components (do not modify shadcn components in-place). Verify the component's usage instructions before implementing."
-        },
-        {
-          "path": "frontend/src/components/dashboard/ProjectSettingsDialog.tsx",
-          "operation": "create",
-          "description": "Extract the Project Settings dialog into a dedicated component that preserves the existing editing fields and save behavior (including token count validation and toasts), while updating styling to match the redesigned dashboard via composed shadcn-ui Dialog/Input/Label/Switch/Button. Verify the component's usage instructions before implementing."
-        },
-        {
-          "path": "frontend/src/pages/Dashboard.tsx",
+          "path": "frontend/src/pages/Vault.tsx",
           "operation": "modify",
-          "description": "Wire the new CreateProjectDialog and ProjectSettingsDialog components into the redesigned dashboard, ensuring existing state, validation, and callbacks are unchanged and that dialog open/close behavior remains correct. Use shadcn-ui Dialog composition through the new components; verify the component's usage instructions before implementing."
+          "description": "Reduce dependency weight by replacing lucide-react imports with local inline SVG icons, and ensure any browser-incompatible typings are removed (keep behavior unchanged)."
+        },
+        {
+          "path": "frontend/src/pages/Settings.tsx",
+          "operation": "modify",
+          "description": "Replace lucide-react icon imports with local inline SVG icons (and keep existing validations and user-facing English text unchanged) to reduce shipped JS."
+        },
+        {
+          "path": "frontend/src/pages/Rules.tsx",
+          "operation": "modify",
+          "description": "Replace lucide-react icon imports with local inline SVG icons and keep modal/rule workflows intact; avoid adding any new animation dependencies."
+        },
+        {
+          "path": "frontend/src/components/dashboard/ProjectTile.tsx",
+          "operation": "modify",
+          "description": "Replace lucide-react icon usage (if present) with local inline SVG icons and remove any dead/unused imports to reduce shipped JS while keeping dashboard interactions intact."
+        },
+        {
+          "path": "frontend/src/components/VaultPublishingControls.tsx",
+          "operation": "modify",
+          "description": "Replace lucide-react icon usage (if present) with local inline SVG icons and eliminate unused imports/logic to reduce shipped JS without changing publishing workflow behavior."
         }
       ]
     },
     {
       "id": "REQ-3",
-      "summary": "Make the redesigned Projects dashboard responsive across breakpoints while keeping existing header/navigation behavior unchanged.",
+      "summary": "Add subtle, performance-friendly motion to selected components (buttons, modals, and at least one icon-button set) using Tailwind/CSS/React only.",
       "acceptanceCriteria": [
-        "On small screens, tiles stack cleanly (1 column) and the hero/header typography scales down without overflow or clipping.",
-        "On medium/large screens, tiles present as a grid similar to the reference with consistent gaps and alignment.",
-        "No changes are required to frontend/src/components/Header.tsx behavior; navigating into/out of projects remains unchanged."
+        "Buttons provide immediate visual press feedback (e.g., subtle scale/translate and transition) and consistent hover/focus transitions.",
+        "Modals animate in/out with a subtle slide+scale and a softened backdrop effect, without jarring motion.",
+        "At least one set of commonly used icon buttons uses lightweight animated SVG/CSS (no external animation libraries) to convey interactivity."
       ],
       "file_operations": [
         {
-          "path": "frontend/src/pages/Dashboard.tsx",
+          "path": "frontend/src/index.css",
           "operation": "modify",
-          "description": "Implement responsive layout rules for the hero and tile grid (1 column on mobile, multi-column grid on tablet/desktop with generous spacing) using Tailwind utilities, ensuring no overflow/clipping and preserving current SPA navigation behavior. Use shadcn-ui components where applicable for consistent interactive states; verify the component's usage instructions before implementing."
+          "description": "Remove global motion/animation rules that apply to all buttons/links and all Radix dialog overlays/contents; instead add scoped utility classes for subtle motion (e.g., .motion-button, .motion-icon-button, .motion-modal-overlay, .motion-modal-content) and ensure prefers-reduced-motion remains respected."
         },
         {
-          "path": "frontend/src/components/dashboard/ProjectTile.tsx",
+          "path": "frontend/src/components/MotionIconButton.tsx",
+          "operation": "create",
+          "description": "Create a small wrapper component for icon buttons that applies subtle hover/press/focus motion via className composition (no new animation libraries), to be used on selected icon buttons (e.g., close/menu actions)."
+        },
+        {
+          "path": "frontend/src/components/dashboard/CreateProjectDialog.tsx",
           "operation": "modify",
-          "description": "Adjust tile internal layout for responsive behavior (typography scaling, truncation, spacing, action button placement) so it remains usable across breakpoints while preserving open/settings/delete interactions. Use shadcn-ui Button focus/hover patterns; verify the component's usage instructions before implementing."
+          "description": "Apply the new scoped modal motion classes to the Dialog overlay/content via className composition, and apply scoped motion classes to the primary action Button to provide subtle press feedback (do not modify any files under frontend/src/components/ui; compose instead)."
+        },
+        {
+          "path": "frontend/src/components/dashboard/ProjectSettingsDialog.tsx",
+          "operation": "modify",
+          "description": "Apply the new scoped modal motion classes to dialog overlay/content and apply scoped motion classes to action buttons for subtle hover/press feedback (compose shadcn components; do not modify frontend/src/components/ui)."
+        },
+        {
+          "path": "frontend/src/components/ConfirmDestructiveDialog.tsx",
+          "operation": "modify",
+          "description": "Apply scoped modal motion classes for in/out animation and softened backdrop, and ensure the Cancel/Delete buttons have consistent subtle hover/press/focus transitions without making motion global."
+        },
+        {
+          "path": "frontend/src/components/Header.tsx",
+          "operation": "modify",
+          "description": "Use the new MotionIconButton (or equivalent scoped motion classes) for the mobile menu icon button and ensure the icon itself has a lightweight CSS/SVG interactive animation (e.g., subtle rotate/scale on hover/press) without introducing third-party animation libraries."
+        },
+        {
+          "path": "frontend/src/pages/Vault.tsx",
+          "operation": "modify",
+          "description": "Apply scoped modal motion classes to the NFT detail modal overlay/content and use MotionIconButton (or scoped motion classes) for the close icon button to satisfy icon-button motion requirement while keeping performance-friendly transitions."
+        }
+      ]
+    },
+    {
+      "id": "REQ-4",
+      "summary": "Fix the prior build failure risk and ensure the frontend builds successfully (development and production) after the changes.",
+      "acceptanceCriteria": [
+        "`npm`/frontend build completes successfully without errors.",
+        "Backend canister compilation succeeds without errors.",
+        "The deployed app loads and the main pages render and function (Dashboard and project editing flows)."
+      ],
+      "file_operations": [
+        {
+          "path": "frontend/src/pages/Vault.tsx",
+          "operation": "modify",
+          "description": "Remove browser-incompatible Node.js typings (e.g., replace NodeJS.Timeout with ReturnType<typeof setTimeout> where used) and verify the worker creation and modal logic still compiles and runs in production builds."
+        },
+        {
+          "path": "frontend/src/App.tsx",
+          "operation": "modify",
+          "description": "Ensure Suspense fallback/loading states are present for lazy-loaded views so navigation remains functional and production builds compile without missing imports."
+        },
+        {
+          "path": "frontend/src/components/icons/index.tsx",
+          "operation": "modify",
+          "description": "Ensure icons are exported with stable names/props so all updated imports compile cleanly; keep the icon module dependency-free to avoid build regressions."
+        },
+        {
+          "path": "frontend/docs/bundle-size-report.md",
+          "operation": "modify",
+          "description": "Record any build issues encountered/fixed during implementation and document the final build verification checklist for dev and production builds (frontend focus)."
         }
       ]
     }

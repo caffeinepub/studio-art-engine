@@ -1,18 +1,20 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, lazy, Suspense } from 'react';
 import { Toaster } from '@/components/ui/sonner';
 import Dashboard from './pages/Dashboard';
-import Workshop from './pages/Workshop';
-import RarityWorkshop from './pages/RarityWorkshop';
-import Rules from './pages/Rules';
-import Preview from './pages/Preview';
-import Builder from './pages/Builder';
-import Vault from './pages/Vault';
-import Settings from './pages/Settings';
 import Header from './components/Header';
 import Footer from './components/Footer';
 import ConfirmDestructiveDialog from './components/ConfirmDestructiveDialog';
 import { toast } from 'sonner';
 import { atomicSave, loadCanonical, cleanupLegacyArtifacts, isStorageNearQuota } from './utils/persistence';
+
+// Lazy load non-critical views
+const Workshop = lazy(() => import('./pages/Workshop'));
+const RarityWorkshop = lazy(() => import('./pages/RarityWorkshop'));
+const Rules = lazy(() => import('./pages/Rules'));
+const Preview = lazy(() => import('./pages/Preview'));
+const Builder = lazy(() => import('./pages/Builder'));
+const Vault = lazy(() => import('./pages/Vault'));
+const Settings = lazy(() => import('./pages/Settings'));
 
 export type Blockchain = 'ICP' | 'ETH' | 'SOL';
 export type MetadataFormat = 'solana' | 'ethereum' | 'icp';
@@ -59,12 +61,12 @@ export interface GeneratedNFT {
 }
 
 export type IPFSPublishingStatus = 
-  | 'not-ready'        // Missing Pinata key
-  | 'ready'            // Generated but not locked
-  | 'ready-to-upload'  // Locked, ready to upload
-  | 'uploading'        // Upload in progress
-  | 'uploaded'         // Successfully uploaded
-  | 'upload-failed';   // Upload failed
+  | 'not-ready'
+  | 'ready'
+  | 'ready-to-upload'
+  | 'uploading'
+  | 'uploaded'
+  | 'upload-failed';
 
 export interface IPFSPublishingState {
   status: IPFSPublishingStatus;
@@ -111,7 +113,6 @@ export interface Project {
 type View = 'dashboard' | 'workshop' | 'rarity' | 'rules' | 'preview' | 'builder' | 'vault' | 'settings';
 type SaveStatus = 'idle' | 'saving' | 'saved' | 'failed';
 
-// Default settings factory
 function getDefaultSettings(blockchain: Blockchain): ProjectSettings {
   return {
     outputSize: 800,
@@ -125,7 +126,6 @@ function getDefaultSettings(blockchain: Blockchain): ProjectSettings {
   };
 }
 
-// Validation and sanitization functions
 function validateProject(project: any): project is Project {
   if (!project || typeof project !== 'object') return false;
   if (typeof project.id !== 'string' || !project.id) return false;
@@ -145,7 +145,6 @@ function validateProject(project: any): project is Project {
 
 function sanitizeProject(project: any): Project | null {
   try {
-    // Determine blockchain from metadataFormat if available, otherwise use stored blockchain
     let blockchain: Blockchain = 'SOL';
     if (project.settings?.metadataFormat) {
       const formatToBlockchain: Record<MetadataFormat, Blockchain> = {
@@ -158,7 +157,6 @@ function sanitizeProject(project: any): Project | null {
       blockchain = project.blockchain;
     }
     
-    // Migrate legacy outputWidth/outputHeight to outputSize (deterministic: use max)
     let outputSize = 800;
     if (project.settings) {
       if (typeof project.settings.outputSize === 'number') {
@@ -170,7 +168,6 @@ function sanitizeProject(project: any): Project | null {
       }
     }
     
-    // Sanitize Solana creators
     let solanaCreators: SolanaCreator[] | undefined = undefined;
     if (blockchain === 'SOL') {
       if (Array.isArray(project.settings?.solanaCreators) && project.settings.solanaCreators.length > 0) {
@@ -186,7 +183,6 @@ function sanitizeProject(project: any): Project | null {
       }
     }
     
-    // Ensure all required fields exist with defaults
     const sanitized: Project = {
       id: String(project.id || Date.now()),
       name: String(project.name || 'Untitled Project'),
@@ -232,7 +228,6 @@ function sanitizeProject(project: any): Project | null {
       } : getDefaultSettings(blockchain),
     };
 
-    // Migrate old rule format
     sanitized.rules = sanitized.rules.map((r: any) => {
       if (r.trait1 && r.trait2) {
         return {
@@ -245,7 +240,6 @@ function sanitizeProject(project: any): Project | null {
       return r;
     });
 
-    // Ensure trait weights are initialized
     sanitized.layers = sanitized.layers.map(layer => ({
       ...layer,
       traits: layer.traits.map((trait: any) => ({
@@ -262,11 +256,9 @@ function sanitizeProject(project: any): Project | null {
   }
 }
 
-// Normalize projects to keep only the latest generation
 function normalizeProjects(projects: Project[]): Project[] {
   if (projects.length === 0) return projects;
 
-  // Find the project with the most recent generation
   let latestGeneratedProject: Project | null = null;
   let latestTimestamp = 0;
 
@@ -279,7 +271,6 @@ function normalizeProjects(projects: Project[]): Project[] {
     }
   }
 
-  // If no project has lastGeneratedAt but some have generatedNFTs, keep the first one with NFTs
   if (!latestGeneratedProject) {
     for (const project of projects) {
       if (project.generatedNFTs.length > 0) {
@@ -289,7 +280,6 @@ function normalizeProjects(projects: Project[]): Project[] {
     }
   }
 
-  // Clear generatedNFTs from all projects except the latest
   return projects.map(project => {
     if (latestGeneratedProject && project.id === latestGeneratedProject.id) {
       return project;
@@ -320,7 +310,6 @@ function loadProjectsFromStorage(): Project[] {
       toast.warning(`Recovered ${sanitized.length} projects`);
     }
 
-    // Normalize to keep only the latest generation
     const normalized = normalizeProjects(sanitized);
 
     return normalized;
@@ -338,9 +327,7 @@ function App() {
   const [isLoading, setIsLoading] = useState(true);
   const [saveStatus, setSaveStatus] = useState<SaveStatus>('idle');
 
-  // Load projects on mount and cleanup legacy artifacts
   useEffect(() => {
-    // One-time cleanup of legacy temp/backup keys
     const cleanup = cleanupLegacyArtifacts();
     if (cleanup.removed > 0) {
       console.log(`Cleaned up ${cleanup.removed} legacy storage artifact(s)`);
@@ -349,47 +336,37 @@ function App() {
       console.warn(`${cleanup.errors} error(s) during legacy cleanup (non-fatal)`);
     }
 
-    // Load persisted projects
     const loadedProjects = loadProjectsFromStorage();
     setProjects(loadedProjects);
     setIsLoading(false);
   }, []);
 
-  // Debounced auto-save with single-write pattern
   useEffect(() => {
     if (isLoading) return;
 
-    // Set status to saving
     setSaveStatus('saving');
 
     const timeoutId = setTimeout(() => {
-      // Validate before saving
       const validProjects = projects.filter(validateProject);
       
       if (validProjects.length !== projects.length) {
         console.warn(`Saving ${validProjects.length} of ${projects.length} valid projects`);
       }
 
-      // Normalize to keep only the latest generation before saving
       const normalizedProjects = normalizeProjects(validProjects);
 
-      // Check storage quota
       if (isStorageNearQuota(normalizedProjects)) {
         toast.warning('Storage nearly full - consider exporting projects');
       }
 
-      // Attempt single-write save
       const result = atomicSave(normalizedProjects);
       
       if (result.success) {
         setSaveStatus('saved');
-        
-        // Reset to idle after brief "Saved" display
         setTimeout(() => setSaveStatus('idle'), 2000);
       } else {
         setSaveStatus('failed');
         
-        // Log error details to console only (no user-facing notification)
         if (result.error?.includes('QuotaExceededError') || result.error?.includes('quota')) {
           console.error('❌ Auto-save failed: Storage quota exceeded');
           console.error('💡 Action required: Reduce project data or export projects to free up space');
@@ -529,54 +506,60 @@ function App() {
             />
           )}
           
-          {currentView === 'workshop' && currentProject && (
-            <Workshop
-              project={currentProject}
-              onUpdateProject={updateCurrentProject}
-            />
-          )}
-          
-          {currentView === 'rarity' && currentProject && (
-            <RarityWorkshop
-              project={currentProject}
-              onUpdateProject={updateCurrentProject}
-            />
-          )}
-          
-          {currentView === 'rules' && currentProject && (
-            <Rules
-              project={currentProject}
-              onUpdateProject={updateCurrentProject}
-            />
-          )}
-          
-          {currentView === 'preview' && currentProject && (
-            <Preview
-              project={currentProject}
-              onUpdateProject={updateCurrentProject}
-            />
-          )}
-          
-          {currentView === 'builder' && currentProject && (
-            <Builder
-              project={currentProject}
-              onUpdateProject={updateCurrentProject}
-            />
-          )}
-          
-          {currentView === 'vault' && currentProject && (
-            <Vault
-              project={currentProject}
-              onUpdateProject={updateCurrentProject}
-            />
-          )}
-          
-          {currentView === 'settings' && currentProject && (
-            <Settings
-              project={currentProject}
-              onUpdateProject={updateCurrentProject}
-            />
-          )}
+          <Suspense fallback={
+            <div className="h-full flex items-center justify-center">
+              <div className="w-12 h-12 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
+            </div>
+          }>
+            {currentView === 'workshop' && currentProject && (
+              <Workshop
+                project={currentProject}
+                onUpdateProject={updateCurrentProject}
+              />
+            )}
+            
+            {currentView === 'rarity' && currentProject && (
+              <RarityWorkshop
+                project={currentProject}
+                onUpdateProject={updateCurrentProject}
+              />
+            )}
+            
+            {currentView === 'rules' && currentProject && (
+              <Rules
+                project={currentProject}
+                onUpdateProject={updateCurrentProject}
+              />
+            )}
+            
+            {currentView === 'preview' && currentProject && (
+              <Preview
+                project={currentProject}
+                onUpdateProject={updateCurrentProject}
+              />
+            )}
+            
+            {currentView === 'builder' && currentProject && (
+              <Builder
+                project={currentProject}
+                onUpdateProject={updateCurrentProject}
+              />
+            )}
+            
+            {currentView === 'vault' && currentProject && (
+              <Vault
+                project={currentProject}
+                onUpdateProject={updateCurrentProject}
+              />
+            )}
+            
+            {currentView === 'settings' && currentProject && (
+              <Settings
+                project={currentProject}
+                onUpdateProject={updateCurrentProject}
+              />
+            )}
+          </Suspense>
         </div>
       </main>
 

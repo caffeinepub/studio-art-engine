@@ -1,64 +1,79 @@
 {
   "kind": "spec_vs_diff_report",
   "version": "1.0",
-  "generatedAt": "2026-02-05T14:38:02.569Z",
-  "summary": "Dashboard and dialog components were added/redesigned toward a dark GENESIS.ENGINE-style UI with project tiles, a dashed new-project tile, and per-card settings/delete actions. However, the diff summary also indicates unrelated redesigns/feature changes across Header/Footer and multiple non-dashboard pages that were not requested and may violate the constraint to avoid changing non-dashboard layouts/behavior.",
+  "generatedAt": "2026-02-05T17:17:53.859Z",
+  "summary": "Diff implements some bundle optimizations (route-level lazy loading; replacing icon library with local SVGs; custom ZIP creation in Vault) and adds scoped motion classes/components for buttons/icon buttons. However, several acceptance criteria items (baseline/after bundle measurements, modal motion, and build-success verification) are not evidenced in the diff summary, and there are some unrequested meta/content changes.",
   "missing_requirements": [
     {
-      "id": "REQ-2",
-      "requirement": "Update the create-project and project-settings dialogs used from the dashboard to visually match the new Projects dashboard style (dark, minimal, rounded, subdued borders), without changing their underlying validation logic or data shape.",
-      "reason": "Dialog styling is present, but the diff for ProjectSettingsDialog is truncated and does not show the full footer/actions or complete behavior; cannot confirm it fully preserves existing validation/flow (e.g., save/close behavior) while matching the new style end-to-end.",
+      "id": "REQ-1",
+      "requirement": "Measure and record a baseline production build size (JS payload) before changes, then document ~90% reduction (or closest achievable) with breakdown of remaining largest contributors.",
+      "reason": "No evidence of any recorded baseline build output sizes, post-change size comparison, or breakdown documentation in the provided diff summary.",
       "evidence": [
-        "frontend/src/components/dashboard/ProjectSettingsDialog.tsx (truncated)"
+        "project_state.json"
+      ]
+    },
+    {
+      "id": "REQ-1",
+      "requirement": "Reduce the frontend JavaScript bundle size by ~90% vs baseline while keeping app functioning.",
+      "reason": "While some optimizations are present (lazy-loaded routes, icon replacement), the diff summary provides no production build size results or verification that the reduction approaches ~90% and that navigation/core workflows are intact.",
+      "evidence": [
+        "frontend/src/App.tsx",
+        "frontend/src/components/icons/index.tsx",
+        "frontend/src/pages/Vault.tsx"
+      ]
+    },
+    {
+      "id": "REQ-2",
+      "requirement": "Ensure large non-critical UI routes/components are code-split/lazy-loaded where appropriate and no runtime errors are introduced.",
+      "reason": "App.tsx shows lazy-loading for several pages, but there is no evidence of runtime-error verification (console clean) or broader audit/removal of unused code/dependencies beyond icons/ZIP logic.",
+      "evidence": [
+        "frontend/src/App.tsx"
+      ]
+    },
+    {
+      "id": "REQ-3",
+      "requirement": "Modals animate in/out with a subtle slide+scale and a softened backdrop effect, without jarring motion.",
+      "reason": "The diff summary shows button/icon-button motion and CSS utilities, but no modal component changes or modal-specific enter/exit/backdrop animation implementation is evidenced.",
+      "evidence": [
+        "frontend/src/index.css",
+        "frontend/src/components/MotionIconButton.tsx"
+      ]
+    },
+    {
+      "id": "REQ-4",
+      "requirement": "Resolve previous build failure; ensure dev and production builds succeed end-to-end, backend compilation succeeds, and Dashboard/project editing flows render and function.",
+      "reason": "No build/CI scripts, lockfile/package changes, or notes/tests indicating successful frontend production build, dev build, backend compilation, or functional verification are present in the diff summary. Also no backend changes are shown.",
+      "evidence": [
+        "frontend/src/App.tsx",
+        "project_state.json"
       ]
     }
   ],
   "hallucinated_features": [
     {
-      "description": "Redesigned navigation header (sentence-case labels, cleaner mobile menu, rearranged nav items, layout changes to prevent horizontal shift).",
-      "reason": "BuildRequest explicitly states no changes are required to Header behavior and focuses changes on the dashboard + its dialogs; header redesign is not requested.",
+      "description": "Addition/modification of a meta tracking file describing feature requests and statuses (AR-1..AR-6) unrelated to app runtime behavior.",
+      "reason": "BuildRequest does not mention adding or maintaining a project_state.json request/issue tracking artifact.",
       "evidence": [
-        "frontend-file-summaries.txt (mentions \"frontend/src/components/Header.tsx\": redesigned navigation header...)"
+        "project_state.json"
       ]
     },
     {
-      "description": "Minimalist footer with attribution changes.",
-      "reason": "Footer changes were not requested (scope is dashboard + related dialogs; avoid changing non-dashboard pages/layouts beyond shared dialog consistency).",
+      "description": "Footer content changed to include “© 2026. Built with … using caffeine.ai” and external link.",
+      "reason": "BuildRequest focuses on bundle size, subtle motion, and build failure resolution; it does not request changing branding/copyright or adding external promotional links.",
       "evidence": [
-        "frontend-file-summaries.txt (mentions \"frontend/src/components/Footer.tsx\": Minimalist footer...)"
-      ]
-    },
-    {
-      "description": "Extensive feature/layout changes across multiple non-dashboard pages (Workshop/Preview/Builder/Vault/Rules/RarityWorkshop) including new behaviors (drag-and-drop, render order enforcement, worker generation details, publishing controls, etc.).",
-      "reason": "BuildRequest non-goals/constraints restrict changes to the Projects dashboard and dialog visual consistency; these page-level behavioral changes are out of scope and not requested.",
-      "evidence": [
-        "frontend-file-summaries.txt (summaries for \"frontend/src/pages/Workshop.tsx\", \"Preview.tsx\", \"Builder.tsx\", \"Vault.tsx\", \"Rules.tsx\", \"RarityWorkshop.tsx\")"
-      ]
-    },
-    {
-      "description": "Tailwind configuration changes adding an 'Apple HIG motion system integration' and comprehensive animation utilities.",
-      "reason": "Not requested by the BuildRequest (which only requires dashboard responsiveness/animations consistent with reference). This is extra global infrastructure work beyond stated requirements.",
-      "evidence": [
-        "frontend-file-summaries.txt (mentions \"frontend/tailwind.config.js\": Apple HIG motion system integration...)"
-      ]
-    },
-    {
-      "description": "New placeholder hook file 'frontend/src/hooks/useQueries.ts' described as empty placeholder.",
-      "reason": "Not requested; also introduces new unused/placeholder module outside dashboard redesign scope.",
-      "evidence": [
-        "frontend-file-summaries.txt (mentions \"frontend/src/hooks/useQueries.ts\": Empty placeholder file...)"
+        "frontend/src/components/Footer.tsx"
       ]
     }
   ],
-  "confidence": 0.62,
+  "confidence": 0.72,
   "changed_files": [
-    "frontend-file-summaries.txt",
-    "frontend/src/components/dashboard/CreateProjectDialog.tsx",
-    "frontend/src/components/dashboard/NewProjectTile.tsx",
-    "frontend/src/components/dashboard/ProjectSettingsDialog.tsx",
-    "frontend/src/components/dashboard/ProjectTile.tsx",
+    "frontend/src/App.tsx",
+    "frontend/src/components/Footer.tsx",
+    "frontend/src/components/Header.tsx",
+    "frontend/src/components/MotionIconButton.tsx",
+    "frontend/src/components/icons/index.tsx",
     "frontend/src/index.css",
-    "frontend/src/pages/Dashboard.tsx",
+    "frontend/src/pages/Vault.tsx",
     "project_state.json"
   ]
 }

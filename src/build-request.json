@@ -1,91 +1,109 @@
 {
   "kind": "build_request",
-  "title": "Redesign Projects dashboard to match uploaded reference (GENESIS.ENGINE style) while keeping existing project actions",
+  "title": "Retry build: reduce frontend bundle size and add subtle motion to selected UI components",
   "priority": "normal",
   "requirements": [
     {
       "id": "REQ-1",
-      "text": "Redesign the Projects dashboard page (frontend/src/pages/Dashboard.tsx) to fully replace the current layout and visual style to match the uploaded reference (image-42.png) and the referenced video, while preserving existing project functionality (create, open, edit/settings, delete).",
+      "text": "Reduce the frontend JavaScript bundle size by approximately 90% compared to the current baseline, focusing on production build output (JS shipped to the browser).",
       "target": "frontend",
       "source": {
         "messageIds": [
-          "msg-6",
-          "msg-8",
-          "msg-10",
-          "msg-12"
+          "recent-messages"
         ],
         "quotes": [
-          "Redesign and adjust the Project Management page to match the layout, flow, and interaction style shown in the attached reference video, image.",
-          "1. follow the uploaded image and video",
-          "2. new layout fully replace the current Projects dashboard, but the functions remain the same.",
-          "3. yes"
+          "Reduce the overall app size by 90% of its current size.",
+          "1. frontend size"
         ]
       },
       "acceptanceCriteria": [
-        "The dashboard route/view still shows the list of projects and supports: create project, open project, edit project settings, and delete project (same callbacks/behavior as before).",
-        "The page header/hero area visually matches the reference: large typographic wordmark treatment, subdued supporting copy, and an overall dark, minimal, high-contrast aesthetic.",
-        "Project cards are redesigned to match the reference card style: large rounded tiles, subtle borders/shadows, subdued secondary text, and hover-driven emphasis.",
-        "A dedicated 'Start new project' tile exists in the grid as a dashed-outline/placeholder style tile with a centered plus icon and label similar to the reference, and triggers the existing create-project dialog when clicked.",
-        "Card content matches the reference’s intent by showing key project fields in the card (at minimum: blockchain/protocol tag, project name, unit count/collection size, and an initialized/created date derived from createdAt).",
-        "Per-card actions for settings/edit and delete remain available and do not trigger open-project when clicked (stopPropagation preserved).",
-        "Animations/interactions are updated to match the reference’s flow: subtle fade/scale in on load and a clear hover state on tiles without harming performance or accessibility.",
-        "All user-facing strings introduced/modified by this redesign are in English."
+        "A baseline production build size (JS payload) is measured and recorded before changes.",
+        "After optimizations, the production JS payload is reduced by ~90% versus the recorded baseline (or the closest achievable reduction is documented with a clear breakdown of remaining largest contributors).",
+        "The app continues to function as before (no broken navigation or core workflows)."
       ]
     },
     {
       "id": "REQ-2",
-      "text": "Update the create-project and project-settings dialogs used from the dashboard to visually match the new Projects dashboard style (dark, minimal, rounded, subdued borders), without changing their underlying validation logic or data shape.",
+      "text": "Implement bundle-size optimizations by removing or replacing unnecessary/heavy frontend dependencies, eliminating unused code, and ensuring large features are code-split/lazy-loaded where appropriate (without adding new third-party animation libraries).",
       "target": "frontend",
       "source": {
         "messageIds": [
-          "msg-6",
-          "msg-10"
+          "recent-messages"
         ],
         "quotes": [
-          "Redesign and adjust the Project Management page to match the layout, flow, and interaction style shown in the attached reference video, image.",
-          "2. new layout fully replace the current Projects dashboard, but the functions remain the same."
+          "Reduce the overall app size by 90% of its current size.",
+          "2. simple Tailwind/React-based motion effects"
         ]
       },
       "acceptanceCriteria": [
-        "The New Project dialog still creates a project with the same fields and defaults as before and navigates into the project as before.",
-        "The Project settings dialog still edits name, symbol, collection size, and pixel art mode as before.",
-        "Dialog styling (background, borders, typography, spacing, control shapes) is consistent with the redesigned dashboard and uses existing shadcn components (composed, not modified in-place)."
+        "No new animation libraries (e.g., Lottie, Framer Motion) are added.",
+        "Large non-critical UI routes/components are loaded via code-splitting (lazy loading) when it meaningfully reduces initial bundle size.",
+        "No runtime errors are introduced in the browser console during typical use."
       ]
     },
     {
       "id": "REQ-3",
-      "text": "Ensure the redesigned Projects dashboard layout is responsive and preserves usability across breakpoints (mobile, tablet, desktop), matching the reference grid feel (large tiles, generous spacing) while keeping the existing header/navigation behavior intact.",
+      "text": "Make the UI feel more dynamic using simple Tailwind/CSS/React-based motion effects applied only to selected components (e.g., buttons and modals), keeping animations subtle and performance-friendly.",
       "target": "frontend",
       "source": {
         "messageIds": [
-          "msg-6",
-          "msg-10"
+          "recent-messages"
         ],
         "quotes": [
-          "Redesign and adjust the Project Management page to match the layout, flow, and interaction style shown in the attached reference video, image.",
-          "2. new layout fully replace the current Projects dashboard, but the functions remain the same."
+          "Make the app more dynamic (for example, use animated icons).",
+          "2. simple Tailwind/React-based motion effects",
+          "3. only certain parts (buttons, modal, etc.)"
         ]
       },
       "acceptanceCriteria": [
-        "On small screens, tiles stack cleanly (1 column) and the hero/header typography scales down without overflow or clipping.",
-        "On medium/large screens, tiles present as a grid similar to the reference with consistent gaps and alignment.",
-        "No changes are required to frontend/src/components/Header.tsx behavior; navigating into/out of projects remains unchanged."
+        "Buttons provide immediate visual press feedback (e.g., subtle scale/translate and transition) and consistent hover/focus transitions.",
+        "Modals animate in/out with a subtle slide+scale and a softened backdrop effect, without jarring motion.",
+        "At least one set of commonly used icon buttons uses lightweight animated SVG/CSS (no external animation libraries) to convey interactivity."
+      ]
+    },
+    {
+      "id": "REQ-4",
+      "text": "Resolve the previous build failure by ensuring the project builds successfully end-to-end after the changes (development and production build).",
+      "target": "both",
+      "source": {
+        "messageIds": [
+          "recent-messages"
+        ],
+        "quotes": [
+          "❌ Application creation unsuccessful",
+          "try again pls"
+        ]
+      },
+      "acceptanceCriteria": [
+        "`npm`/frontend build completes successfully without errors.",
+        "Backend canister compilation succeeds without errors.",
+        "The deployed app loads and the main pages render and function (Dashboard and project editing flows)."
       ]
     }
   ],
   "constraints": [
-    "Do not remove or change the existing project actions/callbacks wired from App.tsx (onCreateProject, onOpenProject, onUpdateProject, onDeleteProject).",
-    "Frontend immutable paths must not be edited: frontend/src/hooks/useInternetIdentity.ts, frontend/src/hooks/useInternetIdentity.tsx, frontend/src/hooks/useActor.ts, frontend/src/main.tsx, frontend/src/components/ui.",
-    "Keep the app as a single-page React app; no new routes/framework changes.",
-    "Use English for any user-facing text introduced or modified."
+    "Use English for any user-facing text.",
+    "Do not modify files under frontend/src/components/ui (compose instead).",
+    "Do not modify files in frontend immutablePaths: frontend/src/hooks/useInternetIdentity.ts, frontend/src/hooks/useInternetIdentity.tsx, frontend/src/hooks/useActor.ts, frontend/src/main.tsx, frontend/src/components/ui.",
+    "Backend must remain a single Motoko actor (all logic in backend/main.mo); only add backend/migration.mo if an upgrade/state migration is required."
   ],
   "nonGoals": [
-    "Implementing new backend storage or changing the Motoko backend.",
-    "Adding new project fields beyond what is already stored (aside from deriving display fields like initialized date from createdAt).",
-    "Changing non-dashboard pages’ layouts beyond what is necessary for shared visual consistency of dialogs invoked from the dashboard."
+    "Do not apply motion/animation changes globally across the entire UI; limit to selected parts such as buttons and modals.",
+    "Do not introduce Lottie/Framer Motion or other third-party animation frameworks.",
+    "Do not add external databases or non-Motoko backend services."
   ],
   "imageRequirements": {
     "required": [],
     "edits": []
+  },
+  "userProfileUpdate": {
+    "goalsToAdd": [],
+    "goalsToRemove": [],
+    "preferencesToAdd": [],
+    "preferencesToRemove": [],
+    "miscToAdd": [],
+    "miscToRemove": [],
+    "fieldsToSet": {},
+    "fieldsToDelete": []
   }
 }

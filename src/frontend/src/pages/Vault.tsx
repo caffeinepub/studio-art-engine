@@ -7,7 +7,8 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
-import { Download, X, RefreshCw, Search, Filter } from 'lucide-react';
+import { DownloadIcon, XIcon, RefreshCwIcon, SearchIcon, FilterIcon } from '@/components/icons';
+import MotionIconButton from '@/components/MotionIconButton';
 import { toast } from 'sonner';
 import VaultViewModeToggle from '@/components/VaultViewModeToggle';
 import VaultPublishingControls from '@/components/VaultPublishingControls';
@@ -172,7 +173,6 @@ class SimpleZipCreator {
   }
 }
 
-// Generate deterministic DNA from ordered layer list
 function generateDNA(traits: Record<string, string>, layers: { id: string }[]): string {
   return layers.map(layer => traits[layer.id] || '').join('-');
 }
@@ -191,12 +191,11 @@ export default function Vault({ project, onUpdateProject }: VaultProps) {
   const [headlessMode, setHeadlessMode] = useState(false);
   
   const imageCache = useRef<ImageCache>({});
-  const filterDebounceTimer = useRef<NodeJS.Timeout | null>(null);
+  const filterDebounceTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const workerRef = useRef<Worker | null>(null);
   const workerSupportsImageCompositing = useRef<boolean>(false);
   const accumulatedNFTs = useRef<GeneratedNFT[]>([]);
 
-  // Cleanup worker on unmount
   useEffect(() => {
     return () => {
       if (workerRef.current) {
@@ -206,7 +205,6 @@ export default function Vault({ project, onUpdateProject }: VaultProps) {
     };
   }, []);
 
-  // Build trait frequency map for rarity calculation
   const traitFrequencyMap = useMemo(() => {
     const frequencyMap: Record<string, Record<string, number>> = {};
     const totalNFTs = project.generatedNFTs.filter(nft => !nft.isForged).length;
@@ -241,7 +239,6 @@ export default function Vault({ project, onUpdateProject }: VaultProps) {
     return frequencyMap;
   }, [project.generatedNFTs, project.layers]);
 
-  // Build layer-based grouped traits for asset library
   const groupedTraitsByLayer = useMemo(() => {
     const traitCounts: Record<string, number> = {};
     const totalNFTs = project.generatedNFTs.length;
@@ -285,7 +282,6 @@ export default function Vault({ project, onUpdateProject }: VaultProps) {
     return layerGroups;
   }, [project.layers, project.generatedNFTs]);
 
-  // Memoized rarity score calculation
   const rarityScoreCache = useMemo(() => {
     const cache = new Map<string, number>();
     
@@ -322,7 +318,6 @@ export default function Vault({ project, onUpdateProject }: VaultProps) {
     return cache;
   }, [project.generatedNFTs, project.layers, traitFrequencyMap]);
 
-  // Calculate rarity rankings and tiers
   const rarityInfoMap = useMemo(() => {
     const infoMap = new Map<string, RarityInfo>();
     
@@ -571,7 +566,6 @@ export default function Vault({ project, onUpdateProject }: VaultProps) {
 
     const loadedImages = await Promise.all(imagePromises);
 
-    // Draw layers in reverse order: lower layers first, higher layers last (on top)
     for (let i = loadedImages.length - 1; i >= 0; i--) {
       const item = loadedImages[i];
       if (!item) continue;
@@ -586,7 +580,6 @@ export default function Vault({ project, onUpdateProject }: VaultProps) {
 
     const dataURL = canvas.toDataURL('image/png');
     
-    // Release canvas reference for garbage collection
     canvas.width = 0;
     canvas.height = 0;
     
@@ -713,7 +706,6 @@ export default function Vault({ project, onUpdateProject }: VaultProps) {
     }
   }, []);
 
-  // Fallback: composite images on main thread for NFTs without imageData
   const compositeFallbackImages = async (nfts: GeneratedNFTData[]): Promise<GeneratedNFT[]> => {
     const result: GeneratedNFT[] = [];
     
@@ -721,10 +713,8 @@ export default function Vault({ project, onUpdateProject }: VaultProps) {
       const nft = nfts[i];
       
       if (nft.imageData) {
-        // Already has image
         result.push(nft as GeneratedNFT);
       } else if (nft.selectedTraits) {
-        // Need to composite on main thread
         try {
           const imageData = await generateImage(nft.selectedTraits);
           result.push({
@@ -733,11 +723,9 @@ export default function Vault({ project, onUpdateProject }: VaultProps) {
           } as GeneratedNFT);
         } catch (error) {
           console.error('Fallback compositing error:', error);
-          // Skip this NFT
         }
       }
       
-      // Yield periodically to keep UI responsive
       if (i % 50 === 0) {
         await yieldToUI();
       }
@@ -765,18 +753,15 @@ export default function Vault({ project, onUpdateProject }: VaultProps) {
     }
 
     try {
-      // Clear previous generation from project state immediately (replace-only model)
       onUpdateProject((p) => ({
         ...p,
         generatedNFTs: [],
       }));
 
-      // Create and start worker
       workerRef.current = new Worker(new URL('../workers/vaultGenerator.worker.ts', import.meta.url), {
         type: 'module',
       });
 
-      // Setup worker message handler
       workerRef.current.onmessage = async (event: MessageEvent<WorkerOutputMessage>) => {
         const message = event.data;
 
@@ -791,23 +776,19 @@ export default function Vault({ project, onUpdateProject }: VaultProps) {
         } else if (isBatchResultMessage(message)) {
           let batchNFTs: GeneratedNFT[];
           
-          // Check if we need fallback compositing
           if (!message.payload.supportsImageCompositing) {
             batchNFTs = await compositeFallbackImages(message.payload.nfts);
           } else {
             batchNFTs = message.payload.nfts as GeneratedNFT[];
           }
           
-          // Accumulate NFTs
           accumulatedNFTs.current.push(...batchNFTs);
           
-          // Progressive commit to project state
           onUpdateProject((p) => ({
             ...p,
             generatedNFTs: [...accumulatedNFTs.current],
           }));
         } else if (isCompleteMessage(message)) {
-          // Final commit with sorted NFTs
           const allGeneratedNFTs = [...accumulatedNFTs.current];
           allGeneratedNFTs.sort((a, b) => a.id - b.id);
 
@@ -828,7 +809,6 @@ export default function Vault({ project, onUpdateProject }: VaultProps) {
             toast.success(`Generated ${allGeneratedNFTs.length} NFTs`);
           }
 
-          // Cleanup
           if (workerRef.current) {
             workerRef.current.terminate();
             workerRef.current = null;
@@ -841,7 +821,6 @@ export default function Vault({ project, onUpdateProject }: VaultProps) {
         } else if (isCancelAckMessage(message)) {
           toast.warning(`Generation canceled at ${accumulatedNFTs.current.length} NFTs`);
 
-          // Cleanup
           if (workerRef.current) {
             workerRef.current.terminate();
             workerRef.current = null;
@@ -855,7 +834,6 @@ export default function Vault({ project, onUpdateProject }: VaultProps) {
           toast.error(message.payload.message);
           console.error('Worker error:', message.payload.details);
 
-          // Cleanup
           if (workerRef.current) {
             workerRef.current.terminate();
             workerRef.current = null;
@@ -883,7 +861,6 @@ export default function Vault({ project, onUpdateProject }: VaultProps) {
         setGeneratedCount(0);
       };
 
-      // Prepare data for worker
       const layers: LayerData[] = project.layers.map(layer => ({
         id: layer.id,
         name: layer.name,
@@ -916,7 +893,6 @@ export default function Vault({ project, onUpdateProject }: VaultProps) {
 
       const batchSize = project.collectionSize > 5000 ? 100 : project.collectionSize > 1000 ? 250 : 500;
 
-      // Start generation
       workerRef.current.postMessage({
         type: 'start',
         payload: {
@@ -1086,16 +1062,14 @@ export default function Vault({ project, onUpdateProject }: VaultProps) {
     return size.toLocaleString();
   };
 
-  // Determine if we should show grid during generation
   const shouldShowGrid = !isGenerating || !headlessMode;
 
   return (
     <div className="h-full flex flex-col lg:flex-row bg-background">
-      {/* Sidebar - Desktop Only */}
       <aside className="hidden lg:flex lg:w-64 lg:flex-shrink-0 border-r border-border bg-card/30 flex-col overflow-hidden">
         <div className="px-4 py-4 border-b border-border flex-shrink-0">
           <div className="flex items-center gap-2 mb-1">
-            <Filter className="w-3.5 h-3.5 text-muted-foreground" />
+            <FilterIcon className="w-3.5 h-3.5 text-muted-foreground" />
             <h2 className="text-xs font-semibold text-foreground">
               Layers
             </h2>
@@ -1113,7 +1087,7 @@ export default function Vault({ project, onUpdateProject }: VaultProps) {
                 value={layerGroup.layerId}
                 className="border-b border-border/50 last:border-0"
               >
-                <AccordionTrigger className="py-3 px-2 hover:bg-muted/50 rounded text-left focus-ring">
+                <AccordionTrigger className="py-3 px-2 hover:bg-muted/50 rounded text-left focus-ring transition-all duration-hover ease-apple">
                   <span className="text-xs font-semibold text-foreground">
                     {layerGroup.layerName}
                   </span>
@@ -1126,10 +1100,10 @@ export default function Vault({ project, onUpdateProject }: VaultProps) {
                         <button
                           key={`${layerGroup.layerId}-${trait.traitId}`}
                           onClick={() => toggleTraitFilter(layerGroup.layerId, trait.traitId, layerGroup.layerName, trait.traitName)}
-                          className={`w-full flex items-center justify-between px-2 py-1.5 rounded text-left transition-all focus-ring ${
+                          className={`motion-button w-full flex items-center justify-between px-2 py-1.5 rounded text-left ${
                             isActive
-                              ? 'bg-foreground/10 text-foreground'
-                              : 'hover:bg-muted/50 text-muted-foreground hover:text-foreground'
+                              ? 'bg-foreground/10 text-foreground scale-100'
+                              : 'hover:bg-muted/50 text-muted-foreground hover:text-foreground scale-95 hover:scale-100'
                           }`}
                         >
                           <span className="text-[11px] font-medium truncate pr-2">
@@ -1149,30 +1123,24 @@ export default function Vault({ project, onUpdateProject }: VaultProps) {
         </div>
       </aside>
 
-      {/* Main Content */}
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
-        {/* Toolbar */}
         <div className="px-4 lg:px-6 py-3 border-b border-border bg-background flex-shrink-0">
           <div className="flex flex-col gap-3">
-            {/* Publishing Controls */}
             <VaultPublishingControls project={project} onUpdateProject={onUpdateProject} />
 
-            {/* Search and View Controls */}
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-              {/* Search */}
               <div className="w-full sm:flex-1 sm:max-w-sm">
                 <div className="relative">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                  <SearchIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                   <Input
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                     placeholder="Search collection..."
-                    className="pl-9 h-9 bg-muted/30 border-border text-foreground placeholder:text-muted-foreground focus-ring"
+                    className="pl-9 h-9 bg-muted/30 border-border text-foreground placeholder:text-muted-foreground focus-ring transition-all duration-component ease-apple"
                   />
                 </div>
               </div>
 
-              {/* Controls */}
               <div className="flex items-center gap-2 w-full sm:w-auto">
                 <VaultViewModeToggle viewMode={viewMode} onViewModeChange={setViewMode} />
                 
@@ -1183,7 +1151,7 @@ export default function Vault({ project, onUpdateProject }: VaultProps) {
                     variant={sortOption === 'index' ? 'default' : 'ghost'}
                     size="sm"
                     onClick={() => setSortOption('index')}
-                    className="h-8 px-3 text-[10px] font-semibold uppercase tracking-wide focus-ring"
+                    className="motion-button h-8 px-3 text-[10px] font-semibold uppercase tracking-wide focus-ring"
                   >
                     Index
                   </Button>
@@ -1191,7 +1159,7 @@ export default function Vault({ project, onUpdateProject }: VaultProps) {
                     variant={sortOption === 'rarity' ? 'default' : 'ghost'}
                     size="sm"
                     onClick={() => setSortOption('rarity')}
-                    className="h-8 px-3 text-[10px] font-semibold uppercase tracking-wide focus-ring"
+                    className="motion-button h-8 px-3 text-[10px] font-semibold uppercase tracking-wide focus-ring"
                   >
                     Rarity
                   </Button>
@@ -1199,7 +1167,7 @@ export default function Vault({ project, onUpdateProject }: VaultProps) {
                     variant={sortOption === 'common' ? 'default' : 'ghost'}
                     size="sm"
                     onClick={() => setSortOption('common')}
-                    className="h-8 px-3 text-[10px] font-semibold uppercase tracking-wide focus-ring"
+                    className="motion-button h-8 px-3 text-[10px] font-semibold uppercase tracking-wide focus-ring"
                   >
                     Common
                   </Button>
@@ -1210,17 +1178,16 @@ export default function Vault({ project, onUpdateProject }: VaultProps) {
                   disabled={isExporting || project.generatedNFTs.length === 0}
                   variant="outline"
                   size="sm"
-                  className="h-8 px-3 text-[10px] font-semibold uppercase tracking-wide focus-ring"
+                  className="motion-button h-8 px-3 text-[10px] font-semibold uppercase tracking-wide focus-ring"
                 >
-                  <Download className="w-3.5 h-3.5 mr-1.5" />
+                  <DownloadIcon className="w-3.5 h-3.5 mr-1.5" />
                   Export
                 </Button>
               </div>
             </div>
 
-            {/* Active Filters */}
             {activeFilters.size > 0 && (
-              <div className="flex items-center gap-2 p-2 bg-muted/30 border border-border rounded-lg">
+              <div className="flex items-center gap-2 p-2 bg-muted/30 border border-border rounded-lg animate-fade-in-scale">
                 <span className="text-[10px] font-medium text-foreground flex-1">
                   Active filters: {Array.from(activeFilters.values()).map(f => f.traitName).join(', ')}
                 </span>
@@ -1228,16 +1195,15 @@ export default function Vault({ project, onUpdateProject }: VaultProps) {
                   variant="ghost"
                   size="sm"
                   onClick={clearAllFilters}
-                  className="h-6 px-2 text-[10px] font-semibold focus-ring"
+                  className="motion-button h-6 px-2 text-[10px] font-semibold focus-ring"
                 >
                   Clear
                 </Button>
               </div>
             )}
 
-            {/* Progress */}
             {(isGenerating || isExporting) && (
-              <div className="space-y-1.5">
+              <div className="space-y-1.5 animate-fade-in">
                 <div className="flex items-center justify-between">
                   <div className="text-[10px] text-muted-foreground font-medium">
                     {isGenerating 
@@ -1250,7 +1216,7 @@ export default function Vault({ project, onUpdateProject }: VaultProps) {
                       variant="ghost"
                       size="sm"
                       onClick={cancelGeneration}
-                      className="h-6 px-2 text-[10px] font-semibold focus-ring"
+                      className="motion-button h-6 px-2 text-[10px] font-semibold focus-ring"
                     >
                       Cancel
                     </Button>
@@ -1262,7 +1228,6 @@ export default function Vault({ project, onUpdateProject }: VaultProps) {
           </div>
         </div>
 
-        {/* Grid Area */}
         <div className="flex-1 overflow-hidden">
           <ScrollArea className="h-full">
             {shouldShowGrid && project.generatedNFTs.length > 0 ? (
@@ -1279,14 +1244,14 @@ export default function Vault({ project, onUpdateProject }: VaultProps) {
                     return (
                       <Card
                         key={nft.id}
-                        className="group bg-card border border-border hover:border-foreground/30 overflow-hidden cursor-pointer transition-all duration-hover focus-ring p-0"
+                        className="group bg-card border border-border hover:border-foreground/30 overflow-hidden cursor-pointer transition-all duration-hover ease-apple hover:-translate-y-1 hover:shadow-lg focus-ring p-0"
                         onClick={() => setSelectedNFT(nft)}
                       >
                         <div className="aspect-square bg-muted/30 relative overflow-hidden">
                           <img
                             src={nft.imageData}
                             alt={tokenName}
-                            className="w-full h-full object-cover block"
+                            className="w-full h-full object-cover block transition-transform duration-component ease-apple group-hover:scale-105"
                             style={{
                               imageRendering: project.pixelArtMode ? 'pixelated' : 'auto',
                             }}
@@ -1327,7 +1292,6 @@ export default function Vault({ project, onUpdateProject }: VaultProps) {
           </ScrollArea>
         </div>
 
-        {/* Bottom Bar */}
         <div className="px-4 lg:px-6 py-3 border-t border-border bg-background flex-shrink-0">
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
             <div className="flex items-center gap-4">
@@ -1341,6 +1305,7 @@ export default function Vault({ project, onUpdateProject }: VaultProps) {
                   checked={headlessMode}
                   onCheckedChange={setHeadlessMode}
                   disabled={isGenerating}
+                  className="transition-all duration-hover ease-apple"
                 />
                 <Label htmlFor="headless-mode" className="text-xs text-muted-foreground cursor-pointer">
                   Low-memory mode
@@ -1352,7 +1317,7 @@ export default function Vault({ project, onUpdateProject }: VaultProps) {
               <Button
                 onClick={generateCollection}
                 disabled={isGenerating}
-                className="h-9 px-5 font-semibold text-xs focus-ring flex-1 sm:flex-initial"
+                className="motion-button h-9 px-5 font-semibold text-xs focus-ring flex-1 sm:flex-initial"
               >
                 {isGenerating ? 'Generating...' : 'Generate'}
               </Button>
@@ -1361,9 +1326,9 @@ export default function Vault({ project, onUpdateProject }: VaultProps) {
                 onClick={downloadAllAsZip}
                 disabled={isExporting || project.generatedNFTs.length === 0}
                 variant="outline"
-                className="h-9 px-5 font-semibold text-xs focus-ring flex-1 sm:flex-initial"
+                className="motion-button h-9 px-5 font-semibold text-xs focus-ring flex-1 sm:flex-initial"
               >
-                <Download className="w-3.5 h-3.5 mr-2" />
+                <DownloadIcon className="w-3.5 h-3.5 mr-2" />
                 {isExporting ? `${Math.round(progress)}%` : 'Download All'}
               </Button>
             </div>
@@ -1371,18 +1336,16 @@ export default function Vault({ project, onUpdateProject }: VaultProps) {
         </div>
       </div>
 
-      {/* NFT Detail Modal */}
       {selectedNFT && (
         <div 
-          className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+          className="fixed inset-0 motion-modal-overlay z-50 flex items-center justify-center p-4"
           onClick={() => setSelectedNFT(null)}
         >
           <div 
-            className="bg-card border border-border rounded-xl w-full max-w-5xl overflow-hidden shadow-2xl"
+            className="motion-modal-content bg-card border border-border rounded-xl w-full max-w-5xl overflow-hidden shadow-2xl"
             style={{ maxHeight: '85vh' }}
             onClick={(e) => e.stopPropagation()}
           >
-            {/* Modal Header */}
             <div className="flex items-center justify-between px-5 py-3 border-b border-border">
               <div className="flex items-center gap-3">
                 <div className="text-sm font-semibold text-foreground">
@@ -1393,22 +1356,18 @@ export default function Vault({ project, onUpdateProject }: VaultProps) {
                 <div className="text-xs text-muted-foreground font-medium">
                   {getRarityInfo(selectedNFT).tier} • Rank #{getRarityInfo(selectedNFT).rank}
                 </div>
-                <Button
-                  variant="ghost"
-                  size="icon"
+                <MotionIconButton
                   onClick={() => setSelectedNFT(null)}
-                  className="h-8 w-8 focus-ring"
+                  className="h-8 w-8 text-foreground hover:bg-muted rounded focus-ring"
                 >
-                  <X className="w-4 h-4" />
-                </Button>
+                  <XIcon className="w-4 h-4" />
+                </MotionIconButton>
               </div>
             </div>
 
-            {/* Modal Content */}
             <ScrollArea style={{ maxHeight: 'calc(85vh - 60px)' }}>
               <div className="p-5">
                 <div className="grid grid-cols-1 lg:grid-cols-5 gap-5">
-                  {/* Image Panel - 60% */}
                   <div className="lg:col-span-3 space-y-3">
                     <div className="aspect-square rounded-xl overflow-hidden bg-muted/30 border border-border">
                       <img
@@ -1421,31 +1380,29 @@ export default function Vault({ project, onUpdateProject }: VaultProps) {
                       />
                     </div>
 
-                    {/* Actions */}
                     <div className="grid grid-cols-2 gap-2">
                       {!selectedNFT.isForged && (
                         <Button
                           onClick={() => regenerateSingleNFT(selectedNFT)}
                           disabled={isRegeneratingNFT}
                           variant="outline"
-                          className="h-9 text-xs font-semibold focus-ring"
+                          className="motion-button h-9 text-xs font-semibold focus-ring"
                         >
-                          <RefreshCw className={`w-3.5 h-3.5 mr-1.5 ${isRegeneratingNFT ? 'animate-spin' : ''}`} />
+                          <RefreshCwIcon className={`w-3.5 h-3.5 mr-1.5 ${isRegeneratingNFT ? 'animate-spin' : ''}`} />
                           {isRegeneratingNFT ? 'Regenerating...' : 'Regenerate'}
                         </Button>
                       )}
                       <Button
                         onClick={() => exportSingleNFT(selectedNFT)}
                         variant="outline"
-                        className={`h-9 text-xs font-semibold focus-ring ${selectedNFT.isForged ? 'col-span-2' : ''}`}
+                        className={`motion-button h-9 text-xs font-semibold focus-ring ${selectedNFT.isForged ? 'col-span-2' : ''}`}
                       >
-                        <Download className="w-3.5 h-3.5 mr-1.5" />
+                        <DownloadIcon className="w-3.5 h-3.5 mr-1.5" />
                         Export
                       </Button>
                     </div>
                   </div>
 
-                  {/* Metadata Panel - 40% */}
                   <div className="lg:col-span-2 flex flex-col">
                     <div className="mb-4">
                       <h3 className="text-xs font-semibold text-muted-foreground mb-1">
@@ -1456,7 +1413,6 @@ export default function Vault({ project, onUpdateProject }: VaultProps) {
                       </p>
                     </div>
 
-                    {/* Attributes Grid */}
                     <div className="grid grid-cols-1 gap-2 flex-1">
                       {(selectedNFT.metadata.attributes as any[]).map((attr, index) => {
                         if (attr.trait_type === 'Type' && attr.value === '1-of-1') {
@@ -1468,7 +1424,7 @@ export default function Vault({ project, onUpdateProject }: VaultProps) {
                                 e.stopPropagation();
                                 toggleTraitFilter('forged', '1-of-1', 'Type', '1-of-1');
                               }}
-                              className={`bg-muted/30 rounded-lg border p-3 hover:bg-muted/50 transition-all text-left focus-ring ${
+                              className={`motion-button bg-muted/30 rounded-lg border p-3 hover:bg-muted/50 text-left focus-ring hover:scale-[1.02] active:scale-[0.98] ${
                                 isActive ? 'border-foreground/30 bg-foreground/5' : 'border-border'
                               }`}
                             >
@@ -1495,7 +1451,7 @@ export default function Vault({ project, onUpdateProject }: VaultProps) {
                                 toggleTraitFilter(layer.id, trait.id, layer.name, trait.name);
                               }
                             }}
-                            className={`bg-muted/30 rounded-lg border p-3 hover:bg-muted/50 transition-all text-left focus-ring ${
+                            className={`motion-button bg-muted/30 rounded-lg border p-3 hover:bg-muted/50 text-left focus-ring hover:scale-[1.02] active:scale-[0.98] ${
                               isActive ? 'border-foreground/30 bg-foreground/5' : 'border-border'
                             }`}
                           >
@@ -1515,13 +1471,12 @@ export default function Vault({ project, onUpdateProject }: VaultProps) {
                       })}
                     </div>
 
-                    {/* Clear Filters */}
                     {activeFilters.size > 0 && (
                       <div className="mt-3 pt-3 border-t border-border">
                         <Button
                           onClick={clearAllFilters}
                           variant="outline"
-                          className="w-full h-9 text-xs font-semibold focus-ring"
+                          className="motion-button w-full h-9 text-xs font-semibold focus-ring"
                         >
                           Clear All Filters
                         </Button>

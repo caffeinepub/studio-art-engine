@@ -19,7 +19,7 @@ export default function PinataKeyGuideDialog() {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button variant="outline" size="sm" className="w-full justify-start gap-2 h-8 text-xs">
+        <Button variant="outline" size="sm" className="w-full justify-start gap-2 h-8 text-xs transition-all duration-hover ease-apple">
           <HelpCircle className="h-3.5 w-3.5" />
           How to get your JWT token
         </Button>
@@ -35,7 +35,7 @@ export default function PinataKeyGuideDialog() {
         <ScrollArea className="h-[calc(85vh-8rem)] pr-4">
           <div className="space-y-6">
             {/* Critical Warning */}
-            <Alert className="border-amber-500/50 bg-amber-500/10">
+            <Alert className="border-amber-500/50 bg-amber-500/10 animate-fade-in-scale">
               <AlertTriangle className="h-4 w-4 text-amber-500" />
               <AlertDescription className="text-sm">
                 <strong className="text-foreground">Important:</strong> Pinata shows three fields when you create an API key. 
@@ -71,7 +71,7 @@ export default function PinataKeyGuideDialog() {
                       href="https://pinata.cloud"
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="text-primary hover:underline inline-flex items-center gap-1"
+                      className="text-primary hover:underline inline-flex items-center gap-1 transition-all duration-hover ease-apple"
                     >
                       pinata.cloud
                       <ExternalLink className="h-3 w-3" />
@@ -246,3 +246,4 @@ export default function PinataKeyGuideDialog() {
     </Dialog>
   );
 }
+

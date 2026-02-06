@@ -181,7 +181,7 @@ export default function Preview({ project, onUpdateProject }: PreviewProps) {
                 <div className="absolute inset-3 bg-[#0a0a0a] rounded-xl overflow-hidden flex items-center justify-center p-6">
                   <canvas
                     ref={canvasRef}
-                    className="w-full h-full object-contain"
+                    className="w-full h-full object-contain rounded-lg"
                     style={{
                       imageRendering: pixelMode ? 'pixelated' : 'auto',
                     }}

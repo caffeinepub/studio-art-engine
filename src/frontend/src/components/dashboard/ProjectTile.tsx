@@ -18,12 +18,12 @@ export default function ProjectTile({ project, onOpen, onSettings, onDelete, ind
 
   return (
     <div
-      className="group relative bg-card border border-border rounded-3xl p-6 cursor-pointer transition-all duration-component ease-apple hover:border-primary/40 hover:shadow-[0_0_24px_rgba(102,102,102,0.15)] stagger-item"
+      className="group relative bg-card border border-border rounded-3xl p-6 cursor-pointer transition-all duration-component ease-apple hover:border-primary/40 hover:shadow-[0_0_24px_rgba(102,102,102,0.15)] hover:-translate-y-1 stagger-item"
       style={{ animationDelay: `${index * 0.05}s` }}
       onClick={onOpen}
     >
       {/* Blockchain/Protocol Tag */}
-      <div className="inline-flex items-center px-3 py-1 bg-muted/40 border border-border rounded-full mb-4">
+      <div className="inline-flex items-center px-3 py-1 bg-muted/40 border border-border rounded-full mb-4 transition-all duration-hover ease-apple group-hover:border-primary/30">
         <span className="text-[10px] font-semibold tracking-wider uppercase text-muted-foreground">
           {project.blockchain || 'SOL'}
         </span>
@@ -46,7 +46,7 @@ export default function ProjectTile({ project, onOpen, onSettings, onDelete, ind
       </div>
 
       {/* Action Buttons */}
-      <div className="absolute top-6 right-6 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-hover ease-apple">
+      <div className="absolute top-6 right-6 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-component ease-apple">
         <Button
           variant="ghost"
           size="icon"
@@ -54,7 +54,7 @@ export default function ProjectTile({ project, onOpen, onSettings, onDelete, ind
             e.stopPropagation();
             onSettings();
           }}
-          className="h-9 w-9 rounded-lg bg-background/80 backdrop-blur-sm border border-border text-muted-foreground hover:text-foreground hover:bg-muted"
+          className="h-9 w-9 rounded-lg bg-background/80 backdrop-blur-sm border border-border text-muted-foreground hover:text-foreground hover:bg-muted transition-all duration-hover ease-apple hover:scale-105 active:scale-95"
         >
           <Settings className="w-4 h-4" />
         </Button>
@@ -65,7 +65,7 @@ export default function ProjectTile({ project, onOpen, onSettings, onDelete, ind
             e.stopPropagation();
             onDelete();
           }}
-          className="h-9 w-9 rounded-lg bg-background/80 backdrop-blur-sm border border-border text-destructive hover:text-destructive hover:bg-destructive/10"
+          className="h-9 w-9 rounded-lg bg-background/80 backdrop-blur-sm border border-border text-destructive hover:text-destructive hover:bg-destructive/10 transition-all duration-hover ease-apple hover:scale-105 active:scale-95"
         >
           <Trash2 className="w-4 h-4" />
         </Button>
@@ -73,3 +73,4 @@ export default function ProjectTile({ project, onOpen, onSettings, onDelete, ind
     </div>
   );
 }
+

@@ -69,7 +69,7 @@ export default function ProjectSettingsDialog({ open, onOpenChange, project, onS
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder="My Collection"
-              className="bg-background border border-border focus:border-primary h-11 rounded-lg"
+              className="bg-background border border-border focus:border-primary h-11 rounded-lg transition-all duration-component ease-apple"
             />
           </div>
           
@@ -80,7 +80,7 @@ export default function ProjectSettingsDialog({ open, onOpenChange, project, onS
               value={symbol}
               onChange={(e) => setSymbol(e.target.value)}
               placeholder="NFT"
-              className="bg-background border border-border focus:border-primary h-11 rounded-lg"
+              className="bg-background border border-border focus:border-primary h-11 rounded-lg transition-all duration-component ease-apple"
             />
           </div>
 
@@ -93,16 +93,17 @@ export default function ProjectSettingsDialog({ open, onOpenChange, project, onS
               onChange={(e) => setCollectionSize(e.target.value)}
               placeholder="1000"
               min="1"
-              className="bg-background border border-border focus:border-primary h-11 rounded-lg"
+              className="bg-background border border-border focus:border-primary h-11 rounded-lg transition-all duration-component ease-apple"
             />
           </div>
           
-          <div className="flex items-center justify-between p-4 bg-muted/30 border border-border rounded-xl">
+          <div className="flex items-center justify-between p-4 bg-muted/30 border border-border rounded-xl transition-all duration-hover ease-apple hover:bg-muted/40">
             <Label htmlFor="edit-pixel" className="text-foreground font-medium text-sm">Pixel art mode</Label>
             <Switch
               id="edit-pixel"
               checked={pixelArtMode}
               onCheckedChange={setPixelArtMode}
+              className="transition-all duration-hover ease-apple"
             />
           </div>
         </div>
@@ -110,7 +111,7 @@ export default function ProjectSettingsDialog({ open, onOpenChange, project, onS
         <DialogFooter>
           <Button
             onClick={handleSave}
-            className="bg-primary text-primary-foreground font-semibold h-11 px-8 rounded-lg"
+            className="bg-primary text-primary-foreground font-semibold h-11 px-8 rounded-lg transition-all duration-hover ease-apple"
           >
             Save
           </Button>
@@ -119,3 +120,4 @@ export default function ProjectSettingsDialog({ open, onOpenChange, project, onS
     </Dialog>
   );
 }
+

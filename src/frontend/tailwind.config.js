@@ -79,13 +79,14 @@ export default {
         black: '900',
       },
       animation: {
-        'page-transition': 'page-transition 300ms var(--ease-apple, cubic-bezier(0.16, 1, 0.3, 1))',
-        'spring-reveal': 'spring-reveal 700ms var(--ease-apple, cubic-bezier(0.16, 1, 0.3, 1))',
-        'slide-in': 'slide-in 300ms var(--ease-apple, cubic-bezier(0.16, 1, 0.3, 1))',
-        'pulse-subtle': 'pulse-subtle 2s var(--ease-apple, cubic-bezier(0.16, 1, 0.3, 1)) infinite',
-        'fade-in': 'fade-in 300ms var(--ease-apple, cubic-bezier(0.16, 1, 0.3, 1))',
-        'fade-in-scale': 'fade-in-scale 300ms var(--ease-apple, cubic-bezier(0.16, 1, 0.3, 1))',
+        'page-transition': 'page-transition 300ms cubic-bezier(0.16, 1, 0.3, 1)',
+        'spring-reveal': 'spring-reveal 700ms cubic-bezier(0.16, 1, 0.3, 1)',
+        'slide-in': 'slide-in 300ms cubic-bezier(0.16, 1, 0.3, 1)',
+        'pulse-subtle': 'pulse-subtle 2s cubic-bezier(0.16, 1, 0.3, 1) infinite',
+        'fade-in': 'fade-in 300ms cubic-bezier(0.16, 1, 0.3, 1)',
+        'fade-in-scale': 'fade-in-scale 300ms cubic-bezier(0.16, 1, 0.3, 1)',
         'shimmer': 'shimmer 2s linear infinite',
+        'modal-slide-scale': 'modal-slide-scale 700ms cubic-bezier(0.16, 1, 0.3, 1)',
       },
       keyframes: {
         'page-transition': {
@@ -115,6 +116,10 @@ export default {
         'shimmer': {
           '0%': { backgroundPosition: '-1000px 0' },
           '100%': { backgroundPosition: '1000px 0' }
+        },
+        'modal-slide-scale': {
+          from: { opacity: '0', transform: 'translateY(20px) scale(0.95)' },
+          to: { opacity: '1', transform: 'translateY(0) scale(1)' }
         }
       },
       transitionTimingFunction: {

@@ -35,12 +35,12 @@ export default function ConfirmDestructiveDialog() {
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
-          <AlertDialogCancel onClick={handleCancel} className="font-medium">
+          <AlertDialogCancel onClick={handleCancel} className="font-medium transition-all duration-hover ease-apple">
             Cancel
           </AlertDialogCancel>
           <AlertDialogAction
             onClick={handleConfirm}
-            className="bg-destructive hover:bg-destructive/90 text-destructive-foreground font-semibold"
+            className="bg-destructive hover:bg-destructive/90 text-destructive-foreground font-semibold transition-all duration-hover ease-apple"
           >
             Delete
           </AlertDialogAction>
@@ -49,3 +49,4 @@ export default function ConfirmDestructiveDialog() {
     </AlertDialog>
   );
 }
+

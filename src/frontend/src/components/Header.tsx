@@ -1,6 +1,6 @@
 import { Button } from '@/components/ui/button';
 import { useState } from 'react';
-import { Menu, X } from 'lucide-react';
+import { MenuIcon, XIcon } from '@/components/icons';
 import type { Project } from '../App';
 import SaveStatusIndicator from './SaveStatusIndicator';
 
@@ -35,16 +35,12 @@ export default function Header({ currentView, onNavigate, currentProject, onBack
                 variant="ghost"
                 size="sm"
                 onClick={onBackToDashboard}
-                className="text-foreground hover:text-foreground hover:bg-muted font-semibold px-3 h-9 text-sm"
+                className="motion-button text-foreground hover:text-foreground hover:bg-muted font-semibold px-3 h-9 text-sm"
               >
                 ← Projects
               </Button>
             ) : (
-              <div>
-                <h1 className="text-base sm:text-lg font-bold text-foreground truncate">
-                  Studio Art Engine
-                </h1>
-              </div>
+              <div />
             )}
           </div>
 
@@ -59,7 +55,7 @@ export default function Header({ currentView, onNavigate, currentProject, onBack
                       variant="ghost"
                       size="sm"
                       onClick={() => onNavigate(item.id as any)}
-                      className={`text-sm font-medium px-3 h-9 rounded-lg transition-all ${
+                      className={`motion-button text-sm font-medium px-3 h-9 rounded-lg ${
                         isActive
                           ? 'bg-primary text-primary-foreground'
                           : 'text-muted-foreground hover:text-foreground hover:bg-muted'
@@ -71,14 +67,12 @@ export default function Header({ currentView, onNavigate, currentProject, onBack
                 })}
               </nav>
 
-              <Button
-                variant="ghost"
-                size="icon"
+              <button
                 onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-                className="lg:hidden text-foreground hover:bg-muted h-9 w-9"
+                className="lg:hidden motion-icon-button text-foreground hover:bg-muted h-9 w-9 rounded inline-flex items-center justify-center"
               >
-                {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
-              </Button>
+                {mobileMenuOpen ? <XIcon className="w-5 h-5" /> : <MenuIcon className="w-5 h-5" />}
+              </button>
             </>
           )}
 
@@ -108,7 +102,7 @@ export default function Header({ currentView, onNavigate, currentProject, onBack
                     onNavigate(item.id as any);
                     setMobileMenuOpen(false);
                   }}
-                  className={`text-sm font-medium px-3 h-10 justify-start rounded-lg transition-all ${
+                  className={`motion-button text-sm font-medium px-3 h-10 justify-start rounded-lg ${
                     isActive
                       ? 'bg-primary text-primary-foreground'
                       : 'text-muted-foreground hover:text-foreground hover:bg-muted'

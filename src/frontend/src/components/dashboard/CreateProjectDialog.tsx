@@ -57,7 +57,7 @@ export default function CreateProjectDialog({ open, onOpenChange, onCreate }: Cr
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder="My Collection"
-              className="bg-background border border-border focus:border-primary h-11 rounded-lg"
+              className="bg-background border border-border focus:border-primary h-11 rounded-lg transition-all duration-component ease-apple"
             />
           </div>
           
@@ -68,7 +68,7 @@ export default function CreateProjectDialog({ open, onOpenChange, onCreate }: Cr
               value={symbol}
               onChange={(e) => setSymbol(e.target.value)}
               placeholder="NFT"
-              className="bg-background border border-border focus:border-primary h-11 rounded-lg"
+              className="bg-background border border-border focus:border-primary h-11 rounded-lg transition-all duration-component ease-apple"
             />
           </div>
           
@@ -81,16 +81,17 @@ export default function CreateProjectDialog({ open, onOpenChange, onCreate }: Cr
               onChange={(e) => setCollectionSize(e.target.value)}
               placeholder="1000"
               min="1"
-              className="bg-background border border-border focus:border-primary h-11 rounded-lg"
+              className="bg-background border border-border focus:border-primary h-11 rounded-lg transition-all duration-component ease-apple"
             />
           </div>
           
-          <div className="flex items-center justify-between p-4 bg-muted/30 border border-border rounded-xl">
+          <div className="flex items-center justify-between p-4 bg-muted/30 border border-border rounded-xl transition-all duration-hover ease-apple hover:bg-muted/40">
             <Label htmlFor="pixel" className="text-foreground font-medium text-sm">Pixel art mode</Label>
             <Switch
               id="pixel"
               checked={pixelArtMode}
               onCheckedChange={setPixelArtMode}
+              className="transition-all duration-hover ease-apple"
             />
           </div>
         </div>
@@ -98,7 +99,7 @@ export default function CreateProjectDialog({ open, onOpenChange, onCreate }: Cr
         <DialogFooter>
           <Button
             onClick={handleCreate}
-            className="bg-primary text-primary-foreground font-semibold h-11 px-8 rounded-lg"
+            className="bg-primary text-primary-foreground font-semibold h-11 px-8 rounded-lg transition-all duration-hover ease-apple"
           >
             Create
           </Button>
@@ -107,3 +108,4 @@ export default function CreateProjectDialog({ open, onOpenChange, onCreate }: Cr
     </Dialog>
   );
 }
+

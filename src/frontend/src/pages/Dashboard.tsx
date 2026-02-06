@@ -134,3 +134,4 @@ export default function Dashboard({ projects, onCreateProject, onOpenProject, on
     </div>
   );
 }
+

@@ -13,10 +13,10 @@ export default function VaultViewModeToggle({ viewMode, onViewModeChange }: Vaul
         variant="ghost"
         size="sm"
         onClick={() => onViewModeChange('compact')}
-        className={`h-8 px-3 font-semibold text-[10px] uppercase tracking-wider transition-all ${
+        className={`h-8 px-3 font-semibold text-[10px] uppercase tracking-wider transition-all duration-component ease-apple ${
           viewMode === 'compact'
-            ? 'bg-background text-foreground shadow-sm'
-            : 'text-muted-foreground hover:text-foreground hover:bg-transparent'
+            ? 'bg-background text-foreground shadow-sm scale-100'
+            : 'text-muted-foreground hover:text-foreground hover:bg-transparent scale-95'
         }`}
       >
         <Grid2x2 className="w-3.5 h-3.5 mr-1.5" />
@@ -26,10 +26,10 @@ export default function VaultViewModeToggle({ viewMode, onViewModeChange }: Vaul
         variant="ghost"
         size="sm"
         onClick={() => onViewModeChange('grid')}
-        className={`h-8 px-3 font-semibold text-[10px] uppercase tracking-wider transition-all ${
+        className={`h-8 px-3 font-semibold text-[10px] uppercase tracking-wider transition-all duration-component ease-apple ${
           viewMode === 'grid'
-            ? 'bg-background text-foreground shadow-sm'
-            : 'text-muted-foreground hover:text-foreground hover:bg-transparent'
+            ? 'bg-background text-foreground shadow-sm scale-100'
+            : 'text-muted-foreground hover:text-foreground hover:bg-transparent scale-95'
         }`}
       >
         <LayoutGrid className="w-3.5 h-3.5 mr-1.5" />
@@ -38,3 +38,4 @@ export default function VaultViewModeToggle({ viewMode, onViewModeChange }: Vaul
     </div>
   );
 }
+

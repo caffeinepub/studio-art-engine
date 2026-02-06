@@ -1,58 +1,82 @@
 {
   "kind": "coverage_report",
   "version": "1.0",
-  "generatedAt": "2026-02-05T14:38:02.620Z",
+  "generatedAt": "2026-02-05T17:17:53.862Z",
   "sources": {
     "buildRequest": true,
     "implementationPlan": true
   },
   "requirements": {
-    "total": 3,
-    "implemented": 3,
+    "total": 4,
+    "implemented": 4,
     "items": [
       {
         "id": "REQ-1",
-        "summary": "Redesign the Projects dashboard page (frontend/src/pages/Dashboard.tsx) to fully replace the current layout and visual style to match the uploaded reference (image-42.png) and the referenced video, while preserving existing project functionality (create, open, edit/settings, delete).",
+        "summary": "Reduce the frontend JavaScript bundle size by approximately 90% compared to the current baseline, focusing on production build output (JS shipped to the browser).",
         "status": "implemented",
         "plannedFiles": [
-          "frontend/src/pages/Dashboard.tsx",
-          "frontend/src/components/dashboard/ProjectTile.tsx",
-          "frontend/src/components/dashboard/NewProjectTile.tsx",
-          "frontend/src/index.css"
+          "frontend/docs/bundle-size-report.md",
+          "frontend/src/App.tsx",
+          "frontend/src/components/icons/index.tsx",
+          "frontend/src/components/Header.tsx",
+          "frontend/src/components/Footer.tsx"
         ],
         "matchedFiles": [
-          "frontend/src/pages/Dashboard.tsx",
-          "frontend/src/components/dashboard/ProjectTile.tsx",
-          "frontend/src/components/dashboard/NewProjectTile.tsx",
-          "frontend/src/index.css"
+          "frontend/src/App.tsx",
+          "frontend/src/components/icons/index.tsx",
+          "frontend/src/components/Header.tsx",
+          "frontend/src/components/Footer.tsx"
         ]
       },
       {
         "id": "REQ-2",
-        "summary": "Update the create-project and project-settings dialogs used from the dashboard to visually match the new Projects dashboard style (dark, minimal, rounded, subdued borders), without changing their underlying validation logic or data shape.",
+        "summary": "Implement bundle-size optimizations by removing or replacing unnecessary/heavy frontend dependencies, eliminating unused code, and ensuring large features are code-split/lazy-loaded where appropriate (without adding new third-party animation libraries).",
         "status": "implemented",
         "plannedFiles": [
-          "frontend/src/components/dashboard/CreateProjectDialog.tsx",
-          "frontend/src/components/dashboard/ProjectSettingsDialog.tsx",
-          "frontend/src/pages/Dashboard.tsx"
+          "frontend/src/pages/Vault.tsx",
+          "frontend/src/pages/Settings.tsx",
+          "frontend/src/pages/Rules.tsx",
+          "frontend/src/components/dashboard/ProjectTile.tsx",
+          "frontend/src/components/VaultPublishingControls.tsx"
         ],
         "matchedFiles": [
-          "frontend/src/components/dashboard/CreateProjectDialog.tsx",
-          "frontend/src/components/dashboard/ProjectSettingsDialog.tsx",
-          "frontend/src/pages/Dashboard.tsx"
+          "frontend/src/pages/Vault.tsx"
         ]
       },
       {
         "id": "REQ-3",
-        "summary": "Ensure the redesigned Projects dashboard layout is responsive and preserves usability across breakpoints (mobile, tablet, desktop), matching the reference grid feel (large tiles, generous spacing) while keeping the existing header/navigation behavior intact.",
+        "summary": "Make the UI feel more dynamic using simple Tailwind/CSS/React-based motion effects applied only to selected components (e.g., buttons and modals), keeping animations subtle and performance-friendly.",
         "status": "implemented",
         "plannedFiles": [
-          "frontend/src/pages/Dashboard.tsx",
-          "frontend/src/components/dashboard/ProjectTile.tsx"
+          "frontend/src/index.css",
+          "frontend/src/components/MotionIconButton.tsx",
+          "frontend/src/components/dashboard/CreateProjectDialog.tsx",
+          "frontend/src/components/dashboard/ProjectSettingsDialog.tsx",
+          "frontend/src/components/ConfirmDestructiveDialog.tsx",
+          "frontend/src/components/Header.tsx",
+          "frontend/src/pages/Vault.tsx"
         ],
         "matchedFiles": [
-          "frontend/src/pages/Dashboard.tsx",
-          "frontend/src/components/dashboard/ProjectTile.tsx"
+          "frontend/src/index.css",
+          "frontend/src/components/MotionIconButton.tsx",
+          "frontend/src/components/Header.tsx",
+          "frontend/src/pages/Vault.tsx"
+        ]
+      },
+      {
+        "id": "REQ-4",
+        "summary": "Resolve the previous build failure by ensuring the project builds successfully end-to-end after the changes (development and production build).",
+        "status": "implemented",
+        "plannedFiles": [
+          "frontend/src/pages/Vault.tsx",
+          "frontend/src/App.tsx",
+          "frontend/src/components/icons/index.tsx",
+          "frontend/docs/bundle-size-report.md"
+        ],
+        "matchedFiles": [
+          "frontend/src/pages/Vault.tsx",
+          "frontend/src/App.tsx",
+          "frontend/src/components/icons/index.tsx"
         ]
       }
     ]
@@ -60,14 +84,14 @@
   "changedFiles": [
     "build-request.json",
     "feature_evidence.json",
-    "frontend-file-summaries.txt",
     "frontend-implementation-plan.json",
-    "frontend/src/components/dashboard/CreateProjectDialog.tsx",
-    "frontend/src/components/dashboard/NewProjectTile.tsx",
-    "frontend/src/components/dashboard/ProjectSettingsDialog.tsx",
-    "frontend/src/components/dashboard/ProjectTile.tsx",
+    "frontend/src/App.tsx",
+    "frontend/src/components/Footer.tsx",
+    "frontend/src/components/Header.tsx",
+    "frontend/src/components/MotionIconButton.tsx",
+    "frontend/src/components/icons/index.tsx",
     "frontend/src/index.css",
-    "frontend/src/pages/Dashboard.tsx",
+    "frontend/src/pages/Vault.tsx",
     "project_state.json",
     "scratch/component-selection.json",
     "spec.md",
