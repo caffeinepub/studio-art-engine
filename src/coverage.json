@@ -1,24 +1,74 @@
 {
   "kind": "coverage_report",
   "version": "1.0",
-  "generatedAt": "2026-02-06T06:22:17.292Z",
+  "generatedAt": "2026-02-07T02:27:47.652Z",
   "sources": {
     "buildRequest": true,
     "implementationPlan": true
   },
   "requirements": {
-    "total": 0,
-    "implemented": 0,
-    "items": []
+    "total": 3,
+    "implemented": 3,
+    "items": [
+      {
+        "id": "REQ-1",
+        "summary": "Fix the Pinata directory upload so collection uploads no longer fail with the error message “Directory upload failed: 400”. Update the Pinata directory upload implementation to correctly upload multiple files as a wrapped directory and return actionable error details when the request fails.",
+        "status": "implemented",
+        "plannedFiles": [
+          "frontend/src/utils/pinata.ts",
+          "frontend/src/utils/ipfsPublishing.ts",
+          "frontend/src/components/VaultPublishingControls.tsx"
+        ],
+        "matchedFiles": [
+          "frontend/src/utils/pinata.ts",
+          "frontend/src/utils/ipfsPublishing.ts",
+          "frontend/src/components/VaultPublishingControls.tsx"
+        ]
+      },
+      {
+        "id": "REQ-2",
+        "summary": "After the user locks a collection for uploading to Pinata, disable the collection “Generate” action and keep it disabled until the user unlocks the collection. The Generate action must not start any regeneration while the collection is locked.",
+        "status": "implemented",
+        "plannedFiles": [
+          "frontend/src/pages/Vault.tsx",
+          "frontend/src/components/VaultPublishingControls.tsx"
+        ],
+        "matchedFiles": [
+          "frontend/src/pages/Vault.tsx",
+          "frontend/src/components/VaultPublishingControls.tsx"
+        ]
+      },
+      {
+        "id": "REQ-3",
+        "summary": "Implement an interactive mirror/gloss reflection effect for the Dashboard hero text “GENESIS.ENGINE” that preserves the existing text colors and feels premium and physical. The effect must use a subtle glass/mirror shine overlay with gradient masking (light → transparent) and smoothly follow mouse movement horizontally; highlight intensity should vary with cursor position. Avoid heavy glow, neon, or gimmicky visuals.",
+        "status": "implemented",
+        "plannedFiles": [
+          "frontend/src/components/dashboard/GlossyHeroText.tsx",
+          "frontend/src/pages/Dashboard.tsx",
+          "frontend/src/index.css"
+        ],
+        "matchedFiles": [
+          "frontend/src/components/dashboard/GlossyHeroText.tsx",
+          "frontend/src/pages/Dashboard.tsx",
+          "frontend/src/index.css"
+        ]
+      }
+    ]
   },
   "changedFiles": [
     "build-request.json",
+    "caffeine.lock.json",
     "feature_evidence.json",
     "frontend-file-summaries.txt",
+    "frontend-implementation-plan.json",
     "frontend/src/App.tsx",
-    "frontend/src/components/dashboard/CreateProjectDialog.tsx",
-    "frontend/src/pages/Settings.tsx",
-    "frontend/src/utils/metadataPresets.ts",
+    "frontend/src/components/VaultPublishingControls.tsx",
+    "frontend/src/components/dashboard/GlossyHeroText.tsx",
+    "frontend/src/index.css",
+    "frontend/src/pages/Dashboard.tsx",
+    "frontend/src/pages/Vault.tsx",
+    "frontend/src/utils/ipfsPublishing.ts",
+    "frontend/src/utils/pinata.ts",
     "project_state.json",
     "scratch/component-selection.json",
     "spec.md",

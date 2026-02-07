@@ -11,6 +11,8 @@ export interface PinataUploadResult {
   success: boolean;
   cid?: string;
   error?: string;
+  statusCode?: number;
+  responseBody?: string;
 }
 
 /**
@@ -78,9 +80,18 @@ export async function uploadToPinata(
 
     if (!response.ok) {
       const errorText = await response.text();
+      let parsedError;
+      try {
+        parsedError = JSON.parse(errorText);
+      } catch {
+        parsedError = null;
+      }
+
       return {
         success: false,
         error: `Upload failed: ${response.status}`,
+        statusCode: response.status,
+        responseBody: parsedError ? JSON.stringify(parsedError, null, 2) : errorText,
       };
     }
 
@@ -121,9 +132,19 @@ export async function uploadJSONToPinata(
     });
 
     if (!response.ok) {
+      const errorText = await response.text();
+      let parsedError;
+      try {
+        parsedError = JSON.parse(errorText);
+      } catch {
+        parsedError = null;
+      }
+
       return {
         success: false,
         error: `Upload failed: ${response.status}`,
+        statusCode: response.status,
+        responseBody: parsedError ? JSON.stringify(parsedError, null, 2) : errorText,
       };
     }
 
@@ -143,6 +164,8 @@ export async function uploadJSONToPinata(
 /**
  * Uploads multiple files as a directory to Pinata IPFS
  * Returns a single directory CID that can be used to construct ipfs://<cid>/<filename> URIs
+ * 
+ * Each file must be appended with a relative path in the filename to create proper directory structure
  */
 export async function uploadDirectoryToPinata(
   apiKey: string,
@@ -151,12 +174,14 @@ export async function uploadDirectoryToPinata(
   try {
     const formData = new FormData();
     
-    // Add all files to the form data
+    // Add all files to the form data with relative paths
+    // Each file needs its own 'file' entry with the path in the filename
     files.forEach(({ filename, blob }) => {
+      // Use the filename as the relative path within the directory
       formData.append('file', blob, filename);
     });
 
-    // Add metadata to wrap as directory
+    // Add metadata to name the directory
     const metadata = JSON.stringify({
       name: 'collection-images',
     });
@@ -171,9 +196,19 @@ export async function uploadDirectoryToPinata(
     });
 
     if (!response.ok) {
+      const errorText = await response.text();
+      let parsedError;
+      try {
+        parsedError = JSON.parse(errorText);
+      } catch {
+        parsedError = null;
+      }
+
       return {
         success: false,
         error: `Directory upload failed: ${response.status}`,
+        statusCode: response.status,
+        responseBody: parsedError ? JSON.stringify(parsedError, null, 2) : errorText,
       };
     }
 

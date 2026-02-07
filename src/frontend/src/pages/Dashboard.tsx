@@ -1,137 +1,139 @@
 import { useState } from 'react';
-import { useConfirmDestructive } from '@/hooks/useConfirmDestructive';
-import { toast } from 'sonner';
-import ProjectTile from '@/components/dashboard/ProjectTile';
-import NewProjectTile from '@/components/dashboard/NewProjectTile';
-import CreateProjectDialog from '@/components/dashboard/CreateProjectDialog';
-import ProjectSettingsDialog from '@/components/dashboard/ProjectSettingsDialog';
+import { Card, CardContent } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { PlusIcon } from '@/components/icons';
 import type { Project } from '../App';
+import ProjectTile from '../components/dashboard/ProjectTile';
+import NewProjectTile from '../components/dashboard/NewProjectTile';
+import CreateProjectDialog from '../components/dashboard/CreateProjectDialog';
+import ProjectSettingsDialog from '../components/dashboard/ProjectSettingsDialog';
+import GlossyHeroText from '../components/dashboard/GlossyHeroText';
 
 interface DashboardProps {
   projects: Project[];
-  onCreateProject: (project: Omit<Project, 'id' | 'createdAt' | 'settings'> & { settings?: Partial<Project['settings']> }) => void;
-  onOpenProject: (id: string) => void;
-  onDeleteProject: (id: string) => void;
+  onSelectProject: (project: Project) => void;
+  onCreateProject: (project: Project) => void;
   onUpdateProject: (projectId: string, updater: (project: Project) => Project) => void;
+  onDeleteProject: (projectId: string) => void;
 }
 
-export default function Dashboard({ projects, onCreateProject, onOpenProject, onDeleteProject, onUpdateProject }: DashboardProps) {
-  const [isCreateOpen, setIsCreateOpen] = useState(false);
-  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+export default function Dashboard({
+  projects,
+  onSelectProject,
+  onCreateProject,
+  onUpdateProject,
+  onDeleteProject,
+}: DashboardProps) {
+  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [editingProject, setEditingProject] = useState<Project | null>(null);
 
-  const { confirm } = useConfirmDestructive();
-
-  const handleCreate = (data: { name: string; symbol: string; collectionSize: number; pixelArtMode: boolean }) => {
-    onCreateProject({
+  const handleCreateProject = (data: { name: string; symbol: string; collectionSize: number; pixelArtMode: boolean }) => {
+    const newProject: Project = {
+      id: `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
       name: data.name,
       symbol: data.symbol,
-      blockchain: 'SOL',
+      blockchain: 'ETH',
       collectionSize: data.collectionSize,
       pixelArtMode: data.pixelArtMode,
       layers: [],
       rules: [],
       customTokens: [],
       generatedNFTs: [],
-    });
-    
-    setIsCreateOpen(false);
+      createdAt: Date.now(),
+      collectionLocked: false,
+      ipfsPublishing: { status: 'not-ready' },
+      settings: {
+        outputSize: 800,
+        metadataFormat: 'ethereum',
+        tokenNameTemplate: '{{collection}} #{{id}}',
+        tokenDescription: '',
+        startTokenNumberAtZero: false,
+        royaltiesPercent: 5,
+        pinataApiKey: '',
+      },
+    };
+    onCreateProject(newProject);
+    setIsCreateDialogOpen(false);
   };
 
-  const openSettings = (project: Project) => {
-    setEditingProject(project);
-    setIsSettingsOpen(true);
-  };
-
-  const handleSaveSettings = (data: { name: string; symbol: string; collectionSize: number; pixelArtMode: boolean }) => {
+  const handleSaveProjectSettings = (data: { name: string; symbol: string; collectionSize: number; pixelArtMode: boolean }) => {
     if (!editingProject) return;
-
-    onUpdateProject(editingProject.id, (p) => ({
-      ...p,
+    
+    onUpdateProject(editingProject.id, (project) => ({
+      ...project,
       name: data.name,
       symbol: data.symbol,
-      pixelArtMode: data.pixelArtMode,
       collectionSize: data.collectionSize,
+      pixelArtMode: data.pixelArtMode,
     }));
-
-    setIsSettingsOpen(false);
     setEditingProject(null);
-    toast.success('Project updated');
-  };
-
-  const handleDeleteProject = async (project: Project) => {
-    const confirmed = await confirm({
-      title: 'Delete project?',
-      description: `Are you sure you want to delete "${project.name}"? This action cannot be undone.`,
-    });
-
-    if (confirmed) {
-      onDeleteProject(project.id);
-    }
   };
 
   return (
-    <div className="h-full flex flex-col overflow-hidden">
-      <div className="flex-1 overflow-y-auto">
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-16 lg:py-20">
-          <div className="max-w-7xl mx-auto">
-            {/* Hero Section */}
-            <div className="mb-16 sm:mb-20 fade-in">
-              <div className="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-6 lg:gap-12">
-                <div className="flex-1">
-                  <div className="mb-3">
-                    <span className="text-[10px] font-semibold tracking-[0.2em] uppercase text-muted-foreground/60">
-                      Professional suite
-                    </span>
-                  </div>
-                  <h1 className="text-4xl sm:text-5xl lg:text-6xl xl:text-7xl font-black tracking-tighter mb-4">
-                    <span className="text-foreground">GENESIS</span>
-                    <span className="text-muted-foreground/40">.ENGINE</span>
-                  </h1>
-                </div>
-                <div className="lg:text-right lg:max-w-xs">
-                  <p className="text-sm text-muted-foreground leading-relaxed">
-                    Industrial-grade generative architecture for high-fidelity digital artifacts.
-                  </p>
-                </div>
-              </div>
-            </div>
+    <div className="min-h-screen bg-background text-foreground page-transition">
+      <div className="max-w-7xl mx-auto px-6 py-12 space-y-12">
+        {/* Hero Section */}
+        <div className="space-y-4">
+          <GlossyHeroText />
+          <p className="text-lg text-muted-foreground max-w-2xl">
+            Create generative NFT collections with layered art, rarity controls, and blockchain-ready metadata.
+          </p>
+        </div>
 
-            {/* Projects Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8">
-              {/* New Project Tile */}
-              <NewProjectTile onClick={() => setIsCreateOpen(true)} />
-
-              {/* Existing Projects */}
-              {projects.map((project, index) => (
-                <ProjectTile
-                  key={project.id}
-                  project={project}
-                  onOpen={() => onOpenProject(project.id)}
-                  onSettings={() => openSettings(project)}
-                  onDelete={() => handleDeleteProject(project)}
-                  index={index}
-                />
-              ))}
-            </div>
+        {/* Projects Grid */}
+        <div className="space-y-6">
+          <div className="flex items-center justify-between">
+            <h2 className="text-2xl font-bold tracking-tight">Your Projects</h2>
+            <Button onClick={() => setIsCreateDialogOpen(true)} size="sm" className="focus-ring">
+              <PlusIcon className="w-4 h-4 mr-2" />
+              New Project
+            </Button>
           </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            {/* New Project Tile */}
+            <NewProjectTile onClick={() => setIsCreateDialogOpen(true)} />
+
+            {/* Existing Projects */}
+            {projects.map((project, index) => (
+              <ProjectTile
+                key={project.id}
+                project={project}
+                onOpen={() => onSelectProject(project)}
+                onSettings={() => setEditingProject(project)}
+                onDelete={() => onDeleteProject(project.id)}
+                index={index}
+              />
+            ))}
+          </div>
+
+          {projects.length === 0 && (
+            <Card className="border-dashed">
+              <CardContent className="py-12 text-center">
+                <p className="text-muted-foreground mb-4">No projects yet. Start by creating your first one!</p>
+                <Button onClick={() => setIsCreateDialogOpen(true)} variant="outline" className="focus-ring">
+                  <PlusIcon className="w-4 h-4 mr-2" />
+                  Create Project
+                </Button>
+              </CardContent>
+            </Card>
+          )}
         </div>
       </div>
 
       {/* Dialogs */}
       <CreateProjectDialog
-        open={isCreateOpen}
-        onOpenChange={setIsCreateOpen}
-        onCreate={handleCreate}
+        open={isCreateDialogOpen}
+        onOpenChange={setIsCreateDialogOpen}
+        onCreate={handleCreateProject}
       />
 
       <ProjectSettingsDialog
-        open={isSettingsOpen}
-        onOpenChange={setIsSettingsOpen}
+        open={!!editingProject}
+        onOpenChange={(open) => !open && setEditingProject(null)}
         project={editingProject}
-        onSave={handleSaveSettings}
+        onSave={handleSaveProjectSettings}
       />
     </div>
   );
 }
-

@@ -14,6 +14,8 @@ export interface IPFSUploadResult {
   imageDirCID?: string;
   metadataCID?: string;
   error?: string;
+  statusCode?: number;
+  responseBody?: string;
 }
 
 /**
@@ -76,6 +78,8 @@ export async function uploadCollectionToIPFS(
       return {
         success: false,
         error: imageDirResult.error || 'Image directory upload failed',
+        statusCode: imageDirResult.statusCode,
+        responseBody: imageDirResult.responseBody,
       };
     }
 
@@ -122,6 +126,8 @@ export async function uploadCollectionToIPFS(
       return {
         success: false,
         error: metadataResult.error || 'Metadata upload failed',
+        statusCode: metadataResult.statusCode,
+        responseBody: metadataResult.responseBody,
       };
     }
 

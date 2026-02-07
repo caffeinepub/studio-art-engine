@@ -1,10 +1,82 @@
 {
   "kind": "build_request",
-  "title": "Untitled request",
+  "title": "Fix Pinata directory upload, enforce lock→generate gating, and add premium mirror/gloss hero text effect",
   "priority": "normal",
-  "requirements": [],
-  "constraints": [],
-  "nonGoals": [],
+  "requirements": [
+    {
+      "id": "REQ-1",
+      "text": "Fix the Pinata directory upload so collection uploads no longer fail with the error message “Directory upload failed: 400”. Update the Pinata directory upload implementation to correctly upload multiple files as a wrapped directory and return actionable error details when the request fails.",
+      "target": "frontend",
+      "source": {
+        "messageIds": [
+          "msg-1"
+        ],
+        "quotes": [
+          "-Please fix the Pinata upload so it no longer throws the error: “Directory upload failed: 400”."
+        ]
+      },
+      "acceptanceCriteria": [
+        "Uploading a generated collection’s images as a directory to Pinata succeeds and returns a directory CID under normal conditions (valid JWT, network available).",
+        "When Pinata returns a non-2xx response, the UI shows a failure state and includes the HTTP status plus any response body text/json provided by Pinata (no silent/opaque 400 errors).",
+        "The IPFS publishing flow in the Vault completes the image directory upload step without triggering “Directory upload failed: 400” for valid inputs."
+      ]
+    },
+    {
+      "id": "REQ-2",
+      "text": "After the user locks a collection for uploading to Pinata, disable the collection “Generate” action and keep it disabled until the user unlocks the collection. The Generate action must not start any regeneration while the collection is locked.",
+      "target": "frontend",
+      "source": {
+        "messageIds": [
+          "msg-1"
+        ],
+        "quotes": [
+          "-After \"lock\" the collection to prepare for uploading to Pinata, the \"Generate\" button should be disabled and only become clickable and generate again after use \"unlock\""
+        ]
+      },
+      "acceptanceCriteria": [
+        "When `project.collectionLocked` is true, the Generate button/control is disabled and cannot be triggered via click or keyboard.",
+        "When the collection is unlocked, the Generate button/control becomes enabled again (subject to any existing non-lock validation like required layers/traits).",
+        "If a user attempts to trigger generation while locked (e.g., via any other UI path), the app prevents it and shows a clear toast/message indicating the collection is locked."
+      ]
+    },
+    {
+      "id": "REQ-3",
+      "text": "Implement an interactive mirror/gloss reflection effect for the Dashboard hero text “GENESIS.ENGINE” that preserves the existing text colors and feels premium and physical. The effect must use a subtle glass/mirror shine overlay with gradient masking (light → transparent) and smoothly follow mouse movement horizontally; highlight intensity should vary with cursor position. Avoid heavy glow, neon, or gimmicky visuals.",
+      "target": "frontend",
+      "source": {
+        "messageIds": [
+          "msg-1"
+        ],
+        "quotes": [
+          "-Interactive Mirror / Gloss Text Effect",
+          "Create an interactive mirror / glossy reflection effect for the text “GENESIS.ENGINE”.",
+          "Text has a subtle glass / mirror shine overlay,keep the text color ",
+          "On mouse move:",
+          "A soft light reflection follows the cursor horizontally.",
+          "Highlight intensity changes based on cursor position.",
+          "Use gradient masking (light → transparent) to simulate reflection.",
+          "Motion must be smooth, lightweight, and responsive.",
+          "No heavy glow, no neon, no gimmicks.",
+          "The effect should feel premium, calm, and physical, similar to Apple product hero text."
+        ]
+      },
+      "acceptanceCriteria": [
+        "On the Dashboard page hero heading, a subtle reflective highlight sweeps/follows the cursor horizontally across “GENESIS.ENGINE”.",
+        "The base text colors remain unchanged (current foreground + muted “.ENGINE” treatment remains visually consistent).",
+        "The reflection uses a gradient mask (light to transparent) rather than outer glows, and remains calm/premium (no neon/glow bloom).",
+        "Motion feels smooth and responsive and does not noticeably degrade scrolling or interaction performance on the Dashboard page."
+      ]
+    }
+  ],
+  "constraints": [
+    "Frontend immutable paths must not be edited: frontend/src/hooks/useInternetIdentity.ts, frontend/src/hooks/useInternetIdentity.tsx, frontend/src/hooks/useActor.ts, frontend/src/main.tsx, frontend/src/components/ui (compose only).",
+    "Backend must remain a single Motoko actor in backend/main.mo; add backend/migration.mo only if persistent state upgrades are required."
+  ],
+  "nonGoals": [
+    "Add or change blockchain/metadata export options (e.g., defaults, adding/removing chains) beyond what is required to fix the Pinata upload and lock/generate flow.",
+    "Implement ICP-native storage, cloud sync, or on-chain publishing (not requested in this build).",
+    "Introduce heavy animation libraries or 3D effects for the hero text."
+  ],
   "imageRequirements": {
     "required": [],
     "edits": []

@@ -121,15 +121,27 @@ export default function VaultPublishingControls({ project, onUpdateProject }: Va
         }));
         toast.success('Collection uploaded to IPFS successfully!');
       } else {
+        // Build detailed error message
+        let errorMessage = result.error || 'Upload failed';
+        if (result.statusCode) {
+          errorMessage += ` (HTTP ${result.statusCode})`;
+        }
+        if (result.responseBody) {
+          errorMessage += `\n\nResponse: ${result.responseBody}`;
+        }
+
         onUpdateProject((p) => ({
           ...p,
           ipfsPublishing: {
             ...p.ipfsPublishing,
             status: 'upload-failed',
-            errorMessage: result.error || 'Upload failed',
+            errorMessage,
           },
         }));
-        toast.error(result.error || 'Upload failed');
+        toast.error(result.error || 'Upload failed', {
+          description: result.statusCode ? `HTTP ${result.statusCode}${result.responseBody ? ': ' + result.responseBody.substring(0, 100) : ''}` : undefined,
+          duration: 6000,
+        });
       }
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Upload failed';

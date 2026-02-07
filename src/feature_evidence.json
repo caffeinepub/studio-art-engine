@@ -1,4 +1,67 @@
 {
   "kind": "feature_evidence_report",
-  "features": []
+  "features": [
+    {
+      "featureId": "feature-fix-the-pinata-directory-upload-so-collection-uploads-no-longer-fail-with-the-error-message-directory-upload-failed-400-update-the-pinata-directory-upload-implementation-to-correctly-upload-multiple-files-as-a-wrapped-directory-and-return-actionable-error-details-when-the-request-fails",
+      "featureTitle": "Fix the Pinata directory upload so collection uploads no longer fail with the error message “Directory upload failed: 400”. Update the Pinata directory upload implementation to correctly upload multiple files as a wrapped directory and return actionable error details when the request fails.",
+      "files": [
+        "frontend/src/components/VaultPublishingControls.tsx",
+        "frontend/src/utils/ipfsPublishing.ts",
+        "frontend/src/utils/pinata.ts"
+      ],
+      "components": [
+        "blob-storage@4.0.0",
+        "core-infrastructure@1.0.2",
+        "shadcn-ui@1.0.0",
+        "build-template-react@1.0.0",
+        "initial-app@1.0.0",
+        "github-export-icp-cli@1.0.0"
+      ],
+      "testIds": [
+        "REQ-1"
+      ],
+      "confidence": "high"
+    },
+    {
+      "featureId": "feature-after-the-user-locks-a-collection-for-uploading-to-pinata-disable-the-collection-generate-action-and-keep-it-disabled-until-the-user-unlocks-the-collection-the-generate-action-must-not-start-any-regeneration-while-the-collection-is-locked",
+      "featureTitle": "After the user locks a collection for uploading to Pinata, disable the collection “Generate” action and keep it disabled until the user unlocks the collection. The Generate action must not start any regeneration while the collection is locked.",
+      "files": [
+        "frontend/src/components/VaultPublishingControls.tsx",
+        "frontend/src/pages/Vault.tsx"
+      ],
+      "components": [
+        "blob-storage@4.0.0",
+        "core-infrastructure@1.0.2",
+        "shadcn-ui@1.0.0",
+        "build-template-react@1.0.0",
+        "initial-app@1.0.0",
+        "github-export-icp-cli@1.0.0"
+      ],
+      "testIds": [
+        "REQ-2"
+      ],
+      "confidence": "high"
+    },
+    {
+      "featureId": "feature-implement-an-interactive-mirror-gloss-reflection-effect-for-the-dashboard-hero-text-genesis-engine-that-preserves-the-existing-text-colors-and-feels-premium-and-physical-the-effect-must-use-a-subtle-glass-mirror-shine-overlay-with-gradient-masking-light-transparent-and-smoothly-follow-mouse-movement-horizontally-highlight-intensity-should-vary-with-cursor-position-avoid-heavy-glow-neon-or-gimmicky-visuals",
+      "featureTitle": "Implement an interactive mirror/gloss reflection effect for the Dashboard hero text “GENESIS.ENGINE” that preserves the existing text colors and feels premium and physical. The effect must use a subtle glass/mirror shine overlay with gradient masking (light → transparent) and smoothly follow mouse movement horizontally; highlight intensity should vary with cursor position. Avoid heavy glow, neon, or gimmicky visuals.",
+      "files": [
+        "frontend/src/components/dashboard/GlossyHeroText.tsx",
+        "frontend/src/index.css",
+        "frontend/src/pages/Dashboard.tsx"
+      ],
+      "components": [
+        "blob-storage@4.0.0",
+        "core-infrastructure@1.0.2",
+        "shadcn-ui@1.0.0",
+        "build-template-react@1.0.0",
+        "initial-app@1.0.0",
+        "github-export-icp-cli@1.0.0"
+      ],
+      "testIds": [
+        "REQ-3"
+      ],
+      "confidence": "high"
+    }
+  ]
 }

@@ -1,15 +1,44 @@
 {
   "schemaVersion": "1.0.0",
-  "projectStateVersion": 3,
-  "summary": "Studio Art Engine: an NFT collection generator focused on layer-based creation, rarity/rules, preview, and export; expanding multi-chain metadata export with Ethereum (ERC-721) as the default format.",
+  "projectStateVersion": 5,
+  "summary": "Studio Art Engine: an NFT collection generator focused on layer-based creation, rarity/rules, preview, and export; expanding multi-chain metadata export with Ethereum (ERC-721) as the default format, plus improving IPFS/Pinata upload workflow and related UI/UX (lock/generate flow and premium interactive hero text effect).",
   "architectural_notes": [
     "Blockchain selector should include Ethereum/Polygon/Base/BNB (export-only) and default new projects to Ethereum (ERC-721).",
     "Users can change the target chain later during metadata generation/export (default is not locked-in).",
-    "Cardano (CIP-25) and Tezos (FA2) options/support should be removed."
+    "Cardano (CIP-25) and Tezos (FA2) options/support should be removed.",
+    "Pinata upload should produce Pinata-compatible upload payload/structure (avoid directory upload 400 errors; ensure export format aligns with Pinata’s accepted directory/file upload expectations).",
+    "Lock/Unlock state should gate generation: locked disables Generate until explicitly unlocked."
   ],
-  "known_issues": [],
-  "isFixRequest": false,
-  "existing_features": [],
+  "known_issues": [
+    "Pinata upload currently fails with error: “Directory upload failed: 400” in some export/upload flows."
+  ],
+  "isFixRequest": true,
+  "existing_features": [
+    {
+      "id": "feature-fix-the-pinata-directory-upload-so-collection-uploads-no-longer-fail-with-the-error-message-directory-upload-failed-400-update-the-pinata-directory-upload-implementation-to-correctly-upload-multiple-files-as-a-wrapped-directory-and-return-actionable-error-details-when-the-request-fails",
+      "title": "Fix the Pinata directory upload so collection uploads no longer fail with the error message “Directory upload failed: 400”. Update the Pinata directory upload implementation to correctly upload multiple files as a wrapped directory and return actionable error details when the request fails.",
+      "reqIds": [
+        "REQ-1"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-after-the-user-locks-a-collection-for-uploading-to-pinata-disable-the-collection-generate-action-and-keep-it-disabled-until-the-user-unlocks-the-collection-the-generate-action-must-not-start-any-regeneration-while-the-collection-is-locked",
+      "title": "After the user locks a collection for uploading to Pinata, disable the collection “Generate” action and keep it disabled until the user unlocks the collection. The Generate action must not start any regeneration while the collection is locked.",
+      "reqIds": [
+        "REQ-2"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-implement-an-interactive-mirror-gloss-reflection-effect-for-the-dashboard-hero-text-genesis-engine-that-preserves-the-existing-text-colors-and-feels-premium-and-physical-the-effect-must-use-a-subtle-glass-mirror-shine-overlay-with-gradient-masking-light-transparent-and-smoothly-follow-mouse-movement-horizontally-highlight-intensity-should-vary-with-cursor-position-avoid-heavy-glow-neon-or-gimmicky-visuals",
+      "title": "Implement an interactive mirror/gloss reflection effect for the Dashboard hero text “GENESIS.ENGINE” that preserves the existing text colors and feels premium and physical. The effect must use a subtle glass/mirror shine overlay with gradient masking (light → transparent) and smoothly follow mouse movement horizontally; highlight intensity should vary with cursor position. Avoid heavy glow, neon, or gimmicky visuals.",
+      "reqIds": [
+        "REQ-3"
+      ],
+      "version": 1
+    }
+  ],
   "new_feature_requests": [
     {
       "id": "AR-1",
@@ -56,6 +85,24 @@
     {
       "id": "AR-8",
       "summary": "Planned: Advanced rarity analytics and collection-grade statistical reports",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-9",
+      "summary": "Implement interactive mirror/gloss reflection effect for the “GENESIS.ENGINE” hero text (cursor-driven subtle shine with gradient masking, smooth and lightweight, no glow/neon)",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-10",
+      "summary": "Fix Pinata IPFS upload so exports no longer fail with “Directory upload failed: 400”",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-11",
+      "summary": "When collection is locked for Pinata upload, disable the Generate button; re-enable only after unlock",
       "reqIds": [],
       "status": "pending"
     }

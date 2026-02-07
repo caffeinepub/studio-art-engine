@@ -1,48 +1,71 @@
 {
   "kind": "spec_vs_diff_report",
   "version": "1.0",
-  "generatedAt": "2026-02-06T06:22:17.290Z",
-  "summary": "BuildRequest contains no requirements or acceptance criteria, but the diff implements multiple functional and UI changes (notably expanded blockchain/metadata support, default chain changes, and significant UI/page behavior updates).",
-  "missing_requirements": [],
-  "hallucinated_features": [
+  "generatedAt": "2026-02-07T02:27:47.649Z",
+  "summary": "REQ-3 (glossy/mirror hero text) appears implemented via a new Dashboard hero component and related CSS utilities. REQ-2 (lock→generate gating) is partially evidenced (generation handler blocks when locked), but the diff summary does not clearly show the Generate control being disabled in the UI. REQ-1 (Pinata directory upload fix) cannot be confirmed from the truncated diff for the directory upload implementation, though improved error capture (status/response body) is partially evidenced in upload helpers.",
+  "missing_requirements": [
     {
-      "description": "Expanded blockchain and metadata format support (adds ETH/SOL/POLYGON/BNB/BASE/ICP types and mapping logic), including default settings logic and project validation/normalization work.",
-      "reason": "No requirements were specified in the BuildRequest; this constitutes unrequested functionality changes.",
+      "id": "REQ-1",
+      "requirement": "Fix the Pinata directory upload to correctly upload multiple files as a wrapped directory and return actionable error details when the request fails.",
+      "reason": "The directory upload function implementation is truncated right when it begins (cannot verify it uses the correct Pinata directory/wrap mechanism and thus cannot confirm the 400 fix). While non-2xx error parsing is implemented for single-file/JSON uploads, the directory-upload-specific behavior is not visible in the provided diff summary.",
       "evidence": [
-        "frontend/src/App.tsx",
-        "frontend-file-summaries.txt"
+        "frontend/src/utils/pinata.ts (truncated at start of directory upload function: \"export async function uploa...\")",
+        "frontend/src/utils/ipfsPublishing.ts"
       ]
     },
     {
-      "description": "Settings page enhancements: metadata format selector that also syncs blockchain, Solana creators management and validation, Pinata API key validation UI/logic, metadata preview building.",
-      "reason": "No requirements were specified in the BuildRequest; these are new behaviors and UI flows.",
+      "id": "REQ-2",
+      "requirement": "When project.collectionLocked is true, disable the Generate action/control and keep it disabled until unlock; prevent regeneration via any path and show a clear toast/message if attempted.",
+      "reason": "The diff shows a guard in the generation handler that blocks generation and shows a toast when locked, but it does not show the Generate button/control actually being disabled in the UI when locked (required by AC for click/keyboard prevention at the control level).",
       "evidence": [
-        "frontend/src/pages/Settings.tsx",
-        "frontend/src/utils/metadataPresets.ts"
-      ]
-    },
-    {
-      "description": "Create Project dialog UI and behavior changes (collection config form fields, pixel art mode toggle, updated styling and description).",
-      "reason": "No requirements were specified in the BuildRequest.",
-      "evidence": [
-        "frontend/src/components/dashboard/CreateProjectDialog.tsx"
-      ]
-    },
-    {
-      "description": "Broad UI/UX redesigns and behavior changes across the app (Header/Footer redesign, Dashboard/Workshop/Preview/Builder/Vault/Rules/RarityWorkshop changes including drag-and-drop, enforced layer render order, worker-based generation, publishing controls, rule duplication, weight normalization).",
-      "reason": "No requirements were specified in the BuildRequest; these are unrequested product changes.",
-      "evidence": [
-        "frontend-file-summaries.txt"
+        "frontend/src/pages/Vault.tsx (handleGenerate checks isLocked and toasts, but no button disabled state is shown in the provided excerpt)"
       ]
     }
   ],
-  "confidence": 0.74,
+  "hallucinated_features": [
+    {
+      "description": "Expanded/changed blockchain and metadata format support (added BASE/BNB/POLYGON/ICP types, changed defaults to Ethereum).",
+      "reason": "The BuildRequest explicitly lists as a non-goal adding or changing blockchain/metadata export options beyond what is required for Pinata upload and lock/generate flow; the diff summary indicates broader chain/metadata changes unrelated to the requested fixes.",
+      "evidence": [
+        "frontend/src/App.tsx (diff shows updated Blockchain/MetadataFormat types and defaults)",
+        "frontend-file-summaries.txt (App.tsx summary: \"expanded blockchain support... default changed from Solana to Ethereum\")"
+      ]
+    },
+    {
+      "description": "Redesigned navigation header and footer UI/UX beyond requested items.",
+      "reason": "Header/Footer redesign was not requested by any requirement; only Pinata upload fix, lock gating, and Dashboard hero text effect were requested.",
+      "evidence": [
+        "frontend-file-summaries.txt (Header.tsx and Footer.tsx summaries describe redesign)"
+      ]
+    },
+    {
+      "description": "Addition of a placeholder hook file (useQueries.ts) unrelated to the requested features.",
+      "reason": "No requirement mentions adding query hooks; this appears unrelated to REQ-1/2/3.",
+      "evidence": [
+        "frontend-file-summaries.txt (\"frontend/src/hooks/useQueries.ts\": \"Empty placeholder file\")"
+      ]
+    },
+    {
+      "description": "Broad Tailwind/motion system additions (Apple HIG motion system, new animations/utilities) beyond what is needed for the hero gloss effect.",
+      "reason": "REQ-3 asks for a subtle cursor-following gloss effect; the diff summary indicates a wider animation/motion utility expansion which is not explicitly requested.",
+      "evidence": [
+        "frontend-file-summaries.txt (index.css and tailwind.config.js summaries mention Apple HIG motion system and comprehensive animation utilities)",
+        "frontend/src/index.css",
+        "frontend/tailwind.config.js"
+      ]
+    }
+  ],
+  "confidence": 0.58,
   "changed_files": [
     "frontend-file-summaries.txt",
     "frontend/src/App.tsx",
-    "frontend/src/components/dashboard/CreateProjectDialog.tsx",
-    "frontend/src/pages/Settings.tsx",
-    "frontend/src/utils/metadataPresets.ts",
+    "frontend/src/components/VaultPublishingControls.tsx",
+    "frontend/src/components/dashboard/GlossyHeroText.tsx",
+    "frontend/src/index.css",
+    "frontend/src/pages/Dashboard.tsx",
+    "frontend/src/pages/Vault.tsx",
+    "frontend/src/utils/ipfsPublishing.ts",
+    "frontend/src/utils/pinata.ts",
     "project_state.json"
   ]
 }

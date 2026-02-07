@@ -1,6 +1,81 @@
 {
   "kind": "implementation_plan",
   "version": "1.0",
-  "title": "Untitled request",
-  "requirements": []
+  "title": "Fix Pinata directory upload, enforce lock→generate gating, and add premium mirror/gloss hero text effect",
+  "requirements": [
+    {
+      "id": "REQ-1",
+      "summary": "Correct Pinata directory upload to wrap files as a directory and surface actionable HTTP status + response details on failure.",
+      "acceptanceCriteria": [
+        "Uploading a generated collection’s images as a directory to Pinata succeeds and returns a directory CID under normal conditions (valid JWT, network available).",
+        "When Pinata returns a non-2xx response, the UI shows a failure state and includes the HTTP status plus any response body text/json provided by Pinata (no silent/opaque 400 errors).",
+        "The IPFS publishing flow in the Vault completes the image directory upload step without triggering “Directory upload failed: 400” for valid inputs."
+      ],
+      "file_operations": [
+        {
+          "path": "frontend/src/utils/pinata.ts",
+          "operation": "modify",
+          "description": "Fix uploadDirectoryToPinata to correctly wrap multiple files as a directory (Pinata wrap-with-directory behavior and directory-style filenames), and improve error handling to include HTTP status plus response body (text and/or parsed JSON) when non-2xx responses occur."
+        },
+        {
+          "path": "frontend/src/utils/ipfsPublishing.ts",
+          "operation": "modify",
+          "description": "Ensure the IPFS publishing flow propagates enhanced Pinata directory upload failure details returned by uploadDirectoryToPinata so the Vault UI can display actionable status/body info when uploads fail."
+        },
+        {
+          "path": "frontend/src/components/VaultPublishingControls.tsx",
+          "operation": "modify",
+          "description": "Update failure-state UI messaging/toasts for IPFS publishing to include the improved Pinata directory upload error details (HTTP status + response body) rather than opaque “Directory upload failed: 400”."
+        }
+      ]
+    },
+    {
+      "id": "REQ-2",
+      "summary": "Gate all generation/regeneration actions behind the collection lock state by disabling Generate while locked and blocking any alternate generation paths with a clear message.",
+      "acceptanceCriteria": [
+        "When `project.collectionLocked` is true, the Generate button/control is disabled and cannot be triggered via click or keyboard.",
+        "When the collection is unlocked, the Generate button/control becomes enabled again (subject to any existing non-lock validation like required layers/traits).",
+        "If a user attempts to trigger generation while locked (e.g., via any other UI path), the app prevents it and shows a clear toast/message indicating the collection is locked."
+      ],
+      "file_operations": [
+        {
+          "path": "frontend/src/pages/Vault.tsx",
+          "operation": "modify",
+          "description": "Disable the primary Generate control when project.collectionLocked is true, and add lock checks to prevent generation from starting via any non-button path (e.g., keyboard handlers, helper functions). Show a clear toast/message when blocked due to lock."
+        },
+        {
+          "path": "frontend/src/components/VaultPublishingControls.tsx",
+          "operation": "modify",
+          "description": "Align lock/unlock messaging and state transitions with generation gating expectations (e.g., ensure unlock clearly restores ability to generate, and lock messaging reinforces that generation is blocked while locked)."
+        }
+      ]
+    },
+    {
+      "id": "REQ-3",
+      "summary": "Add a premium interactive mirror/gloss reflection effect to the Dashboard hero text “GENESIS.ENGINE” that preserves existing colors and smoothly follows horizontal mouse movement.",
+      "acceptanceCriteria": [
+        "On the Dashboard page hero heading, a subtle reflective highlight sweeps/follows the cursor horizontally across “GENESIS.ENGINE”.",
+        "The base text colors remain unchanged (current foreground + muted “.ENGINE” treatment remains visually consistent).",
+        "The reflection uses a gradient mask (light to transparent) rather than outer glows, and remains calm/premium (no neon/glow bloom).",
+        "Motion feels smooth and responsive and does not noticeably degrade scrolling or interaction performance on the Dashboard page."
+      ],
+      "file_operations": [
+        {
+          "path": "frontend/src/components/dashboard/GlossyHeroText.tsx",
+          "operation": "create",
+          "description": "Create a lightweight Dashboard-only hero text component that renders “GENESIS.ENGINE” with a subtle glass/mirror shine overlay driven by pointer position (horizontal tracking), using requestAnimationFrame-throttled updates for smooth performance."
+        },
+        {
+          "path": "frontend/src/pages/Dashboard.tsx",
+          "operation": "modify",
+          "description": "Wire the new GlossyHeroText component into the existing hero heading area in place of the static “GENESIS.ENGINE” markup, preserving the current base text colors and “.ENGINE” muted treatment."
+        },
+        {
+          "path": "frontend/src/index.css",
+          "operation": "modify",
+          "description": "Add the CSS needed for the mirror/gloss effect (gradient-masked shine overlay, calm opacity, and CSS variables for shine position/intensity) without introducing heavy glow/neon visuals."
+        }
+      ]
+    }
+  ]
 }
