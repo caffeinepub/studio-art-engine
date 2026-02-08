@@ -168,9 +168,11 @@ export default function VaultPublishingControls({ project, onUpdateProject }: Va
     }
 
     if (hasUploaded) {
+      const imageCID = publishingState?.imageDirCID || 'N/A';
+      const metadataCID = publishingState?.metadataCID || 'N/A';
       return {
         icon: <CheckCircle2 className="h-3.5 w-3.5 text-green-500" />,
-        text: `Uploaded successfully! Metadata CID: ${publishingState?.metadataCID || 'N/A'}`,
+        text: `Uploaded! Images: ${imageCID.substring(0, 12)}... | Metadata: ${metadataCID.substring(0, 12)}... | Token URI: ipfs://${metadataCID}/<TOKEN_ID>.json`,
         color: 'text-green-600 dark:text-green-400',
       };
     }
@@ -253,25 +255,20 @@ export default function VaultPublishingControls({ project, onUpdateProject }: Va
         </HoverTooltip>
 
         {/* Upload Button */}
-        <HoverTooltip content="Uploads images and metadata to IPFS via Pinata.">
+        <HoverTooltip content="Upload images and metadata to IPFS via Pinata.">
           <Button
             onClick={handleUpload}
             disabled={!canUpload && !canRetry}
-            variant={canUpload || canRetry ? 'default' : 'outline'}
+            variant="default"
             size="sm"
             className="h-9 px-4 font-semibold text-xs focus-ring"
           >
-            {isCurrentlyUploading ? (
-              <>
-                <Loader2 className="w-3.5 h-3.5 mr-1.5 animate-spin" />
-                Uploading...
-              </>
+            {isUploading ? (
+              <Loader2 className="w-3.5 h-3.5 mr-1.5 animate-spin" />
             ) : (
-              <>
-                <Upload className="w-3.5 h-3.5 mr-1.5" />
-                {canRetry ? 'Retry Upload' : 'Upload'}
-              </>
+              <Upload className="w-3.5 h-3.5 mr-1.5" />
             )}
+            {canRetry ? 'Retry Upload' : 'Upload'}
           </Button>
         </HoverTooltip>
       </div>

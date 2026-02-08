@@ -159,30 +159,25 @@ export async function uploadJSONToPinata(
  */
 export async function uploadDirectoryToPinata(
   apiKey: string,
-  files: Array<{ filename: string; blob: Blob }>
+  files: Array<{ filename: string; blob: Blob }>,
+  folderName: string
 ): Promise<PinataUploadResult> {
   try {
     const formData = new FormData();
     
-    // CRITICAL: Each file must be appended with a path that includes a common directory prefix
-    // This ensures Pinata treats all files as part of a single directory structure
-    // Without this, Pinata returns: "More than one file and/or directory was provided for pinning"
-    const directoryName = 'images';
-    
+    // Each file must be appended with its filename as the third parameter
+    // This creates a flat directory structure at the root level
     files.forEach(({ filename, blob }) => {
-      // Append each file with the directory path prefix
-      // The third parameter (filename) in FormData.append must include the directory path
-      formData.append('file', blob, `${directoryName}/${filename}`);
+      formData.append('file', blob, filename);
     });
 
     // Add pinataMetadata for the directory name
     const metadata = JSON.stringify({
-      name: 'collection-images',
+      name: folderName,
     });
     formData.append('pinataMetadata', metadata);
 
     // Add pinataOptions to wrap files as a directory
-    // This ensures we get a single directory CID
     const options = JSON.stringify({
       wrapWithDirectory: true,
     });

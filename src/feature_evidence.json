@@ -2,11 +2,71 @@
   "kind": "feature_evidence_report",
   "features": [
     {
-      "featureId": "feature-update-the-pinata-directory-upload-implementation-so-uploading-a-generated-collection-to-pinata-no-longer-fails-with-http-400-error-more-than-one-file-and-or-directory-was-provided-for-pinning-this-includes-adjusting-the-multipart-form-data-payload-sent-to-https-api-pinata-cloud-pinning-pinfiletoipfs-to-match-pinata-s-directory-upload-expectations-when-multiple-files-are-provided-and-the-request-must-still-use-jwt-bearer-auth",
-      "featureTitle": "Update the Pinata directory upload implementation so uploading a generated collection to Pinata no longer fails with HTTP 400: {\"error\":\"More than one file and/or directory was provided for pinning.\"}. This includes adjusting the multipart/form-data payload sent to https://api.pinata.cloud/pinning/pinFileToIPFS to match Pinata’s directory upload expectations when multiple files are provided (and the request must still use JWT Bearer auth).",
+      "featureId": "feature-update-the-ipfs-pinata-upload-workflow-to-exactly-follow-1-upload-the-entire-images-folder-as-a-single-directory-upload-and-receive-images-folder-cid-2-generate-one-metadata-json-file-per-token-with-an-image-field-set-to-ipfs-images-folder-cid-token-id-png-3-upload-the-entire-metadata-folder-as-a-single-directory-upload-and-receive-metadata-folder-cid-and-4-present-the-final-token-uri-format-as-ipfs-metadata-folder-cid-token-id-json",
+      "featureTitle": "Update the IPFS/Pinata upload workflow to exactly follow: (1) upload the entire images folder as a single directory upload and receive IMAGES_FOLDER_CID; (2) generate one metadata JSON file per token with an `image` field set to `ipfs://IMAGES_FOLDER_CID/<TOKEN_ID>.png`; (3) upload the entire metadata folder as a single directory upload and receive METADATA_FOLDER_CID; and (4) present the final token URI format as `ipfs://METADATA_FOLDER_CID/<TOKEN_ID>.json`.",
+      "files": [
+        "frontend/src/components/VaultPublishingControls.tsx",
+        "frontend/src/utils/ipfsPublishing.ts",
+        "frontend/src/utils/metadataPresets.ts"
+      ],
+      "components": [
+        "blob-storage@4.0.0",
+        "core-infrastructure@1.0.2",
+        "shadcn-ui@1.0.0",
+        "build-template-react@1.0.0",
+        "initial-app@1.0.0",
+        "github-export-icp-cli@1.0.0"
+      ],
+      "testIds": [
+        "REQ-1"
+      ],
+      "confidence": "high"
+    },
+    {
+      "featureId": "feature-fix-pinata-directory-upload-construction-so-directory-uploads-cannot-collapse-merge-metadata-into-a-single-file-ensure-every-file-appended-to-formdata-for-directory-uploads-includes-the-intended-per-file-path-name-via-the-third-parameter-of-formdata-append-file-blob-path-and-that-metadata-is-uploaded-as-multiple-files-1-json-2-json-inside-one-directory-upload",
+      "featureTitle": "Fix Pinata directory upload construction so directory uploads cannot collapse/merge metadata into a single file: ensure every file appended to `FormData` for directory uploads includes the intended per-file path/name (via the third parameter of `formData.append('file', blob, <path>)`) and that metadata is uploaded as multiple files (`1.json`, `2.json`, …) inside one directory upload.",
       "files": [
         "frontend/src/utils/ipfsPublishing.ts",
         "frontend/src/utils/pinata.ts"
+      ],
+      "components": [
+        "blob-storage@4.0.0",
+        "core-infrastructure@1.0.2",
+        "shadcn-ui@1.0.0",
+        "build-template-react@1.0.0",
+        "initial-app@1.0.0",
+        "github-export-icp-cli@1.0.0"
+      ],
+      "testIds": [
+        "REQ-2"
+      ],
+      "confidence": "high"
+    },
+    {
+      "featureId": "feature-enforce-1-based-sequential-filenames-for-both-exported-assets-and-pinata-uploads-images-must-be-named-1-png-2-png-3-png-and-metadata-files-must-be-1-json-2-json-3-json-no-0-png-0-json-in-the-ipfs-upload-workflow",
+      "featureTitle": "Enforce 1-based sequential filenames for both exported assets and Pinata uploads: images must be named `1.png`, `2.png`, `3.png`, … and metadata files must be `1.json`, `2.json`, `3.json`, … (no `0.png`/`0.json` in the IPFS upload workflow).",
+      "files": [
+        "frontend/src/pages/Vault.tsx",
+        "frontend/src/utils/ipfsPublishing.ts"
+      ],
+      "components": [
+        "blob-storage@4.0.0",
+        "core-infrastructure@1.0.2",
+        "shadcn-ui@1.0.0",
+        "build-template-react@1.0.0",
+        "initial-app@1.0.0",
+        "github-export-icp-cli@1.0.0"
+      ],
+      "testIds": [
+        "REQ-3"
+      ],
+      "confidence": "high"
+    },
+    {
+      "featureId": "feature-implement-final-asset-locking-behavior-when-the-collection-is-locked-for-publishing-disable-the-vault-generate-action-and-any-regeneration-actions-that-would-change-the-collection-and-only-re-enable-them-after-the-collection-is-unlocked-without-changing-the-current-app-layout",
+      "featureTitle": "Implement final asset locking behavior: when the collection is locked for publishing, disable the Vault \"Generate\" action (and any regeneration actions that would change the collection) and only re-enable them after the collection is unlocked, without changing the current app layout.",
+      "files": [
+        "frontend/src/pages/Vault.tsx"
       ],
       "components": [
         "blob-storage@4.0.0",
@@ -22,11 +82,13 @@
       "confidence": "high"
     },
     {
-      "featureId": "feature-ensure-the-image-uri-paths-in-generated-metadata-remain-correct-after-the-directory-upload-payload-change-e-g-if-files-are-uploaded-under-a-directory-prefix-path-metadata-must-reference-ipfs-imagedircid-correct-relative-path",
-      "featureTitle": "Ensure the image URI paths in generated metadata remain correct after the directory-upload payload change (e.g., if files are uploaded under a directory prefix/path, metadata must reference ipfs://<imageDirCID>/<correct relative path>).",
+      "featureId": "feature-ensure-exported-images-match-the-exact-pixel-dimensions-configured-in-the-settings-section-for-the-project-and-that-the-same-sizing-is-used-for-the-images-that-are-uploaded-to-pinata-so-all-assets-in-the-uploaded-images-folder-share-identical-dimensions",
+      "featureTitle": "Ensure exported images match the exact pixel dimensions configured in the Settings section for the project, and that the same sizing is used for the images that are uploaded to Pinata (so all assets in the uploaded images folder share identical dimensions).",
       "files": [
+        "frontend/src/pages/Vault.tsx",
         "frontend/src/utils/ipfsPublishing.ts",
-        "frontend/src/utils/metadataPresets.ts"
+        "frontend/src/utils/vaultGeneratorProtocol.ts",
+        "frontend/src/workers/vaultGenerator.worker.ts"
       ],
       "components": [
         "blob-storage@4.0.0",
@@ -38,6 +100,25 @@
       ],
       "testIds": [
         "REQ-5"
+      ],
+      "confidence": "high"
+    },
+    {
+      "featureId": "feature-keep-the-existing-upload-controls-flow-lock-upload-unlock-but-update-status-output-text-to-clearly-show-both-returned-cids-images-folder-cid-and-metadata-folder-cid-and-the-final-token-uri-format-ipfs-metadata-folder-cid-token-id-json-using-english-for-all-user-facing-text",
+      "featureTitle": "Keep the existing upload controls flow (Lock → Upload → Unlock) but update status/output text to clearly show both returned CIDs (IMAGES_FOLDER_CID and METADATA_FOLDER_CID) and the final token URI format `ipfs://METADATA_FOLDER_CID/<TOKEN_ID>.json`, using English for all user-facing text.",
+      "files": [
+        "frontend/src/components/VaultPublishingControls.tsx"
+      ],
+      "components": [
+        "blob-storage@4.0.0",
+        "core-infrastructure@1.0.2",
+        "shadcn-ui@1.0.0",
+        "build-template-react@1.0.0",
+        "initial-app@1.0.0",
+        "github-export-icp-cli@1.0.0"
+      ],
+      "testIds": [
+        "REQ-6"
       ],
       "confidence": "high"
     }

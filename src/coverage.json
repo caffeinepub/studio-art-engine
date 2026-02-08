@@ -1,18 +1,33 @@
 {
   "kind": "coverage_report",
   "version": "1.0",
-  "generatedAt": "2026-02-07T03:19:36.504Z",
+  "generatedAt": "2026-02-08T04:11:46.867Z",
   "sources": {
     "buildRequest": true,
     "implementationPlan": true
   },
   "requirements": {
-    "total": 2,
-    "implemented": 2,
+    "total": 6,
+    "implemented": 6,
     "items": [
       {
-        "id": "REQ-4",
-        "summary": "Update the Pinata directory upload implementation so uploading a generated collection to Pinata no longer fails with HTTP 400: {\"error\":\"More than one file and/or directory was provided for pinning.\"}. This includes adjusting the multipart/form-data payload sent to https://api.pinata.cloud/pinning/pinFileToIPFS to match Pinata’s directory upload expectations when multiple files are provided (and the request must still use JWT Bearer auth).",
+        "id": "REQ-1",
+        "summary": "Update the IPFS/Pinata upload workflow to exactly follow: (1) upload the entire images folder as a single directory upload and receive IMAGES_FOLDER_CID; (2) generate one metadata JSON file per token with an `image` field set to `ipfs://IMAGES_FOLDER_CID/<TOKEN_ID>.png`; (3) upload the entire metadata folder as a single directory upload and receive METADATA_FOLDER_CID; and (4) present the final token URI format as `ipfs://METADATA_FOLDER_CID/<TOKEN_ID>.json`.",
+        "status": "implemented",
+        "plannedFiles": [
+          "frontend/src/utils/ipfsPublishing.ts",
+          "frontend/src/utils/metadataPresets.ts",
+          "frontend/src/components/VaultPublishingControls.tsx"
+        ],
+        "matchedFiles": [
+          "frontend/src/utils/ipfsPublishing.ts",
+          "frontend/src/utils/metadataPresets.ts",
+          "frontend/src/components/VaultPublishingControls.tsx"
+        ]
+      },
+      {
+        "id": "REQ-2",
+        "summary": "Fix Pinata directory upload construction so directory uploads cannot collapse/merge metadata into a single file: ensure every file appended to `FormData` for directory uploads includes the intended per-file path/name (via the third parameter of `formData.append('file', blob, <path>)`) and that metadata is uploaded as multiple files (`1.json`, `2.json`, …) inside one directory upload.",
         "status": "implemented",
         "plannedFiles": [
           "frontend/src/utils/pinata.ts",
@@ -24,16 +39,55 @@
         ]
       },
       {
-        "id": "REQ-5",
-        "summary": "Ensure the image URI paths in generated metadata remain correct after the directory-upload payload change (e.g., if files are uploaded under a directory prefix/path, metadata must reference ipfs://<imageDirCID>/<correct relative path>).",
+        "id": "REQ-3",
+        "summary": "Enforce 1-based sequential filenames for both exported assets and Pinata uploads: images must be named `1.png`, `2.png`, `3.png`, … and metadata files must be `1.json`, `2.json`, `3.json`, … (no `0.png`/`0.json` in the IPFS upload workflow).",
         "status": "implemented",
         "plannedFiles": [
-          "frontend/src/utils/metadataPresets.ts",
+          "frontend/src/utils/ipfsPublishing.ts",
+          "frontend/src/pages/Vault.tsx"
+        ],
+        "matchedFiles": [
+          "frontend/src/utils/ipfsPublishing.ts",
+          "frontend/src/pages/Vault.tsx"
+        ]
+      },
+      {
+        "id": "REQ-4",
+        "summary": "Implement final asset locking behavior: when the collection is locked for publishing, disable the Vault \"Generate\" action (and any regeneration actions that would change the collection) and only re-enable them after the collection is unlocked, without changing the current app layout.",
+        "status": "implemented",
+        "plannedFiles": [
+          "frontend/src/pages/Vault.tsx"
+        ],
+        "matchedFiles": [
+          "frontend/src/pages/Vault.tsx"
+        ]
+      },
+      {
+        "id": "REQ-5",
+        "summary": "Ensure exported images match the exact pixel dimensions configured in the Settings section for the project, and that the same sizing is used for the images that are uploaded to Pinata (so all assets in the uploaded images folder share identical dimensions).",
+        "status": "implemented",
+        "plannedFiles": [
+          "frontend/src/workers/vaultGenerator.worker.ts",
+          "frontend/src/utils/vaultGeneratorProtocol.ts",
+          "frontend/src/pages/Vault.tsx",
           "frontend/src/utils/ipfsPublishing.ts"
         ],
         "matchedFiles": [
-          "frontend/src/utils/metadataPresets.ts",
+          "frontend/src/workers/vaultGenerator.worker.ts",
+          "frontend/src/utils/vaultGeneratorProtocol.ts",
+          "frontend/src/pages/Vault.tsx",
           "frontend/src/utils/ipfsPublishing.ts"
+        ]
+      },
+      {
+        "id": "REQ-6",
+        "summary": "Keep the existing upload controls flow (Lock → Upload → Unlock) but update status/output text to clearly show both returned CIDs (IMAGES_FOLDER_CID and METADATA_FOLDER_CID) and the final token URI format `ipfs://METADATA_FOLDER_CID/<TOKEN_ID>.json`, using English for all user-facing text.",
+        "status": "implemented",
+        "plannedFiles": [
+          "frontend/src/components/VaultPublishingControls.tsx"
+        ],
+        "matchedFiles": [
+          "frontend/src/components/VaultPublishingControls.tsx"
         ]
       }
     ]
@@ -43,9 +97,14 @@
     "feature_evidence.json",
     "frontend-file-summaries.txt",
     "frontend-implementation-plan.json",
+    "frontend/src/components/VaultPublishingControls.tsx",
+    "frontend/src/pages/Settings.tsx",
+    "frontend/src/pages/Vault.tsx",
     "frontend/src/utils/ipfsPublishing.ts",
     "frontend/src/utils/metadataPresets.ts",
     "frontend/src/utils/pinata.ts",
+    "frontend/src/utils/vaultGeneratorProtocol.ts",
+    "frontend/src/workers/vaultGenerator.worker.ts",
     "project_state.json",
     "scratch/component-selection.json",
     "spec.md",

@@ -120,12 +120,11 @@ export default function Settings({ project, onUpdateProject }: SettingsProps) {
 
   const metadataPreview = useMemo(() => {
     return buildMetadataPreview(
-      project.name,
-      project.symbol,
-      localSettings,
-      1
+      project,
+      1,
+      [{ trait_type: 'Example', value: 'Sample Trait' }]
     );
-  }, [project.name, project.symbol, localSettings]);
+  }, [project]);
 
   // Determine publishing status
   const getPublishingStatus = () => {
@@ -433,45 +432,22 @@ export default function Settings({ project, onUpdateProject }: SettingsProps) {
                   className="h-9"
                 />
                 <p className="text-xs text-muted-foreground">
-                  Square output size (width × height)
+                  Square output size (100-4096px). All generated images will use this size.
                 </p>
-              </div>
-
-              {/* Format */}
-              <div className="space-y-2">
-                <Label htmlFor="format" className="text-sm font-medium">
-                  Format
-                </Label>
-                <Select
-                  value="same"
-                  onValueChange={() => {}}
-                  disabled
-                >
-                  <SelectTrigger className="h-9">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="same">Same as assets</SelectItem>
-                  </SelectContent>
-                </Select>
               </div>
 
               <Separator className="my-6" />
 
               {/* Metadata Format */}
               <div className="space-y-2">
-                <Label htmlFor="format-preset" className="text-sm font-medium">
+                <Label htmlFor="metadata-format" className="text-sm font-medium">
                   Metadata format
                 </Label>
                 <Select
                   value={localSettings.metadataFormat}
-                  onValueChange={(value: MetadataFormat) => {
-                    // Prevent ICP selection
-                    if (value === 'icp') return;
-                    updateMetadataFormat(value);
-                  }}
+                  onValueChange={(value) => updateMetadataFormat(value as MetadataFormat)}
                 >
-                  <SelectTrigger className="h-9">
+                  <SelectTrigger id="metadata-format" className="h-9">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -480,83 +456,12 @@ export default function Settings({ project, onUpdateProject }: SettingsProps) {
                     <SelectItem value="base">Base (ERC-721)</SelectItem>
                     <SelectItem value="bnb">BNB Chain (BEP-721)</SelectItem>
                     <SelectItem value="solana">Solana (Metaplex)</SelectItem>
-                    <SelectItem value="icp" disabled>ICP (coming soon)</SelectItem>
+                    <SelectItem value="icp">Internet Computer</SelectItem>
                   </SelectContent>
                 </Select>
-              </div>
-
-              {/* Token Name Template */}
-              <div className="space-y-2">
-                <Label htmlFor="token-name-template" className="text-sm font-medium">
-                  Token name template
-                </Label>
-                <Input
-                  id="token-name-template"
-                  value={localSettings.tokenNameTemplate}
-                  onChange={(e) => updateSetting('tokenNameTemplate', e.target.value)}
-                  placeholder="{{collection}} #{{id}}"
-                  className="h-9"
-                />
                 <p className="text-xs text-muted-foreground">
-                  Use {'{{collection}}'} and {'{{id}}'} as placeholders
+                  Changing this will update the blockchain and metadata structure
                 </p>
-              </div>
-
-              {/* Token Description */}
-              <div className="space-y-2">
-                <Label htmlFor="token-description" className="text-sm font-medium">
-                  Token description
-                </Label>
-                <Textarea
-                  id="token-description"
-                  value={localSettings.tokenDescription}
-                  onChange={(e) => updateSetting('tokenDescription', e.target.value)}
-                  placeholder="A short description for tokens..."
-                  className="min-h-[80px] resize-none"
-                />
-              </div>
-
-              {/* Start at Zero */}
-              <div className="flex items-center justify-between p-3 bg-muted/30 border border-border rounded-lg">
-                <div className="flex-1">
-                  <Label
-                    htmlFor="start-at-zero"
-                    className="text-sm font-medium cursor-pointer"
-                  >
-                    Start token number at 0
-                  </Label>
-                </div>
-                <Switch
-                  id="start-at-zero"
-                  checked={localSettings.startTokenNumberAtZero}
-                  onCheckedChange={(checked) =>
-                    updateSetting('startTokenNumberAtZero', checked)
-                  }
-                />
-              </div>
-
-              <Separator className="my-6" />
-
-              {/* Royalties */}
-              <div className="space-y-2">
-                <Label htmlFor="royalties" className="text-sm font-medium">
-                  Royalties %
-                </Label>
-                <Input
-                  id="royalties"
-                  type="number"
-                  value={localSettings.royaltiesPercent}
-                  onChange={(e) =>
-                    updateSetting(
-                      'royaltiesPercent',
-                      Math.max(0, Math.min(100, parseFloat(e.target.value) || 0))
-                    )
-                  }
-                  min="0"
-                  max="100"
-                  step="0.1"
-                  className="h-9"
-                />
               </div>
             </div>
           </div>
@@ -564,15 +469,15 @@ export default function Settings({ project, onUpdateProject }: SettingsProps) {
           {/* Right Panel - Metadata Preview */}
           <div className="bg-muted/20">
             <div className="px-6 py-4 border-b border-border">
-              <h3 className="text-base font-semibold text-foreground">Preview</h3>
-              <p className="text-xs text-muted-foreground mt-1">
-                Live preview of exported metadata
+              <h2 className="text-lg font-semibold text-foreground">Metadata preview</h2>
+              <p className="text-sm text-muted-foreground mt-1">
+                Example of generated metadata structure
               </p>
             </div>
 
             <div className="px-6 py-6">
-              <div className="bg-card border border-border rounded-lg p-4">
-                <pre className="text-xs text-foreground font-mono overflow-x-auto">
+              <div className="bg-background border border-border rounded-lg p-4 font-mono text-xs overflow-auto max-h-[calc(100vh-200px)]">
+                <pre className="text-foreground whitespace-pre-wrap break-words">
                   {JSON.stringify(metadataPreview, null, 2)}
                 </pre>
               </div>

@@ -48,6 +48,7 @@ export interface StartGenerationMessage {
     symbol: string;
     pixelArtMode: boolean;
     batchSize: number;
+    outputSize?: number;
   };
 }
 

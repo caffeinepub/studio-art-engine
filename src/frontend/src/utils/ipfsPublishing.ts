@@ -1,4 +1,4 @@
-import { uploadDirectoryToPinata, uploadJSONToPinata } from './pinata';
+import { uploadDirectoryToPinata } from './pinata';
 import type { GeneratedNFT, ProjectSettings } from '../App';
 import { buildMetadataForNFT } from './metadataPresets';
 
@@ -17,8 +17,11 @@ export interface IPFSUploadResult {
 }
 
 /**
- * Uploads all NFT images and metadata to IPFS via Pinata
- * Images are uploaded as a directory to get a single CID for ipfs://<cid>/images/<tokenId>.png URIs
+ * Uploads all NFT images and metadata to IPFS via Pinata following industry standard workflow:
+ * 1. Upload images as directory (1.png, 2.png, 3.png...) → get IMAGES_FOLDER_CID
+ * 2. Build metadata with ipfs://IMAGES_FOLDER_CID/<TOKEN_ID>.png
+ * 3. Upload metadata as directory (1.json, 2.json, 3.json...) → get METADATA_FOLDER_CID
+ * Final token URI: ipfs://METADATA_FOLDER_CID/<TOKEN_ID>.json
  */
 export async function uploadCollectionToIPFS(
   apiKey: string,
@@ -29,7 +32,7 @@ export async function uploadCollectionToIPFS(
   onProgress?: (progress: IPFSUploadProgress) => void
 ): Promise<IPFSUploadResult> {
   try {
-    // Stage 1: Prepare all images for directory upload
+    // Stage 1: Prepare all images for directory upload with 1-based sequential filenames
     const imageFiles: Array<{ filename: string; blob: Blob }> = [];
     
     for (let i = 0; i < nfts.length; i++) {
@@ -39,7 +42,7 @@ export async function uploadCollectionToIPFS(
         onProgress({
           current: i + 1,
           total: nfts.length,
-          percentage: ((i + 1) / nfts.length) * 40, // First 40% for preparing images
+          percentage: ((i + 1) / nfts.length) * 30, // First 30% for preparing images
           stage: 'images',
         });
       }
@@ -53,9 +56,10 @@ export async function uploadCollectionToIPFS(
       }
       const imageBlob = new Blob([bytes], { type: 'image/png' });
 
-      const actualTokenId = settings.startTokenNumberAtZero ? nft.id - 1 : nft.id;
+      // Use 1-based sequential filenames: 1.png, 2.png, 3.png...
+      const tokenId = i + 1;
       imageFiles.push({
-        filename: `${actualTokenId}.png`,
+        filename: `${tokenId}.png`,
         blob: imageBlob,
       });
     }
@@ -65,12 +69,16 @@ export async function uploadCollectionToIPFS(
       onProgress({
         current: nfts.length,
         total: nfts.length,
-        percentage: 50, // 50% for uploading directory
+        percentage: 40, // 40% for uploading images directory
         stage: 'images',
       });
     }
 
-    const imageDirResult = await uploadDirectoryToPinata(apiKey, imageFiles);
+    const imageDirResult = await uploadDirectoryToPinata(
+      apiKey,
+      imageFiles,
+      'collection-images'
+    );
 
     if (!imageDirResult.success || !imageDirResult.cid) {
       return {
@@ -81,9 +89,17 @@ export async function uploadCollectionToIPFS(
 
     const imageDirCID = imageDirResult.cid;
 
-    // Stage 2: Build and upload metadata with IPFS URIs
-    // The directory structure is: <CID>/images/<filename>
-    const metadataArray: any[] = [];
+    // Stage 2: Build metadata with IPFS image URIs
+    if (onProgress) {
+      onProgress({
+        current: 0,
+        total: nfts.length,
+        percentage: 50, // 50% starting metadata preparation
+        stage: 'metadata',
+      });
+    }
+
+    const metadataFiles: Array<{ filename: string; blob: Blob }> = [];
 
     for (let i = 0; i < nfts.length; i++) {
       const nft = nfts[i];
@@ -92,47 +108,75 @@ export async function uploadCollectionToIPFS(
         onProgress({
           current: i + 1,
           total: nfts.length,
-          percentage: 50 + ((i + 1) / nfts.length) * 50, // Second 50% for metadata
+          percentage: 50 + ((i + 1) / nfts.length) * 30, // 50-80% for preparing metadata
           stage: 'metadata',
         });
       }
 
       const attributes = nft.metadata.attributes as Array<{ trait_type: string; value: string }>;
       
-      // Build metadata with IPFS image URI
-      // Pass the directory CID and the subdirectory name ('images')
+      // Use 1-based token ID
+      const tokenId = i + 1;
+      
+      // Build metadata with IPFS image URI (no subdirectory)
       const metadata = buildMetadataForNFT(
         projectName,
         symbol,
         settings,
-        nft.id,
+        tokenId,
         attributes,
         imageDirCID,
-        'images' // subdirectory name
+        undefined // No subdirectory - images are at root of CID
       );
 
-      metadataArray.push(metadata);
+      // Convert metadata to JSON blob
+      const metadataJson = JSON.stringify(metadata, null, 2);
+      const metadataBlob = new Blob([metadataJson], { type: 'application/json' });
+
+      // Use 1-based sequential filenames: 1.json, 2.json, 3.json...
+      metadataFiles.push({
+        filename: `${tokenId}.json`,
+        blob: metadataBlob,
+      });
     }
 
-    // Upload master metadata JSON
-    const metadataResult = await uploadJSONToPinata(
+    // Stage 3: Upload metadata as a directory
+    if (onProgress) {
+      onProgress({
+        current: nfts.length,
+        total: nfts.length,
+        percentage: 90, // 90% for uploading metadata directory
+        stage: 'metadata',
+      });
+    }
+
+    const metadataDirResult = await uploadDirectoryToPinata(
       apiKey,
-      metadataArray,
-      `${projectName.replace(/\s+/g, '_')}_metadata.json`
+      metadataFiles,
+      'collection-metadata'
     );
 
-    if (!metadataResult.success || !metadataResult.cid) {
+    if (!metadataDirResult.success || !metadataDirResult.cid) {
       return {
         success: false,
         imageDirCID, // Return imageDirCID even if metadata fails
-        error: metadataResult.error || 'Metadata upload failed',
+        error: metadataDirResult.error || 'Metadata directory upload failed',
       };
+    }
+
+    if (onProgress) {
+      onProgress({
+        current: nfts.length,
+        total: nfts.length,
+        percentage: 100,
+        stage: 'metadata',
+      });
     }
 
     return {
       success: true,
       imageDirCID,
-      metadataCID: metadataResult.cid,
+      metadataCID: metadataDirResult.cid,
     };
   } catch (error) {
     return {

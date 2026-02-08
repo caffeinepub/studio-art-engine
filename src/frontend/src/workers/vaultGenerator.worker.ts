@@ -79,14 +79,15 @@ async function loadImage(dataUrl: string): Promise<ImageBitmap> {
 async function generateImage(
   traits: Record<string, string>,
   layers: LayerData[],
-  pixelArtMode: boolean
+  pixelArtMode: boolean,
+  outputSize: number
 ): Promise<string | null> {
   if (!supportsImageCompositing) {
     return null;
   }
 
   try {
-    const canvas = new OffscreenCanvas(800, 800);
+    const canvas = new OffscreenCanvas(outputSize, outputSize);
     const ctx = canvas.getContext('2d', { alpha: true, willReadFrequently: false });
     if (!ctx) return null;
 
@@ -108,7 +109,7 @@ async function generateImage(
       ctx.save();
       ctx.globalAlpha = layer.opacity / 100;
       ctx.globalCompositeOperation = layer.blendMode as GlobalCompositeOperation;
-      ctx.drawImage(img, 0, 0, 800, 800);
+      ctx.drawImage(img, 0, 0, outputSize, outputSize);
       ctx.restore();
     }
 
@@ -181,7 +182,8 @@ async function generateCollection(
   blockchain: string,
   symbol: string,
   pixelArtMode: boolean,
-  batchSize: number
+  batchSize: number,
+  outputSize: number
 ) {
   isCancelled = false;
 
@@ -296,7 +298,7 @@ async function generateCollection(
       availableIndex++;
 
       // Try to generate image in worker
-      const imageData = await generateImage(selectedTraits, layers, pixelArtMode);
+      const imageData = await generateImage(selectedTraits, layers, pixelArtMode, outputSize);
       
       const metadata = createMetadata(tokenNumber, selectedTraits, layers, projectName, blockchain, symbol);
 
@@ -372,7 +374,7 @@ self.onmessage = async (event: MessageEvent<WorkerInputMessage>) => {
       },
     } as WorkerOutputMessage);
 
-    const { layers, rules, forgedTokens, collectionSize, projectName, blockchain, symbol, pixelArtMode, batchSize } = message.payload;
+    const { layers, rules, forgedTokens, collectionSize, projectName, blockchain, symbol, pixelArtMode, batchSize, outputSize } = message.payload;
     
     await generateCollection(
       layers,
@@ -383,7 +385,8 @@ self.onmessage = async (event: MessageEvent<WorkerInputMessage>) => {
       blockchain,
       symbol,
       pixelArtMode,
-      batchSize
+      batchSize,
+      outputSize || 800
     );
   } else if (message.type === 'cancel') {
     isCancelled = true;

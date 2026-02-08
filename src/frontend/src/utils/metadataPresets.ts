@@ -1,175 +1,89 @@
-import type { ProjectSettings, MetadataFormat, SolanaCreator } from '../App';
+import type { Project, ProjectSettings } from '../App';
 
 /**
- * Resolves template placeholders in a string.
- * Supports {{collection}} and {{id}}.
- */
-function resolveTemplate(
-  template: string,
-  collectionName: string,
-  tokenId: number
-): string {
-  return template
-    .replace(/\{\{collection\}\}/g, collectionName)
-    .replace(/\{\{id\}\}/g, String(tokenId));
-}
-
-/**
- * Builds a metadata object for preview or export based on project settings.
- */
-export function buildMetadataPreview(
-  collectionName: string,
-  symbol: string,
-  settings: ProjectSettings,
-  tokenId: number
-): Record<string, unknown> {
-  const actualTokenId = settings.startTokenNumberAtZero ? tokenId - 1 : tokenId;
-  
-  const name = resolveTemplate(settings.tokenNameTemplate, collectionName, actualTokenId);
-  const description = settings.tokenDescription || `${collectionName} NFT Collection`;
-  
-  // Base image path (will be replaced with actual CID/path during export)
-  const imagePath = `${actualTokenId}.png`;
-
-  const baseMetadata: Record<string, unknown> = {
-    name,
-    description,
-    image: imagePath,
-    attributes: [
-      {
-        trait_type: 'Layer 1',
-        value: '1.png',
-      },
-    ],
-  };
-
-  // Format-specific fields
-  if (settings.metadataFormat === 'solana') {
-    const creators = settings.solanaCreators && settings.solanaCreators.length > 0
-      ? settings.solanaCreators.map(c => ({
-          address: c.address || 'YOUR_WALLET_ADDRESS',
-          share: c.share,
-        }))
-      : [{ address: 'YOUR_WALLET_ADDRESS', share: 100 }];
-
-    return {
-      ...baseMetadata,
-      symbol,
-      seller_fee_basis_points: Math.round(settings.royaltiesPercent * 100),
-      properties: {
-        files: [
-          {
-            uri: imagePath,
-            type: 'image/png',
-          },
-        ],
-        category: 'image',
-        creators,
-      },
-    };
-  }
-
-  // ERC-721 standard (Ethereum, Polygon, Base, BNB Chain)
-  if (settings.metadataFormat === 'ethereum' || 
-      settings.metadataFormat === 'polygon' || 
-      settings.metadataFormat === 'base' || 
-      settings.metadataFormat === 'bnb') {
-    return {
-      ...baseMetadata,
-    };
-  }
-
-  if (settings.metadataFormat === 'icp') {
-    return {
-      ...baseMetadata,
-      symbol,
-    };
-  }
-
-  return baseMetadata;
-}
-
-/**
- * Builds metadata for a specific NFT during generation or export.
- * Includes actual trait attributes.
- * If imageDirCID is provided, uses ipfs:// URIs; otherwise uses local filenames.
+ * Builds metadata for a single NFT based on the project's blockchain format
+ * @param projectName - Name of the project
+ * @param symbol - Symbol/ticker for the collection
+ * @param settings - Project settings including blockchain and metadata format
+ * @param tokenId - Token ID (1-based)
+ * @param attributes - Array of trait attributes
+ * @param ipfsCID - IPFS CID for the image (optional)
+ * @param subdirectory - Subdirectory path within the CID (optional, e.g., 'images')
  */
 export function buildMetadataForNFT(
-  collectionName: string,
+  projectName: string,
   symbol: string,
   settings: ProjectSettings,
   tokenId: number,
   attributes: Array<{ trait_type: string; value: string }>,
-  imageDirCID?: string,
+  ipfsCID?: string,
   subdirectory?: string
-): Record<string, unknown> {
-  const actualTokenId = settings.startTokenNumberAtZero ? tokenId - 1 : tokenId;
-  
-  const name = resolveTemplate(settings.tokenNameTemplate, collectionName, actualTokenId);
-  const description = settings.tokenDescription || `${collectionName} NFT Collection`;
-  
-  // Use IPFS URI if CID is provided, otherwise local filename
-  // When uploading to Pinata with wrapWithDirectory and a subdirectory structure,
-  // the path is: ipfs://<CID>/<subdirectory>/<filename>
-  let imagePath: string;
-  if (imageDirCID) {
+): any {
+  // Construct image URI
+  let imageUri: string;
+  if (ipfsCID) {
+    // If subdirectory is provided, include it in the path
     if (subdirectory) {
-      imagePath = `ipfs://${imageDirCID}/${subdirectory}/${actualTokenId}.png`;
+      imageUri = `ipfs://${ipfsCID}/${subdirectory}/${tokenId}.png`;
     } else {
-      imagePath = `ipfs://${imageDirCID}/${actualTokenId}.png`;
+      // No subdirectory - image is at root of CID
+      imageUri = `ipfs://${ipfsCID}/${tokenId}.png`;
     }
   } else {
-    imagePath = `${actualTokenId}.png`;
+    // Fallback for preview/export without IPFS
+    imageUri = `${tokenId}.png`;
   }
 
-  const baseMetadata: Record<string, unknown> = {
-    name,
-    description,
-    image: imagePath,
+  // Base metadata structure (ERC-721 standard)
+  const baseMetadata = {
+    name: `${projectName} #${tokenId}`,
+    description: `${projectName} NFT Collection`,
+    image: imageUri,
     attributes,
   };
 
+  // Solana (Metaplex) format
   if (settings.metadataFormat === 'solana') {
-    const creators = settings.solanaCreators && settings.solanaCreators.length > 0
-      ? settings.solanaCreators.map(c => ({
-          address: c.address,
-          share: c.share,
-        }))
-      : [{ address: 'YOUR_WALLET_ADDRESS', share: 100 }];
-
     return {
       ...baseMetadata,
-      symbol,
-      seller_fee_basis_points: Math.round(settings.royaltiesPercent * 100),
+      symbol: symbol,
+      seller_fee_basis_points: (settings.solanaCreators && settings.solanaCreators.length > 0) ? 500 : 500,
+      external_url: '',
       properties: {
         files: [
           {
-            uri: imagePath,
+            uri: imageUri,
             type: 'image/png',
           },
         ],
         category: 'image',
-        creators,
+        creators: settings.solanaCreators || [
+          {
+            address: 'YOUR_WALLET_ADDRESS',
+            share: 100,
+          },
+        ],
       },
     };
   }
 
   // ERC-721 standard (Ethereum, Polygon, Base, BNB Chain)
-  if (settings.metadataFormat === 'ethereum' || 
-      settings.metadataFormat === 'polygon' || 
-      settings.metadataFormat === 'base' || 
-      settings.metadataFormat === 'bnb') {
-    return {
-      ...baseMetadata,
-    };
-  }
-
-  if (settings.metadataFormat === 'icp') {
-    return {
-      ...baseMetadata,
-      symbol,
-    };
-  }
-
   return baseMetadata;
+}
+
+/**
+ * Builds preview metadata for display in the UI
+ */
+export function buildMetadataPreview(
+  project: Project,
+  tokenId: number,
+  attributes: Array<{ trait_type: string; value: string }>
+): any {
+  return buildMetadataForNFT(
+    project.name,
+    project.symbol,
+    project.settings,
+    tokenId,
+    attributes
+  );
 }

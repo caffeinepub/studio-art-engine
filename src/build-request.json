@@ -1,72 +1,138 @@
 {
   "kind": "build_request",
-  "title": "Fix Pinata directory upload 400 error: \"More than one file and/or directory was provided for pinning.\"",
-  "priority": "high",
+  "title": "Implement industry-standard Pinata directory upload workflow (images CID + per-token metadata CID) with asset locking",
+  "priority": "normal",
   "requirements": [
     {
-      "id": "REQ-4",
-      "text": "Update the Pinata directory upload implementation so uploading a generated collection to Pinata no longer fails with HTTP 400: {\"error\":\"More than one file and/or directory was provided for pinning.\"}. This includes adjusting the multipart/form-data payload sent to https://api.pinata.cloud/pinning/pinFileToIPFS to match Pinata’s directory upload expectations when multiple files are provided (and the request must still use JWT Bearer auth).",
+      "id": "REQ-1",
+      "text": "Update the IPFS/Pinata upload workflow to exactly follow: (1) upload the entire images folder as a single directory upload and receive IMAGES_FOLDER_CID; (2) generate one metadata JSON file per token with an `image` field set to `ipfs://IMAGES_FOLDER_CID/<TOKEN_ID>.png`; (3) upload the entire metadata folder as a single directory upload and receive METADATA_FOLDER_CID; and (4) present the final token URI format as `ipfs://METADATA_FOLDER_CID/<TOKEN_ID>.json`.",
       "target": "frontend",
       "source": {
         "messageIds": [
-          "msg-2",
-          "msg-4",
-          "msg-6"
+          "user-1"
         ],
         "quotes": [
-          "Still get this error \"Upload failed: Directory upload failed: 400 - {\"error\":\"More than one file and/or directory was provided for pinning.\"}\"",
-          "1. Yes pls check carefully and update the Pinata upload code again to try to fix this error",
-          "Start building"
+          "workflow for uploading to IPFS without changing any existing features or the current app layout ... Upload images folder only → receive IMAGES_FOLDER_CID ... Upload metadata folder only → receive METADATA_FOLDER_CID"
         ]
       },
       "acceptanceCriteria": [
-        "From the Vault publishing flow, uploading a typical full generated collection (images + metadata) completes successfully and returns a directory CID for images and a CID for the metadata JSON.",
-        "The request remains a POST to https://api.pinata.cloud/pinning/pinFileToIPFS with Authorization: Bearer <JWT> (no endpoint or auth mechanism changes).",
-        "If the directory upload still fails for any reason, the UI error message includes both the HTTP status code and the response body text (when available), preserving the existing diagnostics behavior."
+        "Running the app’s Upload action results in TWO Pinata uploads: one for images (directory) and one for metadata (directory).",
+        "The images upload returns a CID used in metadata `image` fields as `ipfs://IMAGES_FOLDER_CID/<TOKEN_ID>.png` (no extra subfolder segment like `/images/`).",
+        "The metadata upload returns a CID such that token URIs are `ipfs://METADATA_FOLDER_CID/<TOKEN_ID>.json`.",
+        "The app no longer uploads a single merged metadata JSON (e.g., `MONKE_INDEX_metadata.json`) to Pinata as the primary metadata output."
+      ]
+    },
+    {
+      "id": "REQ-2",
+      "text": "Fix Pinata directory upload construction so directory uploads cannot collapse/merge metadata into a single file: ensure every file appended to `FormData` for directory uploads includes the intended per-file path/name (via the third parameter of `formData.append('file', blob, <path>)`) and that metadata is uploaded as multiple files (`1.json`, `2.json`, …) inside one directory upload.",
+      "target": "frontend",
+      "source": {
+        "messageIds": [
+          "user-1"
+        ],
+        "quotes": [
+          "the metadata uploaded to Pinata is being merged into a single file",
+          "Each NFT must have one JSON file: 1.json, 2.json, …",
+          "Upload the entire metadata folder"
+        ]
+      },
+      "acceptanceCriteria": [
+        "Pinata receives multiple multipart `file` parts for metadata (one per token) rather than one aggregated JSON payload.",
+        "The resulting IPFS content for METADATA_FOLDER_CID contains individual files `1.json`, `2.json`, … (not a single `*_metadata.json`).",
+        "Each metadata file contains an `image` field pointing to the corresponding token image IPFS URI."
+      ]
+    },
+    {
+      "id": "REQ-3",
+      "text": "Enforce 1-based sequential filenames for both exported assets and Pinata uploads: images must be named `1.png`, `2.png`, `3.png`, … and metadata files must be `1.json`, `2.json`, `3.json`, … (no `0.png`/`0.json` in the IPFS upload workflow).",
+      "target": "frontend",
+      "source": {
+        "messageIds": [
+          "user-1"
+        ],
+        "quotes": [
+          "Use sequential file names: 1.png, 2.png, 3.png, …",
+          "Each NFT must have one JSON file: 1.json, 2.json, …"
+        ]
+      },
+      "acceptanceCriteria": [
+        "The images directory upload contains files named exactly `1.png..N.png`.",
+        "The metadata directory upload contains files named exactly `1.json..N.json`.",
+        "The `<TOKEN_ID>` used in both `ipfs://IMAGES_FOLDER_CID/<TOKEN_ID>.png` and `ipfs://METADATA_FOLDER_CID/<TOKEN_ID>.json` matches this 1-based numbering."
+      ]
+    },
+    {
+      "id": "REQ-4",
+      "text": "Implement final asset locking behavior: when the collection is locked for publishing, disable the Vault \"Generate\" action (and any regeneration actions that would change the collection) and only re-enable them after the collection is unlocked, without changing the current app layout.",
+      "target": "frontend",
+      "source": {
+        "messageIds": [
+          "user-1"
+        ],
+        "quotes": [
+          "After locking the collection to prepare for uploading to Pinata, the Generate button should be disabled and only become clickable again after the collection is unlocked."
+        ]
+      },
+      "acceptanceCriteria": [
+        "When `project.collectionLocked` is true, the Generate button in the Vault cannot be clicked and does not trigger generation.",
+        "When the collection is unlocked, the Generate button returns to its prior enabled behavior.",
+        "No new pages or major layout rearrangements are introduced; the existing Vault layout remains intact."
       ]
     },
     {
       "id": "REQ-5",
-      "text": "Ensure the image URI paths in generated metadata remain correct after the directory-upload payload change (e.g., if files are uploaded under a directory prefix/path, metadata must reference ipfs://<imageDirCID>/<correct relative path>).",
+      "text": "Ensure exported images match the exact pixel dimensions configured in the Settings section for the project, and that the same sizing is used for the images that are uploaded to Pinata (so all assets in the uploaded images folder share identical dimensions).",
       "target": "frontend",
       "source": {
         "messageIds": [
-          "msg-2",
-          "msg-4"
+          "user-1"
         ],
         "quotes": [
-          "Still get this error \"Upload failed: Directory upload failed: 400 - {\"error\":\"More than one file and/or directory was provided for pinning.\"}\"",
-          "1. Yes pls check carefully and update the Pinata upload code again to try to fix this error"
+          "Export the entire collection as PNG or JPG, Ensure all assets have the same size and match the exact dimensions (px) configured in the Settings section."
         ]
       },
       "acceptanceCriteria": [
-        "After a successful upload, at least one sampled token’s metadata image field resolves to an existing file under the returned images directory CID using the expected token filename convention (e.g., 0.png / 1.png depending on settings).",
-        "No regressions to existing token numbering behavior (startTokenNumberAtZero continues to affect filenames/URIs consistently)."
+        "All generated/exported images use the project’s configured output dimensions (per Settings) rather than a hard-coded size.",
+        "All uploaded images in the Pinata images directory share identical width/height matching Settings.",
+        "If Settings output size is changed and the collection is regenerated, newly exported/uploaded images reflect the updated dimensions."
+      ]
+    },
+    {
+      "id": "REQ-6",
+      "text": "Keep the existing upload controls flow (Lock → Upload → Unlock) but update status/output text to clearly show both returned CIDs (IMAGES_FOLDER_CID and METADATA_FOLDER_CID) and the final token URI format `ipfs://METADATA_FOLDER_CID/<TOKEN_ID>.json`, using English for all user-facing text.",
+      "target": "frontend",
+      "source": {
+        "messageIds": [
+          "user-1"
+        ],
+        "quotes": [
+          "Receive a single folder CID: IMAGES_FOLDER_CID",
+          "Receive a metadata folder CID: METADATA_FOLDER_CID",
+          "Standard token URI format: ipfs://METADATA_FOLDER_CID/<TOKEN_ID>.json",
+          "Use English for any user-facing text in the build request."
+        ]
+      },
+      "acceptanceCriteria": [
+        "After a successful upload, the UI displays the metadata folder CID and the images folder CID (or otherwise makes both accessible to the user).",
+        "The UI shows the final token URI pattern exactly as `ipfs://METADATA_FOLDER_CID/<TOKEN_ID>.json`.",
+        "All newly introduced/modified user-facing strings are in English."
       ]
     }
   ],
   "constraints": [
-    "Frontend files under frontend.immutablePaths must not be edited.",
-    "Keep the Pinata upload endpoint as https://api.pinata.cloud/pinning/pinFileToIPFS and continue using JWT Bearer authorization.",
-    "Do not introduce external backend services or databases; keep all changes within the existing React/TS frontend utilities and components."
+    "Do not change any existing features outside the IPFS/Pinata publishing workflow.",
+    "Do not change the current app layout (no major UI restructuring).",
+    "Frontend immutable paths must not be edited: frontend/src/hooks/useInternetIdentity.ts, frontend/src/hooks/useInternetIdentity.tsx, frontend/src/hooks/useActor.ts, frontend/src/main.tsx, frontend/src/components/ui.",
+    "Backend must remain single-actor; avoid backend changes unless strictly required (this workflow should be frontend-only)."
   ],
   "nonGoals": [
-    "Adding new chains/metadata formats (Polygon/Base/BNB, default chain changes, removal of Cardano/Tezos).",
-    "Implementing ICP-native storage or any new backend-based IPFS pinning flow.",
-    "Changing the lock/unlock publishing UX beyond what is necessary to surface correct upload results/errors."
+    "Adding new third-party auth providers (only Internet Identity is supported).",
+    "Adding real-time features (WebSockets, live progress via sockets, etc.).",
+    "Introducing external databases or non-IC backend services.",
+    "Changing how NFTs are generated artistically beyond enforcing output dimensions and locking behavior."
   ],
   "imageRequirements": {
     "required": [],
     "edits": []
-  },
-  "userProfileUpdate": {
-    "goalsToAdd": [],
-    "goalsToRemove": [],
-    "preferencesToAdd": [],
-    "preferencesToRemove": [],
-    "miscToAdd": [],
-    "miscToRemove": [],
-    "fieldsToSet": {},
-    "fieldsToDelete": []
   }
 }

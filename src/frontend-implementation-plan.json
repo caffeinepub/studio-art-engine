@@ -1,46 +1,137 @@
 {
   "kind": "implementation_plan",
   "version": "1.0",
-  "title": "Fix Pinata directory upload multipart payload and preserve correct metadata image URIs",
+  "title": "Pinata directory uploads (images + per-token metadata) with 1-based filenames, correct sizing, and publish locking",
   "requirements": [
     {
-      "id": "REQ-4",
-      "summary": "Adjust Pinata directory upload multipart/form-data payload so multi-file directory pin succeeds with JWT Bearer auth and preserves detailed HTTP error diagnostics.",
+      "id": "REQ-1",
+      "summary": "Change IPFS/Pinata publishing to upload images as a single directory CID, generate per-token metadata JSON files referencing those images, upload metadata as a single directory CID, and present final token URI format.",
       "acceptanceCriteria": [
-        "From the Vault publishing flow, uploading a typical full generated collection (images + metadata) completes successfully and returns a directory CID for images and a CID for the metadata JSON.",
-        "The request remains a POST to https://api.pinata.cloud/pinning/pinFileToIPFS with Authorization: Bearer <JWT> (no endpoint or auth mechanism changes).",
-        "If the directory upload still fails for any reason, the UI error message includes both the HTTP status code and the response body text (when available), preserving the existing diagnostics behavior."
+        "Running the app’s Upload action results in TWO Pinata uploads: one for images (directory) and one for metadata (directory).",
+        "The images upload returns a CID used in metadata `image` fields as `ipfs://IMAGES_FOLDER_CID/<TOKEN_ID>.png` (no extra subfolder segment like `/images/`).",
+        "The metadata upload returns a CID such that token URIs are `ipfs://METADATA_FOLDER_CID/<TOKEN_ID>.json`.",
+        "The app no longer uploads a single merged metadata JSON (e.g., `MONKE_INDEX_metadata.json`) to Pinata as the primary metadata output."
+      ],
+      "file_operations": [
+        {
+          "path": "frontend/src/utils/ipfsPublishing.ts",
+          "operation": "modify",
+          "description": "Refactor `uploadCollectionToIPFS` to: (1) upload images as one directory upload and capture IMAGES_FOLDER_CID; (2) build one metadata JSON per token with `image: ipfs://IMAGES_FOLDER_CID/<TOKEN_ID>.png`; (3) upload those JSON files as one directory upload and capture METADATA_FOLDER_CID; (4) return both CIDs and the derived token URI pattern. Ensure the workflow no longer uses `uploadJSONToPinata` for the primary metadata output."
+        },
+        {
+          "path": "frontend/src/utils/metadataPresets.ts",
+          "operation": "modify",
+          "description": "Update `buildMetadataForNFT` usage for publishing so the generated metadata uses `image: ipfs://<IMAGES_FOLDER_CID>/<TOKEN_ID>.png` without any subdirectory segment, while preserving existing behavior for previews/other flows."
+        },
+        {
+          "path": "frontend/src/components/VaultPublishingControls.tsx",
+          "operation": "modify",
+          "description": "Update the upload success/status output text to clearly show both returned CIDs (IMAGES_FOLDER_CID and METADATA_FOLDER_CID) and display the final token URI pattern exactly as `ipfs://METADATA_FOLDER_CID/<TOKEN_ID>.json`, without changing the existing Lock → Upload → Unlock controls flow or major layout."
+        }
+      ]
+    },
+    {
+      "id": "REQ-2",
+      "summary": "Fix Pinata directory upload FormData construction so each file part includes its intended path/name and metadata is uploaded as multiple per-token JSON files in a single directory upload.",
+      "acceptanceCriteria": [
+        "Pinata receives multiple multipart `file` parts for metadata (one per token) rather than one aggregated JSON payload.",
+        "The resulting IPFS content for METADATA_FOLDER_CID contains individual files `1.json`, `2.json`, … (not a single `*_metadata.json`).",
+        "Each metadata file contains an `image` field pointing to the corresponding token image IPFS URI."
       ],
       "file_operations": [
         {
           "path": "frontend/src/utils/pinata.ts",
           "operation": "modify",
-          "description": "Fix uploadDirectoryToPinata to match Pinata directory-upload expectations by ensuring all uploaded parts represent a single directory (e.g., applying a consistent directory prefix in each file’s multipart filename / filepath semantics) rather than multiple top-level files that trigger the 400 \"More than one file and/or directory was provided for pinning.\" error. Keep the request as POST to https://api.pinata.cloud/pinning/pinFileToIPFS with Authorization: Bearer <JWT>. Also improve error extraction to include HTTP status code and response body text (when available) without losing existing diagnostic detail."
+          "description": "Adjust directory upload helper to accept and append each file with an explicit per-file path/name via the third parameter of `formData.append('file', blob, <path>)`, ensuring multiple `file` parts are sent. Ensure the helper supports root-level filenames (e.g., `1.json`) so directory uploads do not introduce unwanted subfolders."
         },
         {
           "path": "frontend/src/utils/ipfsPublishing.ts",
           "operation": "modify",
-          "description": "Update uploadCollectionToIPFS to use the revised uploadDirectoryToPinata contract (including any returned directory path prefix information, if introduced) while keeping progress reporting and overall publishing flow intact. Ensure failures still surface the underlying status code + response body text coming from the Pinata utility so the UI diagnostics remain informative."
+          "description": "When building metadata for upload, create one JSON Blob per token and pass them to the directory upload helper as individual entries with filenames `1.json`, `2.json`, … (no aggregated array upload)."
+        }
+      ]
+    },
+    {
+      "id": "REQ-3",
+      "summary": "Enforce 1-based sequential filenames for exported assets and Pinata uploads (no 0-indexed filenames) and keep token IDs consistent across images, metadata, and displayed token URIs.",
+      "acceptanceCriteria": [
+        "The images directory upload contains files named exactly `1.png..N.png`.",
+        "The metadata directory upload contains files named exactly `1.json..N.json`.",
+        "The `<TOKEN_ID>` used in both `ipfs://IMAGES_FOLDER_CID/<TOKEN_ID>.png` and `ipfs://METADATA_FOLDER_CID/<TOKEN_ID>.json` matches this 1-based numbering."
+      ],
+      "file_operations": [
+        {
+          "path": "frontend/src/utils/ipfsPublishing.ts",
+          "operation": "modify",
+          "description": "Remove any publishing-time use of `startTokenNumberAtZero` for filenames/URIs and ensure the upload workflow always uses 1-based sequential token IDs for image filenames (`1.png..N.png`), metadata filenames (`1.json..N.json`), and the URIs written into metadata."
+        },
+        {
+          "path": "frontend/src/pages/Vault.tsx",
+          "operation": "modify",
+          "description": "Ensure any export/ZIP naming logic for generated assets uses 1-based sequential filenames (`1.png..N.png` and `1.json..N.json`) and does not produce `0.png`/`0.json` within the export flow."
+        }
+      ]
+    },
+    {
+      "id": "REQ-4",
+      "summary": "Implement final asset locking behavior by disabling generation/regeneration actions in the Vault when the collection is locked, re-enabling only after unlock, without changing the current layout.",
+      "acceptanceCriteria": [
+        "When `project.collectionLocked` is true, the Generate button in the Vault cannot be clicked and does not trigger generation.",
+        "When the collection is unlocked, the Generate button returns to its prior enabled behavior.",
+        "No new pages or major layout rearrangements are introduced; the existing Vault layout remains intact."
+      ],
+      "file_operations": [
+        {
+          "path": "frontend/src/pages/Vault.tsx",
+          "operation": "modify",
+          "description": "Wire `project.collectionLocked` into the Vault generation UI by disabling the Generate control(s) and guarding generation/regeneration handlers so they no-op (and optionally show an English toast/message) while locked, restoring prior behavior when unlocked."
         }
       ]
     },
     {
       "id": "REQ-5",
-      "summary": "Ensure generated metadata image URIs correctly reference the uploaded image directory CID and any directory prefix introduced by the directory-upload payload change, without changing token numbering behavior.",
+      "summary": "Ensure generated/exported images use the exact pixel dimensions from project Settings and that Pinata uploads use those same sized images.",
       "acceptanceCriteria": [
-        "After a successful upload, at least one sampled token’s metadata image field resolves to an existing file under the returned images directory CID using the expected token filename convention (e.g., 0.png / 1.png depending on settings).",
-        "No regressions to existing token numbering behavior (startTokenNumberAtZero continues to affect filenames/URIs consistently)."
+        "All generated/exported images use the project’s configured output dimensions (per Settings) rather than a hard-coded size.",
+        "All uploaded images in the Pinata images directory share identical width/height matching Settings.",
+        "If Settings output size is changed and the collection is regenerated, newly exported/uploaded images reflect the updated dimensions."
       ],
       "file_operations": [
         {
-          "path": "frontend/src/utils/metadataPresets.ts",
+          "path": "frontend/src/workers/vaultGenerator.worker.ts",
           "operation": "modify",
-          "description": "Update buildMetadataForNFT (and any related helpers) to support composing image URIs that include the returned image directory CID plus the correct relative path when a directory prefix is used (e.g., ipfs://<imageDirCID>/<prefix>/<tokenId>.png). Preserve existing startTokenNumberAtZero behavior for filename/URI token numbering."
+          "description": "Replace hard-coded canvas dimensions with the project’s configured `outputSize` so worker-generated images are rendered/exported at the exact Settings size."
+        },
+        {
+          "path": "frontend/src/utils/vaultGeneratorProtocol.ts",
+          "operation": "modify",
+          "description": "Extend the worker start message payload to include the project output dimension (e.g., `outputSize`) so the worker can render at the correct size."
+        },
+        {
+          "path": "frontend/src/pages/Vault.tsx",
+          "operation": "modify",
+          "description": "Pass the project Settings output dimension into the worker start message and ensure any main-thread fallback compositing/export paths (when worker compositing is unavailable) also render/export images at the exact Settings size."
         },
         {
           "path": "frontend/src/utils/ipfsPublishing.ts",
           "operation": "modify",
-          "description": "Wire any new directory prefix/path information from the image directory upload step into metadata generation so metadata always points to the correct ipfs://<imageDirCID>/<relative path>. Keep existing tokenId filename convention logic consistent with startTokenNumberAtZero."
+          "description": "Ensure the images uploaded to Pinata are derived from the generated/exported images at Settings dimensions (i.e., do not re-encode/rescale to a hard-coded size during upload preparation)."
+        }
+      ]
+    },
+    {
+      "id": "REQ-6",
+      "summary": "Keep the Lock → Upload → Unlock flow while updating publishing status/output text to show both CIDs and the final token URI format in English.",
+      "acceptanceCriteria": [
+        "After a successful upload, the UI displays the metadata folder CID and the images folder CID (or otherwise makes both accessible to the user).",
+        "The UI shows the final token URI pattern exactly as `ipfs://METADATA_FOLDER_CID/<TOKEN_ID>.json`.",
+        "All newly introduced/modified user-facing strings are in English."
+      ],
+      "file_operations": [
+        {
+          "path": "frontend/src/components/VaultPublishingControls.tsx",
+          "operation": "modify",
+          "description": "Update the publishing status UI to (a) show both CIDs on success and (b) display the token URI pattern exactly as `ipfs://METADATA_FOLDER_CID/<TOKEN_ID>.json`, ensuring all newly added/changed user-facing strings remain in English and the overall layout remains intact."
         }
       ]
     }

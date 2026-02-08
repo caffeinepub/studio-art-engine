@@ -1,11 +1,14 @@
 # Specification
 
 ## Summary
-**Goal:** Fix the Pinata directory upload flow so generated NFT collections (images + metadata) upload successfully without the HTTP 400 “More than one file and/or directory was provided for pinning.” error, while preserving JWT Bearer auth and existing diagnostics.
+**Goal:** Update the Pinata/IPFS publishing workflow to use industry-standard directory uploads for images and per-token metadata (with correct token URI formatting), enforce 1-based filenames, respect configured export dimensions, and lock assets to prevent regeneration during publishing.
 
 **Planned changes:**
-- Update the multipart/form-data payload sent to `https://api.pinata.cloud/pinning/pinFileToIPFS` so Pinata receives the files as a single directory upload (not interpreted as multiple separate roots), keeping `Authorization: Bearer <JWT>`.
-- Ensure the returned directory CIDs are used to construct correct `ipfs://` URIs in generated metadata, including correct relative paths and no changes to existing token numbering behavior (e.g., `startTokenNumberAtZero`).
-- Preserve/ensure UI error reporting includes both HTTP status code and response body text (when available) when an upload fails.
+- Change the upload flow to perform two Pinata directory uploads: (1) upload the images folder to get `IMAGES_FOLDER_CID`, then (2) generate per-token metadata JSON files referencing `ipfs://IMAGES_FOLDER_CID/<TOKEN_ID>.png` and upload the metadata folder to get `METADATA_FOLDER_CID`.
+- Fix Pinata directory upload `FormData` construction so each uploaded file includes its intended path/filename (via `formData.append('file', blob, <path>)`), ensuring metadata is uploaded as many files (`1.json`, `2.json`, …) rather than merged into one.
+- Enforce 1-based sequential filenames for both images (`1.png..N.png`) and metadata (`1.json..N.json`) throughout export and upload (no `0.*`).
+- Implement asset locking behavior so when `project.collectionLocked` is true, the Vault “Generate” action (and any regeneration actions) are disabled until the collection is unlocked, without changing the existing layout.
+- Ensure exported and uploaded images use the exact pixel dimensions configured in Settings, and that all uploaded images share identical dimensions.
+- Keep the existing Lock → Upload → Unlock control flow, but update status/output text (in English) to show both returned CIDs and the final token URI pattern `ipfs://METADATA_FOLDER_CID/<TOKEN_ID>.json`.
 
-**User-visible outcome:** From the Vault publishing flow, a typical generated collection uploads to Pinata successfully and returns a directory CID for images and a CID for metadata, with metadata image links resolving correctly; if an upload fails, the UI shows the status code and response body for troubleshooting.
+**User-visible outcome:** Users can lock a collection, upload images and per-token metadata to Pinata as two directory uploads, see both resulting CIDs plus the final token URI format, and are prevented from regenerating the collection while it is locked; exported/uploaded images match the configured Settings dimensions.

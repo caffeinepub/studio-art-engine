@@ -1,54 +1,61 @@
 {
   "schemaVersion": "1.0.0",
-  "projectStateVersion": 7,
-  "summary": "Studio Art Engine: an NFT collection generator focused on layer-based creation, rarity/rules, preview, and export; expanding multi-chain metadata export with Ethereum (ERC-721) as the default format.",
+  "projectStateVersion": 3,
+  "summary": "App needs an industry-standard IPFS/Pinata NFT upload workflow: lock assets, upload images folder to get IMAGES_FOLDER_CID, inject image URIs into per-token metadata JSON files, then upload metadata folder to get METADATA_FOLDER_CID (for marketplace tokenURIs), without changing existing features or UI layout.",
   "architectural_notes": [
-    "Blockchain selector should include Ethereum/Polygon/Base/BNB (export-only) and default new projects to Ethereum (ERC-721).",
-    "Users can change the target chain later during metadata generation/export (default is not locked-in).",
-    "Cardano (CIP-25) and Tezos (FA2) options/support should be removed."
+    "Pinata uploads must use directory paths in multipart FormData (3rd arg filename like \"metadata/1.json\") so Pinata creates folders rather than collapsing/merging into a single file.",
+    "Workflow requires two separate Pinata uploads: images folder first to obtain IMAGES_FOLDER_CID, then metadata folder after rewriting image URIs to ipfs://IMAGES_FOLDER_CID/<TOKEN_ID>.png."
   ],
   "known_issues": [
-    "Pinata IPFS directory upload fails with HTTP 400: {\"error\":\"More than one file and/or directory was provided for pinning.\"}"
+    "Metadata upload to Pinata is currently being merged into a single file (e.g., MONKE_INDEX_metadata.json) instead of a metadata folder containing per-token JSON files."
   ],
   "isFixRequest": true,
   "existing_features": [
     {
-      "id": "feature-fix-the-pinata-directory-upload-implementation-so-uploading-a-full-generated-collection-all-images-metadata-no-longer-fails-with-the-error-directory-upload-failed-400-around-50-progress",
-      "title": "Fix the Pinata directory upload implementation so uploading a full generated collection (all images + metadata) no longer fails with the error \"Directory upload failed: 400\" around 50% progress.",
+      "id": "feature-update-the-ipfs-pinata-upload-workflow-to-exactly-follow-1-upload-the-entire-images-folder-as-a-single-directory-upload-and-receive-images-folder-cid-2-generate-one-metadata-json-file-per-token-with-an-image-field-set-to-ipfs-images-folder-cid-token-id-png-3-upload-the-entire-metadata-folder-as-a-single-directory-upload-and-receive-metadata-folder-cid-and-4-present-the-final-token-uri-format-as-ipfs-metadata-folder-cid-token-id-json",
+      "title": "Update the IPFS/Pinata upload workflow to exactly follow: (1) upload the entire images folder as a single directory upload and receive IMAGES_FOLDER_CID; (2) generate one metadata JSON file per token with an `image` field set to `ipfs://IMAGES_FOLDER_CID/<TOKEN_ID>.png`; (3) upload the entire metadata folder as a single directory upload and receive METADATA_FOLDER_CID; and (4) present the final token URI format as `ipfs://METADATA_FOLDER_CID/<TOKEN_ID>.json`.",
       "reqIds": [
         "REQ-1"
       ],
       "version": 1
     },
     {
-      "id": "feature-update-the-pinata-directory-upload-request-payload-to-follow-pinata-s-expected-format-for-directory-wrapping-e-g-include-directory-paths-for-files-and-include-required-pinata-options-to-wrap-files-as-a-directory-while-keeping-the-existing-api-endpoint-and-jwt-bearer-auth-approach",
-      "title": "Update the Pinata directory upload request payload to follow Pinata's expected format for directory wrapping (e.g., include directory paths for files and include required Pinata options to wrap files as a directory), while keeping the existing API endpoint and JWT Bearer auth approach.",
+      "id": "feature-fix-pinata-directory-upload-construction-so-directory-uploads-cannot-collapse-merge-metadata-into-a-single-file-ensure-every-file-appended-to-formdata-for-directory-uploads-includes-the-intended-per-file-path-name-via-the-third-parameter-of-formdata-append-file-blob-path-and-that-metadata-is-uploaded-as-multiple-files-1-json-2-json-inside-one-directory-upload",
+      "title": "Fix Pinata directory upload construction so directory uploads cannot collapse/merge metadata into a single file: ensure every file appended to `FormData` for directory uploads includes the intended per-file path/name (via the third parameter of `formData.append('file', blob, <path>)`) and that metadata is uploaded as multiple files (`1.json`, `2.json`, …) inside one directory upload.",
       "reqIds": [
         "REQ-2"
       ],
       "version": 1
     },
     {
-      "id": "feature-improve-error-reporting-for-failed-pinata-uploads-by-capturing-and-surfacing-the-response-body-text-when-available-alongside-the-http-status-code-so-that-future-failures-are-diagnosable-from-the-ui-toast-status-message",
-      "title": "Improve error reporting for failed Pinata uploads by capturing and surfacing the response body/text (when available) alongside the HTTP status code so that future failures are diagnosable from the UI toast/status message.",
+      "id": "feature-enforce-1-based-sequential-filenames-for-both-exported-assets-and-pinata-uploads-images-must-be-named-1-png-2-png-3-png-and-metadata-files-must-be-1-json-2-json-3-json-no-0-png-0-json-in-the-ipfs-upload-workflow",
+      "title": "Enforce 1-based sequential filenames for both exported assets and Pinata uploads: images must be named `1.png`, `2.png`, `3.png`, … and metadata files must be `1.json`, `2.json`, `3.json`, … (no `0.png`/`0.json` in the IPFS upload workflow).",
       "reqIds": [
         "REQ-3"
       ],
       "version": 1
     },
     {
-      "id": "feature-update-the-pinata-directory-upload-implementation-so-uploading-a-generated-collection-to-pinata-no-longer-fails-with-http-400-error-more-than-one-file-and-or-directory-was-provided-for-pinning-this-includes-adjusting-the-multipart-form-data-payload-sent-to-https-api-pinata-cloud-pinning-pinfiletoipfs-to-match-pinata-s-directory-upload-expectations-when-multiple-files-are-provided-and-the-request-must-still-use-jwt-bearer-auth",
-      "title": "Update the Pinata directory upload implementation so uploading a generated collection to Pinata no longer fails with HTTP 400: {\"error\":\"More than one file and/or directory was provided for pinning.\"}. This includes adjusting the multipart/form-data payload sent to https://api.pinata.cloud/pinning/pinFileToIPFS to match Pinata’s directory upload expectations when multiple files are provided (and the request must still use JWT Bearer auth).",
+      "id": "feature-implement-final-asset-locking-behavior-when-the-collection-is-locked-for-publishing-disable-the-vault-generate-action-and-any-regeneration-actions-that-would-change-the-collection-and-only-re-enable-them-after-the-collection-is-unlocked-without-changing-the-current-app-layout",
+      "title": "Implement final asset locking behavior: when the collection is locked for publishing, disable the Vault \"Generate\" action (and any regeneration actions that would change the collection) and only re-enable them after the collection is unlocked, without changing the current app layout.",
       "reqIds": [
         "REQ-4"
       ],
       "version": 1
     },
     {
-      "id": "feature-ensure-the-image-uri-paths-in-generated-metadata-remain-correct-after-the-directory-upload-payload-change-e-g-if-files-are-uploaded-under-a-directory-prefix-path-metadata-must-reference-ipfs-imagedircid-correct-relative-path",
-      "title": "Ensure the image URI paths in generated metadata remain correct after the directory-upload payload change (e.g., if files are uploaded under a directory prefix/path, metadata must reference ipfs://<imageDirCID>/<correct relative path>).",
+      "id": "feature-ensure-exported-images-match-the-exact-pixel-dimensions-configured-in-the-settings-section-for-the-project-and-that-the-same-sizing-is-used-for-the-images-that-are-uploaded-to-pinata-so-all-assets-in-the-uploaded-images-folder-share-identical-dimensions",
+      "title": "Ensure exported images match the exact pixel dimensions configured in the Settings section for the project, and that the same sizing is used for the images that are uploaded to Pinata (so all assets in the uploaded images folder share identical dimensions).",
       "reqIds": [
         "REQ-5"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-keep-the-existing-upload-controls-flow-lock-upload-unlock-but-update-status-output-text-to-clearly-show-both-returned-cids-images-folder-cid-and-metadata-folder-cid-and-the-final-token-uri-format-ipfs-metadata-folder-cid-token-id-json-using-english-for-all-user-facing-text",
+      "title": "Keep the existing upload controls flow (Lock → Upload → Unlock) but update status/output text to clearly show both returned CIDs (IMAGES_FOLDER_CID and METADATA_FOLDER_CID) and the final token URI format `ipfs://METADATA_FOLDER_CID/<TOKEN_ID>.json`, using English for all user-facing text.",
+      "reqIds": [
+        "REQ-6"
       ],
       "version": 1
     }
@@ -56,55 +63,30 @@
   "new_feature_requests": [
     {
       "id": "AR-1",
-      "summary": "Add full export-only metadata support for Polygon (ERC-721), Base (ERC-721), and BNB Chain (BEP-721)",
+      "summary": "Implement industry-standard IPFS/Pinata workflow: lock assets, disable Generate while locked, enforce sequential filenames, upload images folder -> IMAGES_FOLDER_CID, inject image URIs into per-token metadata JSON, upload metadata folder -> METADATA_FOLDER_CID",
       "reqIds": [],
       "status": "pending"
     },
     {
       "id": "AR-2",
-      "summary": "Change default new collection chain/metadata format from Solana (Metaplex) to Ethereum (ERC-721); allow users to switch chain later during metadata generation",
+      "summary": "Fix Pinata metadata upload so metadata is uploaded as a folder of individual JSON files (e.g., 1.json, 2.json, ...) instead of being merged into a single aggregated metadata file",
       "reqIds": [],
       "status": "pending"
     },
     {
       "id": "AR-3",
-      "summary": "Remove Cardano (CIP-25) and Tezos (FA2) chain options/support from export selector",
+      "summary": "Add one-click end-to-end Upload action that automatically performs images upload, metadata rewriting with IMAGES_FOLDER_CID, then metadata folder upload, producing final marketplace-ready tokenURI base (METADATA_FOLDER_CID)",
       "reqIds": [],
       "status": "pending"
     },
     {
       "id": "AR-4",
-      "summary": "Planned: Full ICP-native storage of NFTs (images + metadata + assets stored in canister storage)",
-      "reqIds": [],
-      "status": "pending"
-    },
-    {
-      "id": "AR-5",
-      "summary": "Planned: Project-level cloud sync so artwork/collections persist across sessions",
-      "reqIds": [],
-      "status": "pending"
-    },
-    {
-      "id": "AR-6",
-      "summary": "Planned: Optional on-chain metadata publishing",
-      "reqIds": [],
-      "status": "pending"
-    },
-    {
-      "id": "AR-7",
-      "summary": "Planned: Built-in IPFS pinning automation",
-      "reqIds": [],
-      "status": "pending"
-    },
-    {
-      "id": "AR-8",
-      "summary": "Planned: Advanced rarity analytics and collection-grade statistical reports",
+      "summary": "Support 1-based token naming/numbering for assets and metadata (1.png/1.json, 2.png/2.json, ...) to match the required workflow and marketplaces expectations",
       "reqIds": [],
       "status": "pending"
     }
   ],
-  "gameProjectType": "none",
-  "projectName": "Studio Art Engine",
+  "projectName": "Implement industry-standard Pinata directory upload workflow (images CID + per-token metadata CID) with asset locking",
   "clarification_mode": "instant",
   "clarification_rounds": 0
 }

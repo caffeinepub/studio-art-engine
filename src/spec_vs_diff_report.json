@@ -1,47 +1,69 @@
 {
   "kind": "spec_vs_diff_report",
   "version": "1.0",
-  "generatedAt": "2026-02-07T03:19:36.502Z",
-  "summary": "The diff updates the IPFS publishing flow to upload images via a new `uploadDirectoryToPinata` helper and updates metadata generation to produce `ipfs://<cid>/<subdirectory>/<token>.png` URIs while preserving `startTokenNumberAtZero` behavior. However, the key Pinata directory-upload multipart payload fix and the required UI/diagnostics behavior for directory-upload failures cannot be confirmed because the `uploadDirectoryToPinata` implementation is truncated. The diff summary also indicates many unrelated UI/chain-support changes that are outside the stated non-goals.",
+  "generatedAt": "2026-02-08T04:11:46.864Z",
+  "summary": "Diff implements a two-step Pinata directory upload flow in `ipfsPublishing.ts` (images folder CID then metadata folder CID) with 1-based filenames and metadata `image` URIs pointing to `ipfs://<IMAGES_CID>/<TOKEN_ID>.png`. Asset locking state and publishing controls are partially updated, but the diff is truncated around the Pinata directory upload construction and UI output text, so compliance with the FormData path requirement and the exact CID/token-URI display cannot be fully verified. The diff summary also indicates multiple unrelated UI/layout and feature changes not requested by the BuildRequest.",
   "missing_requirements": [
     {
-      "id": "REQ-4",
-      "requirement": "Update the Pinata directory upload implementation so uploading a generated collection to Pinata no longer fails with HTTP 400 {\"error\":\"More than one file and/or directory was provided for pinning.\"}, by adjusting the multipart/form-data payload for https://api.pinata.cloud/pinning/pinFileToIPFS while keeping JWT Bearer auth and surfacing status code + response body text on failure.",
-      "reason": "The only relevant code for the multipart directory upload (`uploadDirectoryToPinata`) is truncated right where the critical multipart/path logic would be; the diff summary does not provide enough evidence that the payload is now in Pinata’s expected directory-wrapping format or that directory-upload failure errors include both HTTP status code and response body text.",
+      "id": "REQ-2",
+      "requirement": "Fix Pinata directory upload construction so directory uploads cannot collapse/merge metadata into a single file: ensure every file appended to FormData includes the intended per-file path/name (third param of formData.append) and metadata is uploaded as multiple files (1.json, 2.json, …) inside one directory upload.",
+      "reason": "The `uploadDirectoryToPinata` implementation is truncated right where it should show how files are appended to `FormData` (including the third-parameter filename/path). The diff does not provide enough visible evidence that each multipart part uses the correct per-file path/name and that metadata cannot collapse into one file.",
       "evidence": [
-        "frontend/src/utils/pinata.ts (truncated at: \"CRITICAL: Each file must be appended with a path that includes a common directory prefi\")"
+        "frontend/src/utils/pinata.ts (truncated at: \"Each file must be appended with its filename as the third paramet\")",
+        "frontend/src/utils/ipfsPublishing.ts (truncated before showing metadata files appended/uploaded)"
+      ]
+    },
+    {
+      "id": "REQ-6",
+      "requirement": "Keep existing Lock → Upload → Unlock flow but update status/output text to clearly show both returned CIDs (IMAGES_FOLDER_CID and METADATA_FOLDER_CID) and the final token URI format `ipfs://METADATA_FOLDER_CID/<TOKEN_ID>.json`, in English.",
+      "reason": "State now stores `imageDirCID` and `metadataCID`, but the provided diff snippet is truncated before showing the rendered status/output text that displays both CIDs and the final token URI pattern. Toast messages alone are not sufficient to confirm the required on-screen output format.",
+      "evidence": [
+        "frontend/src/components/VaultPublishingControls.tsx (truncated; shows storing `imageDirCID`/`metadataCID` but not the output text rendering)"
       ]
     }
   ],
   "hallucinated_features": [
     {
-      "description": "Expanded blockchain/metadata format support (ETH, SOL, Polygon, BNB, Base, ICP) and changing default chain/metadata format from Solana to Ethereum.",
-      "reason": "Explicitly listed as non-goals (no new chains/metadata formats, no default chain changes, no removal of existing chains). The diff summary indicates these changes occurred.",
+      "description": "Major UI/navigation redesign and layout changes across Header/Dashboard/Footer and other pages.",
+      "reason": "BuildRequest explicitly constrained against changing existing features outside the IPFS/Pinata workflow and against major UI restructuring, but the diff summary text describes redesigned navigation, dashboard, footer, and multiple page refinements unrelated to publishing.",
       "evidence": [
-        "frontend-file-summaries.txt (\"frontend/src/App.tsx\": \"expanded blockchain support ... default changed from Solana to Ethereum\")"
+        "frontend-file-summaries.txt (mentions redesigned Header, minimalist Footer, GENESIS.ENGINE-style Dashboard, multiple page refinements)"
       ]
     },
     {
-      "description": "Large-scale UI redesign across Header/Footer/Dashboard/Workshop/Preview/Builder/Rules/RarityWorkshop and other UX/styling changes unrelated to Pinata directory upload fix.",
-      "reason": "Not requested; scope was constrained to only what is necessary to fix Pinata uploads and surface correct upload results/errors without broader UX changes.",
+      "description": "Expanded blockchain support and changing defaults/normalization logic (e.g., default changed from Solana to Ethereum).",
+      "reason": "Not requested; non-goals include avoiding unrelated feature changes outside the IPFS/Pinata workflow.",
       "evidence": [
-        "frontend-file-summaries.txt (entries for Header.tsx, Footer.tsx, Dashboard.tsx, Workshop.tsx, Preview.tsx, Builder.tsx, Rules.tsx, RarityWorkshop.tsx, index.css, tailwind.config.js)"
+        "frontend-file-summaries.txt (\"frontend/src/App.tsx\": expanded blockchain support; default changed from Solana to Ethereum)"
       ]
     },
     {
-      "description": "Creation of an empty placeholder hook file `useQueries.ts`.",
-      "reason": "Not requested by the BuildRequest and not directly related to the Pinata upload bugfix requirements.",
+      "description": "JSON export functionality replacing ZIP export due to library constraints.",
+      "reason": "Not requested by any REQ; BuildRequest focuses on Pinata directory upload workflow and locking/sizing behavior.",
       "evidence": [
-        "frontend-file-summaries.txt (\"frontend/src/hooks/useQueries.ts\": \"Empty placeholder file...\")"
+        "frontend-file-summaries.txt (\"frontend/src/pages/Vault.tsx\": \"JSON export functionality (instead of ZIP due to library constraints)\")"
+      ]
+    },
+    {
+      "description": "Worker capability detection and fallback compositing logic (supportsImageCompositing via OffscreenCanvas/createImageBitmap) beyond required IPFS workflow changes.",
+      "reason": "Not requested; BuildRequest non-goals include avoiding changes outside publishing workflow and avoiding broader generation feature work (except enforcing output dimensions/locking).",
+      "evidence": [
+        "frontend/src/workers/vaultGenerator.worker.ts (adds compositing feature detection and conditional generation)",
+        "frontend/src/utils/vaultGeneratorProtocol.ts (adds/extends capability messaging)"
       ]
     }
   ],
-  "confidence": 0.64,
+  "confidence": 0.62,
   "changed_files": [
     "frontend-file-summaries.txt",
+    "frontend/src/components/VaultPublishingControls.tsx",
+    "frontend/src/pages/Settings.tsx",
+    "frontend/src/pages/Vault.tsx",
     "frontend/src/utils/ipfsPublishing.ts",
     "frontend/src/utils/metadataPresets.ts",
     "frontend/src/utils/pinata.ts",
+    "frontend/src/utils/vaultGeneratorProtocol.ts",
+    "frontend/src/workers/vaultGenerator.worker.ts",
     "project_state.json"
   ]
 }
