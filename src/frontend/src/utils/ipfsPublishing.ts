@@ -14,13 +14,11 @@ export interface IPFSUploadResult {
   imageDirCID?: string;
   metadataCID?: string;
   error?: string;
-  statusCode?: number;
-  responseBody?: string;
 }
 
 /**
  * Uploads all NFT images and metadata to IPFS via Pinata
- * Images are uploaded as a directory to get a single CID for ipfs://<cid>/<tokenId>.png URIs
+ * Images are uploaded as a directory to get a single CID for ipfs://<cid>/images/<tokenId>.png URIs
  */
 export async function uploadCollectionToIPFS(
   apiKey: string,
@@ -78,14 +76,13 @@ export async function uploadCollectionToIPFS(
       return {
         success: false,
         error: imageDirResult.error || 'Image directory upload failed',
-        statusCode: imageDirResult.statusCode,
-        responseBody: imageDirResult.responseBody,
       };
     }
 
     const imageDirCID = imageDirResult.cid;
 
     // Stage 2: Build and upload metadata with IPFS URIs
+    // The directory structure is: <CID>/images/<filename>
     const metadataArray: any[] = [];
 
     for (let i = 0; i < nfts.length; i++) {
@@ -103,13 +100,15 @@ export async function uploadCollectionToIPFS(
       const attributes = nft.metadata.attributes as Array<{ trait_type: string; value: string }>;
       
       // Build metadata with IPFS image URI
+      // Pass the directory CID and the subdirectory name ('images')
       const metadata = buildMetadataForNFT(
         projectName,
         symbol,
         settings,
         nft.id,
         attributes,
-        imageDirCID // Pass CID to generate ipfs:// URIs
+        imageDirCID,
+        'images' // subdirectory name
       );
 
       metadataArray.push(metadata);
@@ -125,9 +124,8 @@ export async function uploadCollectionToIPFS(
     if (!metadataResult.success || !metadataResult.cid) {
       return {
         success: false,
+        imageDirCID, // Return imageDirCID even if metadata fails
         error: metadataResult.error || 'Metadata upload failed',
-        statusCode: metadataResult.statusCode,
-        responseBody: metadataResult.responseBody,
       };
     }
 

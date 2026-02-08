@@ -121,27 +121,17 @@ export default function VaultPublishingControls({ project, onUpdateProject }: Va
         }));
         toast.success('Collection uploaded to IPFS successfully!');
       } else {
-        // Build detailed error message
-        let errorMessage = result.error || 'Upload failed';
-        if (result.statusCode) {
-          errorMessage += ` (HTTP ${result.statusCode})`;
-        }
-        if (result.responseBody) {
-          errorMessage += `\n\nResponse: ${result.responseBody}`;
-        }
-
+        // Preserve imageDirCID if it was returned (partial success)
         onUpdateProject((p) => ({
           ...p,
           ipfsPublishing: {
             ...p.ipfsPublishing,
             status: 'upload-failed',
-            errorMessage,
+            errorMessage: result.error || 'Upload failed',
+            imageDirCID: result.imageDirCID || p.ipfsPublishing?.imageDirCID,
           },
         }));
-        toast.error(result.error || 'Upload failed', {
-          description: result.statusCode ? `HTTP ${result.statusCode}${result.responseBody ? ': ' + result.responseBody.substring(0, 100) : ''}` : undefined,
-          duration: 6000,
-        });
+        toast.error(result.error || 'Upload failed');
       }
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Upload failed';

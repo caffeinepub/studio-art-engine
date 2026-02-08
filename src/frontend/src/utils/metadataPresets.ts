@@ -100,7 +100,8 @@ export function buildMetadataForNFT(
   settings: ProjectSettings,
   tokenId: number,
   attributes: Array<{ trait_type: string; value: string }>,
-  imageDirCID?: string
+  imageDirCID?: string,
+  subdirectory?: string
 ): Record<string, unknown> {
   const actualTokenId = settings.startTokenNumberAtZero ? tokenId - 1 : tokenId;
   
@@ -108,9 +109,18 @@ export function buildMetadataForNFT(
   const description = settings.tokenDescription || `${collectionName} NFT Collection`;
   
   // Use IPFS URI if CID is provided, otherwise local filename
-  const imagePath = imageDirCID 
-    ? `ipfs://${imageDirCID}/${actualTokenId}.png`
-    : `${actualTokenId}.png`;
+  // When uploading to Pinata with wrapWithDirectory and a subdirectory structure,
+  // the path is: ipfs://<CID>/<subdirectory>/<filename>
+  let imagePath: string;
+  if (imageDirCID) {
+    if (subdirectory) {
+      imagePath = `ipfs://${imageDirCID}/${subdirectory}/${actualTokenId}.png`;
+    } else {
+      imagePath = `ipfs://${imageDirCID}/${actualTokenId}.png`;
+    }
+  } else {
+    imagePath = `${actualTokenId}.png`;
+  }
 
   const baseMetadata: Record<string, unknown> = {
     name,

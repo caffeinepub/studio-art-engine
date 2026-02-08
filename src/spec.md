@@ -1,12 +1,11 @@
 # Specification
 
 ## Summary
-**Goal:** Resolve Pinata directory upload failures, prevent regeneration while a collection is locked for upload, and add a premium interactive mirror/gloss reflection effect to the Dashboard “GENESIS.ENGINE” hero text.
+**Goal:** Fix the Pinata directory upload flow so generated NFT collections (images + metadata) upload successfully without the HTTP 400 “More than one file and/or directory was provided for pinning.” error, while preserving JWT Bearer auth and existing diagnostics.
 
 **Planned changes:**
-- Fix the Pinata “directory upload” flow to correctly upload multiple files as a wrapped directory and return a directory CID on success.
-- Improve Pinata upload error handling to surface HTTP status plus any response body text/JSON in the UI when uploads fail.
-- Enforce lock→generate gating: disable “Generate” while the collection is locked and block any generation attempts with a clear message until unlocked.
-- Add a subtle, mouse-tracked mirror/gloss highlight overlay on the Dashboard hero text that preserves current text colors and uses gradient masking (light→transparent) with smooth horizontal motion.
+- Update the multipart/form-data payload sent to `https://api.pinata.cloud/pinning/pinFileToIPFS` so Pinata receives the files as a single directory upload (not interpreted as multiple separate roots), keeping `Authorization: Bearer <JWT>`.
+- Ensure the returned directory CIDs are used to construct correct `ipfs://` URIs in generated metadata, including correct relative paths and no changes to existing token numbering behavior (e.g., `startTokenNumberAtZero`).
+- Preserve/ensure UI error reporting includes both HTTP status code and response body text (when available) when an upload fails.
 
-**User-visible outcome:** Collection image directory uploads to Pinata succeed under normal conditions (and show actionable error details when they don’t), users cannot regenerate a locked collection until it’s unlocked, and the Dashboard “GENESIS.ENGINE” text has a calm, premium interactive gloss reflection that follows the cursor.
+**User-visible outcome:** From the Vault publishing flow, a typical generated collection uploads to Pinata successfully and returns a directory CID for images and a CID for metadata, with metadata image links resolving correctly; if an upload fails, the UI shows the status code and response body for troubleshooting.

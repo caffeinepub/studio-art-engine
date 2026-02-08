@@ -1,40 +1,54 @@
 {
   "schemaVersion": "1.0.0",
-  "projectStateVersion": 5,
-  "summary": "Studio Art Engine: an NFT collection generator focused on layer-based creation, rarity/rules, preview, and export; expanding multi-chain metadata export with Ethereum (ERC-721) as the default format, plus improving IPFS/Pinata upload workflow and related UI/UX (lock/generate flow and premium interactive hero text effect).",
+  "projectStateVersion": 7,
+  "summary": "Studio Art Engine: an NFT collection generator focused on layer-based creation, rarity/rules, preview, and export; expanding multi-chain metadata export with Ethereum (ERC-721) as the default format.",
   "architectural_notes": [
     "Blockchain selector should include Ethereum/Polygon/Base/BNB (export-only) and default new projects to Ethereum (ERC-721).",
     "Users can change the target chain later during metadata generation/export (default is not locked-in).",
-    "Cardano (CIP-25) and Tezos (FA2) options/support should be removed.",
-    "Pinata upload should produce Pinata-compatible upload payload/structure (avoid directory upload 400 errors; ensure export format aligns with Pinata’s accepted directory/file upload expectations).",
-    "Lock/Unlock state should gate generation: locked disables Generate until explicitly unlocked."
+    "Cardano (CIP-25) and Tezos (FA2) options/support should be removed."
   ],
   "known_issues": [
-    "Pinata upload currently fails with error: “Directory upload failed: 400” in some export/upload flows."
+    "Pinata IPFS directory upload fails with HTTP 400: {\"error\":\"More than one file and/or directory was provided for pinning.\"}"
   ],
   "isFixRequest": true,
   "existing_features": [
     {
-      "id": "feature-fix-the-pinata-directory-upload-so-collection-uploads-no-longer-fail-with-the-error-message-directory-upload-failed-400-update-the-pinata-directory-upload-implementation-to-correctly-upload-multiple-files-as-a-wrapped-directory-and-return-actionable-error-details-when-the-request-fails",
-      "title": "Fix the Pinata directory upload so collection uploads no longer fail with the error message “Directory upload failed: 400”. Update the Pinata directory upload implementation to correctly upload multiple files as a wrapped directory and return actionable error details when the request fails.",
+      "id": "feature-fix-the-pinata-directory-upload-implementation-so-uploading-a-full-generated-collection-all-images-metadata-no-longer-fails-with-the-error-directory-upload-failed-400-around-50-progress",
+      "title": "Fix the Pinata directory upload implementation so uploading a full generated collection (all images + metadata) no longer fails with the error \"Directory upload failed: 400\" around 50% progress.",
       "reqIds": [
         "REQ-1"
       ],
       "version": 1
     },
     {
-      "id": "feature-after-the-user-locks-a-collection-for-uploading-to-pinata-disable-the-collection-generate-action-and-keep-it-disabled-until-the-user-unlocks-the-collection-the-generate-action-must-not-start-any-regeneration-while-the-collection-is-locked",
-      "title": "After the user locks a collection for uploading to Pinata, disable the collection “Generate” action and keep it disabled until the user unlocks the collection. The Generate action must not start any regeneration while the collection is locked.",
+      "id": "feature-update-the-pinata-directory-upload-request-payload-to-follow-pinata-s-expected-format-for-directory-wrapping-e-g-include-directory-paths-for-files-and-include-required-pinata-options-to-wrap-files-as-a-directory-while-keeping-the-existing-api-endpoint-and-jwt-bearer-auth-approach",
+      "title": "Update the Pinata directory upload request payload to follow Pinata's expected format for directory wrapping (e.g., include directory paths for files and include required Pinata options to wrap files as a directory), while keeping the existing API endpoint and JWT Bearer auth approach.",
       "reqIds": [
         "REQ-2"
       ],
       "version": 1
     },
     {
-      "id": "feature-implement-an-interactive-mirror-gloss-reflection-effect-for-the-dashboard-hero-text-genesis-engine-that-preserves-the-existing-text-colors-and-feels-premium-and-physical-the-effect-must-use-a-subtle-glass-mirror-shine-overlay-with-gradient-masking-light-transparent-and-smoothly-follow-mouse-movement-horizontally-highlight-intensity-should-vary-with-cursor-position-avoid-heavy-glow-neon-or-gimmicky-visuals",
-      "title": "Implement an interactive mirror/gloss reflection effect for the Dashboard hero text “GENESIS.ENGINE” that preserves the existing text colors and feels premium and physical. The effect must use a subtle glass/mirror shine overlay with gradient masking (light → transparent) and smoothly follow mouse movement horizontally; highlight intensity should vary with cursor position. Avoid heavy glow, neon, or gimmicky visuals.",
+      "id": "feature-improve-error-reporting-for-failed-pinata-uploads-by-capturing-and-surfacing-the-response-body-text-when-available-alongside-the-http-status-code-so-that-future-failures-are-diagnosable-from-the-ui-toast-status-message",
+      "title": "Improve error reporting for failed Pinata uploads by capturing and surfacing the response body/text (when available) alongside the HTTP status code so that future failures are diagnosable from the UI toast/status message.",
       "reqIds": [
         "REQ-3"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-update-the-pinata-directory-upload-implementation-so-uploading-a-generated-collection-to-pinata-no-longer-fails-with-http-400-error-more-than-one-file-and-or-directory-was-provided-for-pinning-this-includes-adjusting-the-multipart-form-data-payload-sent-to-https-api-pinata-cloud-pinning-pinfiletoipfs-to-match-pinata-s-directory-upload-expectations-when-multiple-files-are-provided-and-the-request-must-still-use-jwt-bearer-auth",
+      "title": "Update the Pinata directory upload implementation so uploading a generated collection to Pinata no longer fails with HTTP 400: {\"error\":\"More than one file and/or directory was provided for pinning.\"}. This includes adjusting the multipart/form-data payload sent to https://api.pinata.cloud/pinning/pinFileToIPFS to match Pinata’s directory upload expectations when multiple files are provided (and the request must still use JWT Bearer auth).",
+      "reqIds": [
+        "REQ-4"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-ensure-the-image-uri-paths-in-generated-metadata-remain-correct-after-the-directory-upload-payload-change-e-g-if-files-are-uploaded-under-a-directory-prefix-path-metadata-must-reference-ipfs-imagedircid-correct-relative-path",
+      "title": "Ensure the image URI paths in generated metadata remain correct after the directory-upload payload change (e.g., if files are uploaded under a directory prefix/path, metadata must reference ipfs://<imageDirCID>/<correct relative path>).",
+      "reqIds": [
+        "REQ-5"
       ],
       "version": 1
     }
@@ -85,24 +99,6 @@
     {
       "id": "AR-8",
       "summary": "Planned: Advanced rarity analytics and collection-grade statistical reports",
-      "reqIds": [],
-      "status": "pending"
-    },
-    {
-      "id": "AR-9",
-      "summary": "Implement interactive mirror/gloss reflection effect for the “GENESIS.ENGINE” hero text (cursor-driven subtle shine with gradient masking, smooth and lightweight, no glow/neon)",
-      "reqIds": [],
-      "status": "pending"
-    },
-    {
-      "id": "AR-10",
-      "summary": "Fix Pinata IPFS upload so exports no longer fail with “Directory upload failed: 400”",
-      "reqIds": [],
-      "status": "pending"
-    },
-    {
-      "id": "AR-11",
-      "summary": "When collection is locked for Pinata upload, disable the Generate button; re-enable only after unlock",
       "reqIds": [],
       "status": "pending"
     }

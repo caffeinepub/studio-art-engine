@@ -11,8 +11,6 @@ export interface PinataUploadResult {
   success: boolean;
   cid?: string;
   error?: string;
-  statusCode?: number;
-  responseBody?: string;
 }
 
 /**
@@ -79,19 +77,16 @@ export async function uploadToPinata(
     });
 
     if (!response.ok) {
-      const errorText = await response.text();
-      let parsedError;
+      let errorDetail = '';
       try {
-        parsedError = JSON.parse(errorText);
+        const errorText = await response.text();
+        errorDetail = errorText ? ` - ${errorText.substring(0, 200)}` : '';
       } catch {
-        parsedError = null;
+        // Ignore error text parsing failures
       }
-
       return {
         success: false,
-        error: `Upload failed: ${response.status}`,
-        statusCode: response.status,
-        responseBody: parsedError ? JSON.stringify(parsedError, null, 2) : errorText,
+        error: `Upload failed: ${response.status}${errorDetail}`,
       };
     }
 
@@ -132,19 +127,16 @@ export async function uploadJSONToPinata(
     });
 
     if (!response.ok) {
-      const errorText = await response.text();
-      let parsedError;
+      let errorDetail = '';
       try {
-        parsedError = JSON.parse(errorText);
+        const errorText = await response.text();
+        errorDetail = errorText ? ` - ${errorText.substring(0, 200)}` : '';
       } catch {
-        parsedError = null;
+        // Ignore error text parsing failures
       }
-
       return {
         success: false,
-        error: `Upload failed: ${response.status}`,
-        statusCode: response.status,
-        responseBody: parsedError ? JSON.stringify(parsedError, null, 2) : errorText,
+        error: `Upload failed: ${response.status}${errorDetail}`,
       };
     }
 
@@ -164,8 +156,6 @@ export async function uploadJSONToPinata(
 /**
  * Uploads multiple files as a directory to Pinata IPFS
  * Returns a single directory CID that can be used to construct ipfs://<cid>/<filename> URIs
- * 
- * Each file must be appended with a relative path in the filename to create proper directory structure
  */
 export async function uploadDirectoryToPinata(
   apiKey: string,
@@ -174,18 +164,29 @@ export async function uploadDirectoryToPinata(
   try {
     const formData = new FormData();
     
-    // Add all files to the form data with relative paths
-    // Each file needs its own 'file' entry with the path in the filename
+    // CRITICAL: Each file must be appended with a path that includes a common directory prefix
+    // This ensures Pinata treats all files as part of a single directory structure
+    // Without this, Pinata returns: "More than one file and/or directory was provided for pinning"
+    const directoryName = 'images';
+    
     files.forEach(({ filename, blob }) => {
-      // Use the filename as the relative path within the directory
-      formData.append('file', blob, filename);
+      // Append each file with the directory path prefix
+      // The third parameter (filename) in FormData.append must include the directory path
+      formData.append('file', blob, `${directoryName}/${filename}`);
     });
 
-    // Add metadata to name the directory
+    // Add pinataMetadata for the directory name
     const metadata = JSON.stringify({
       name: 'collection-images',
     });
     formData.append('pinataMetadata', metadata);
+
+    // Add pinataOptions to wrap files as a directory
+    // This ensures we get a single directory CID
+    const options = JSON.stringify({
+      wrapWithDirectory: true,
+    });
+    formData.append('pinataOptions', options);
 
     const response = await fetch('https://api.pinata.cloud/pinning/pinFileToIPFS', {
       method: 'POST',
@@ -196,19 +197,16 @@ export async function uploadDirectoryToPinata(
     });
 
     if (!response.ok) {
-      const errorText = await response.text();
-      let parsedError;
+      let errorDetail = '';
       try {
-        parsedError = JSON.parse(errorText);
+        const errorText = await response.text();
+        errorDetail = errorText ? ` - ${errorText.substring(0, 200)}` : '';
       } catch {
-        parsedError = null;
+        // Ignore error text parsing failures
       }
-
       return {
         success: false,
-        error: `Directory upload failed: ${response.status}`,
-        statusCode: response.status,
-        responseBody: parsedError ? JSON.stringify(parsedError, null, 2) : errorText,
+        error: `Directory upload failed: ${response.status}${errorDetail}`,
       };
     }
 

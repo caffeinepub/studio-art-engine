@@ -2,10 +2,9 @@
   "kind": "feature_evidence_report",
   "features": [
     {
-      "featureId": "feature-fix-the-pinata-directory-upload-so-collection-uploads-no-longer-fail-with-the-error-message-directory-upload-failed-400-update-the-pinata-directory-upload-implementation-to-correctly-upload-multiple-files-as-a-wrapped-directory-and-return-actionable-error-details-when-the-request-fails",
-      "featureTitle": "Fix the Pinata directory upload so collection uploads no longer fail with the error message “Directory upload failed: 400”. Update the Pinata directory upload implementation to correctly upload multiple files as a wrapped directory and return actionable error details when the request fails.",
+      "featureId": "feature-update-the-pinata-directory-upload-implementation-so-uploading-a-generated-collection-to-pinata-no-longer-fails-with-http-400-error-more-than-one-file-and-or-directory-was-provided-for-pinning-this-includes-adjusting-the-multipart-form-data-payload-sent-to-https-api-pinata-cloud-pinning-pinfiletoipfs-to-match-pinata-s-directory-upload-expectations-when-multiple-files-are-provided-and-the-request-must-still-use-jwt-bearer-auth",
+      "featureTitle": "Update the Pinata directory upload implementation so uploading a generated collection to Pinata no longer fails with HTTP 400: {\"error\":\"More than one file and/or directory was provided for pinning.\"}. This includes adjusting the multipart/form-data payload sent to https://api.pinata.cloud/pinning/pinFileToIPFS to match Pinata’s directory upload expectations when multiple files are provided (and the request must still use JWT Bearer auth).",
       "files": [
-        "frontend/src/components/VaultPublishingControls.tsx",
         "frontend/src/utils/ipfsPublishing.ts",
         "frontend/src/utils/pinata.ts"
       ],
@@ -18,16 +17,16 @@
         "github-export-icp-cli@1.0.0"
       ],
       "testIds": [
-        "REQ-1"
+        "REQ-4"
       ],
       "confidence": "high"
     },
     {
-      "featureId": "feature-after-the-user-locks-a-collection-for-uploading-to-pinata-disable-the-collection-generate-action-and-keep-it-disabled-until-the-user-unlocks-the-collection-the-generate-action-must-not-start-any-regeneration-while-the-collection-is-locked",
-      "featureTitle": "After the user locks a collection for uploading to Pinata, disable the collection “Generate” action and keep it disabled until the user unlocks the collection. The Generate action must not start any regeneration while the collection is locked.",
+      "featureId": "feature-ensure-the-image-uri-paths-in-generated-metadata-remain-correct-after-the-directory-upload-payload-change-e-g-if-files-are-uploaded-under-a-directory-prefix-path-metadata-must-reference-ipfs-imagedircid-correct-relative-path",
+      "featureTitle": "Ensure the image URI paths in generated metadata remain correct after the directory-upload payload change (e.g., if files are uploaded under a directory prefix/path, metadata must reference ipfs://<imageDirCID>/<correct relative path>).",
       "files": [
-        "frontend/src/components/VaultPublishingControls.tsx",
-        "frontend/src/pages/Vault.tsx"
+        "frontend/src/utils/ipfsPublishing.ts",
+        "frontend/src/utils/metadataPresets.ts"
       ],
       "components": [
         "blob-storage@4.0.0",
@@ -38,28 +37,7 @@
         "github-export-icp-cli@1.0.0"
       ],
       "testIds": [
-        "REQ-2"
-      ],
-      "confidence": "high"
-    },
-    {
-      "featureId": "feature-implement-an-interactive-mirror-gloss-reflection-effect-for-the-dashboard-hero-text-genesis-engine-that-preserves-the-existing-text-colors-and-feels-premium-and-physical-the-effect-must-use-a-subtle-glass-mirror-shine-overlay-with-gradient-masking-light-transparent-and-smoothly-follow-mouse-movement-horizontally-highlight-intensity-should-vary-with-cursor-position-avoid-heavy-glow-neon-or-gimmicky-visuals",
-      "featureTitle": "Implement an interactive mirror/gloss reflection effect for the Dashboard hero text “GENESIS.ENGINE” that preserves the existing text colors and feels premium and physical. The effect must use a subtle glass/mirror shine overlay with gradient masking (light → transparent) and smoothly follow mouse movement horizontally; highlight intensity should vary with cursor position. Avoid heavy glow, neon, or gimmicky visuals.",
-      "files": [
-        "frontend/src/components/dashboard/GlossyHeroText.tsx",
-        "frontend/src/index.css",
-        "frontend/src/pages/Dashboard.tsx"
-      ],
-      "components": [
-        "blob-storage@4.0.0",
-        "core-infrastructure@1.0.2",
-        "shadcn-ui@1.0.0",
-        "build-template-react@1.0.0",
-        "initial-app@1.0.0",
-        "github-export-icp-cli@1.0.0"
-      ],
-      "testIds": [
-        "REQ-3"
+        "REQ-5"
       ],
       "confidence": "high"
     }

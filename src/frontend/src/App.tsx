@@ -471,10 +471,16 @@ function App() {
     toast.success('Project deleted');
   }, [projects, currentProjectId, saveProjects]);
 
-  const selectProject = useCallback((project: Project) => {
-    setCurrentProjectId(project.id);
+  const openProject = useCallback((id: string) => {
+    const project = projects.find(p => p.id === id);
+    if (!project) {
+      toast.error('Project not found');
+      return;
+    }
+    
+    setCurrentProjectId(id);
     setCurrentView('workshop');
-  }, []);
+  }, [projects]);
 
   if (isLoading) {
     return (
@@ -506,56 +512,69 @@ function App() {
             <Dashboard
               projects={projects}
               onCreateProject={createProject}
-              onSelectProject={selectProject}
+              onOpenProject={openProject}
               onDeleteProject={deleteProject}
               onUpdateProject={updateProject}
             />
           )}
           
-          {currentView === 'workshop' && currentProject && (
-            <Suspense fallback={<div className="h-full flex items-center justify-center"><div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin"></div></div>}>
-              <Workshop project={currentProject} onUpdateProject={updateCurrentProject} />
-            </Suspense>
-          )}
-          
-          {currentView === 'rarity' && currentProject && (
-            <Suspense fallback={<div className="h-full flex items-center justify-center"><div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin"></div></div>}>
-              <RarityWorkshop project={currentProject} onUpdateProject={updateCurrentProject} />
-            </Suspense>
-          )}
-          
-          {currentView === 'rules' && currentProject && (
-            <Suspense fallback={<div className="h-full flex items-center justify-center"><div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin"></div></div>}>
-              <Rules project={currentProject} onUpdateProject={updateCurrentProject} />
-            </Suspense>
-          )}
-          
-          {currentView === 'preview' && currentProject && (
-            <Suspense fallback={<div className="h-full flex items-center justify-center"><div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin"></div></div>}>
-              <Preview project={currentProject} onUpdateProject={updateCurrentProject} />
-            </Suspense>
-          )}
-          
-          {currentView === 'builder' && currentProject && (
-            <Suspense fallback={<div className="h-full flex items-center justify-center"><div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin"></div></div>}>
-              <Builder project={currentProject} onUpdateProject={updateCurrentProject} />
-            </Suspense>
-          )}
-          
-          {currentView === 'vault' && currentProject && (
-            <Suspense fallback={<div className="h-full flex items-center justify-center"><div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin"></div></div>}>
-              <Vault project={currentProject} onUpdateProject={updateCurrentProject} />
-            </Suspense>
-          )}
-          
-          {currentView === 'settings' && currentProject && (
-            <Suspense fallback={<div className="h-full flex items-center justify-center"><div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin"></div></div>}>
-              <Settings project={currentProject} onUpdateProject={updateCurrentProject} />
-            </Suspense>
-          )}
+          <Suspense fallback={
+            <div className="h-full flex items-center justify-center">
+              <div className="w-12 h-12 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
+            </div>
+          }>
+            {currentView === 'workshop' && currentProject && (
+              <Workshop
+                project={currentProject}
+                onUpdateProject={updateCurrentProject}
+              />
+            )}
+            
+            {currentView === 'rarity' && currentProject && (
+              <RarityWorkshop
+                project={currentProject}
+                onUpdateProject={updateCurrentProject}
+              />
+            )}
+            
+            {currentView === 'rules' && currentProject && (
+              <Rules
+                project={currentProject}
+                onUpdateProject={updateCurrentProject}
+              />
+            )}
+            
+            {currentView === 'preview' && currentProject && (
+              <Preview
+                project={currentProject}
+                onUpdateProject={updateCurrentProject}
+              />
+            )}
+            
+            {currentView === 'builder' && currentProject && (
+              <Builder
+                project={currentProject}
+                onUpdateProject={updateCurrentProject}
+              />
+            )}
+            
+            {currentView === 'vault' && currentProject && (
+              <Vault
+                project={currentProject}
+                onUpdateProject={updateCurrentProject}
+              />
+            )}
+            
+            {currentView === 'settings' && currentProject && (
+              <Settings
+                project={currentProject}
+                onUpdateProject={updateCurrentProject}
+              />
+            )}
+          </Suspense>
         </div>
       </main>
-      
+
       <Footer />
       <Toaster />
       <ConfirmDestructiveDialog />
