@@ -141,24 +141,55 @@ export async function uploadJSONToPinata(
 }
 
 /**
+ * Sanitizes a filename to a relative path by removing absolute path segments
+ * and normalizing to forward slashes
+ */
+function sanitizeFilename(filename: string): string {
+  // Remove any absolute path indicators (C:\, /Users/, etc.)
+  let sanitized = filename.replace(/^[A-Za-z]:\\/, ''); // Windows absolute paths
+  sanitized = sanitized.replace(/^\/[^/]+\//, ''); // Unix-style absolute paths
+  sanitized = sanitized.replace(/^\.\//, ''); // Relative ./ prefix
+  sanitized = sanitized.replace(/^\.\.\//, ''); // Relative ../ prefix
+  
+  // Normalize to forward slashes
+  sanitized = sanitized.replace(/\\/g, '/');
+  
+  // Extract just the basename if it still contains path separators
+  const parts = sanitized.split('/');
+  return parts[parts.length - 1];
+}
+
+/**
  * Uploads multiple files as a directory to Pinata IPFS
  * Returns a single directory CID that can be used to construct ipfs://<cid>/<filename> URIs
+ * 
+ * @param apiKey - Pinata JWT Bearer token
+ * @param files - Array of files with filenames and blobs
+ * @param folderPrefix - Folder name to prefix all files with (e.g., "images", "metadata")
  */
 export async function uploadDirectoryToPinata(
   apiKey: string,
-  files: Array<{ filename: string; blob: Blob }>
+  files: Array<{ filename: string; blob: Blob }>,
+  folderPrefix: string
 ): Promise<PinataUploadResult> {
   try {
     const formData = new FormData();
     
-    // Add all files to the form data
+    // Add all files to the form data with sanitized relative paths
     files.forEach(({ filename, blob }) => {
-      formData.append('file', blob, filename);
+      // Sanitize the filename to remove any absolute path segments
+      const sanitizedBasename = sanitizeFilename(filename);
+      
+      // Construct the relative path with folder prefix
+      const relativePath = `${folderPrefix}/${sanitizedBasename}`;
+      
+      // Append to FormData with the relative path as the multipart filename
+      formData.append('file', blob, relativePath);
     });
 
-    // Add metadata to wrap as directory
+    // Add metadata to name the directory
     const metadata = JSON.stringify({
-      name: 'collection-images',
+      name: `${folderPrefix}-directory`,
     });
     formData.append('pinataMetadata', metadata);
 

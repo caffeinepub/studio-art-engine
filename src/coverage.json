@@ -1,7 +1,7 @@
 {
   "kind": "coverage_report",
   "version": "1.0",
-  "generatedAt": "2026-02-09T04:36:48.794Z",
+  "generatedAt": "2026-02-10T02:52:01.059Z",
   "sources": {
     "buildRequest": true,
     "implementationPlan": true
@@ -12,53 +12,51 @@
     "items": [
       {
         "id": "REQ-1",
-        "summary": "Retry the full application build and ensure the project compiles successfully after changes, with no TypeScript build errors and no runtime crashes on initial load.",
+        "summary": "Ensure Forge “Direct Injection” image uploads are processed into a new square PNG at the project’s configured output dimensions before being saved into project state (so the stored image matches what the app displays). Processing must: (1) resize to exactly project.settings.outputSize x project.settings.outputSize, and (2) apply pixel mode by disabling canvas image smoothing when project.pixelArtMode is enabled.",
         "status": "implemented",
         "plannedFiles": [
-          "frontend/src/App.tsx",
-          "frontend/src/pages/Dashboard.tsx"
+          "frontend/src/utils/forgeImageProcessing.ts",
+          "frontend/src/pages/Builder.tsx"
         ],
         "matchedFiles": [
-          "frontend/src/App.tsx"
+          "frontend/src/utils/forgeImageProcessing.ts",
+          "frontend/src/pages/Builder.tsx"
         ]
       },
       {
         "id": "REQ-2",
-        "summary": "Review the entire codebase and remove unused and redundant files and unnecessary code paths that are not used by the app, while preserving all current app behavior (project creation, layer/trait workshop, rules, preview, vault generation/export, settings, Pinata/IPFS publishing, and localStorage persistence).",
+        "summary": "Discard the original, unprocessed uploaded file once processing is complete: do not persist original dimensions or original image bytes in project.customTokens or any other long-lived project state used for export/upload.",
         "status": "implemented",
         "plannedFiles": [
-          "frontend/src/hooks/useQueries.ts",
-          "frontend/src/utils/persistence.ts"
+          "frontend/src/pages/Builder.tsx"
         ],
         "matchedFiles": [
-          "frontend/src/hooks/useQueries.ts"
+          "frontend/src/pages/Builder.tsx"
         ]
       },
       {
         "id": "REQ-3",
-        "summary": "Perform a targeted cleanup of clearly unused placeholders and legacy scaffolding related to persistence/querying and backend storage, including removing files that are intentionally empty or unused, and trimming backend code that is not referenced by the frontend (while keeping the single-actor backend architecture intact).",
+        "summary": "Verify the IPFS/Pinata upload pipeline uses the processed images for any NFTs originating from Forge uploads by ensuring the imageData that flows into uploadCollectionToIPFS (project.generatedNFTs[*].imageData) is the processed Forge output rather than the original upload data URL.",
         "status": "implemented",
         "plannedFiles": [
-          "frontend/src/hooks/useQueries.ts",
-          "frontend/src/backend.d.ts"
+          "frontend/src/pages/Builder.tsx",
+          "frontend/src/utils/ipfsPublishing.ts"
         ],
         "matchedFiles": [
-          "frontend/src/hooks/useQueries.ts",
-          "frontend/src/backend.d.ts"
+          "frontend/src/pages/Builder.tsx",
+          "frontend/src/utils/ipfsPublishing.ts"
         ]
       }
     ]
   },
   "changedFiles": [
-    "backend/main.mo",
     "build-request.json",
-    "caffeine.lock.json",
     "feature_evidence.json",
     "frontend-file-summaries.txt",
     "frontend-implementation-plan.json",
-    "frontend/src/App.tsx",
-    "frontend/src/backend.d.ts",
-    "frontend/src/hooks/useQueries.ts",
+    "frontend/src/pages/Builder.tsx",
+    "frontend/src/utils/forgeImageProcessing.ts",
+    "frontend/src/utils/ipfsPublishing.ts",
     "project_state.json",
     "scratch/component-selection.json",
     "spec.md",

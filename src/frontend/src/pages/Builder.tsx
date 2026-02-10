@@ -4,6 +4,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { X, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
 import type { Project, CustomToken } from '../App';
+import { processForgeImage } from '../utils/forgeImageProcessing';
 
 interface BuilderProps {
   project: Project;
@@ -17,6 +18,7 @@ export default function Builder({ project, onUpdateProject }: BuilderProps) {
   const [uploadQueue, setUploadQueue] = useState<Array<{ id: string; name: string; data: string }>>([]);
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   const [tokenToDelete, setTokenToDelete] = useState<CustomToken | null>(null);
+  const [isProcessing, setIsProcessing] = useState(false);
   const previewCanvasRef = useRef<HTMLCanvasElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -92,29 +94,51 @@ export default function Builder({ project, onUpdateProject }: BuilderProps) {
     }
   }, [selectedTraits, activeTab, renderGenesisPreview]);
 
-  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (!files) return;
 
-    Array.from(files).forEach((file) => {
-      // Validate file type
-      const validTypes = ['image/png', 'image/jpeg', 'image/jpg', 'image/gif'];
-      if (!validTypes.includes(file.type)) {
-        toast.error(`UNSUPPORTED FORMAT: ${file.name}`);
-        return;
-      }
+    setIsProcessing(true);
 
-      const reader = new FileReader();
-      reader.onload = (event) => {
-        const newItem = {
+    try {
+      const processedItems: Array<{ id: string; name: string; data: string }> = [];
+
+      for (const file of Array.from(files)) {
+        // Validate file type
+        const validTypes = ['image/png', 'image/jpeg', 'image/jpg', 'image/gif'];
+        if (!validTypes.includes(file.type)) {
+          toast.error(`UNSUPPORTED FORMAT: ${file.name}`);
+          continue;
+        }
+
+        // Read the file
+        const dataUrl = await new Promise<string>((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = (event) => resolve(event.target?.result as string);
+          reader.onerror = reject;
+          reader.readAsDataURL(file);
+        });
+
+        // Process the image (resize to square, apply pixel mode)
+        const processedDataUrl = await processForgeImage(dataUrl, {
+          outputSize: project.settings.outputSize,
+          pixelArtMode: project.pixelArtMode,
+        });
+
+        processedItems.push({
           id: Date.now().toString() + Math.random(),
           name: file.name,
-          data: event.target?.result as string,
-        };
-        setUploadQueue((prev) => [...prev, newItem]);
-      };
-      reader.readAsDataURL(file);
-    });
+          data: processedDataUrl,
+        });
+      }
+
+      setUploadQueue((prev) => [...prev, ...processedItems]);
+    } catch (error) {
+      toast.error('IMAGE PROCESSING FAILED');
+      console.error('Image processing error:', error);
+    } finally {
+      setIsProcessing(false);
+    }
   };
 
   const removeFromQueue = (id: string) => {
@@ -215,13 +239,14 @@ export default function Builder({ project, onUpdateProject }: BuilderProps) {
       return;
     }
 
+    // All images in uploadQueue are already processed to the correct dimensions
     const newTokens: CustomToken[] = uploadQueue.map((item, index) => {
       const tokenNumber = getRandomTokenNumber();
       return {
         id: Date.now().toString() + index,
         name: item.name.replace(/\.[^/.]+$/, ''),
         type: 'direct',
-        imageData: item.data,
+        imageData: item.data, // Already processed PNG at correct dimensions
         tokenNumber,
       };
     });
@@ -441,111 +466,97 @@ export default function Builder({ project, onUpdateProject }: BuilderProps) {
                   </div>
                 </div>
               ) : (
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 lg:gap-8 h-full">
-                  <div className="flex flex-col min-h-[400px] lg:min-h-[500px]">
-                    <div className="flex-1 bg-background rounded-lg border border-border p-4 sm:p-6 overflow-y-auto">
-                      {uploadQueue.length === 0 ? (
-                        <div className="flex flex-col items-center justify-center h-full">
-                          <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-lg bg-card border border-border flex items-center justify-center mb-4">
-                            <div className="w-8 h-8 sm:w-10 sm:h-10 rounded bg-background"></div>
-                          </div>
-                          <p className="text-xs sm:text-sm font-black uppercase tracking-tight text-muted-foreground text-center">
-                            VAULT INJECTION QUEUE IS EMPTY
-                          </p>
-                        </div>
-                      ) : (
-                        <div className="space-y-3">
-                          {uploadQueue.map((item) => (
-                            <div
-                              key={item.id}
-                              className="bg-card border border-border rounded-lg p-3 flex items-center gap-3 group"
-                            >
-                              <div className="w-12 h-12 sm:w-16 sm:h-16 bg-background rounded-lg overflow-hidden flex-shrink-0">
-                                <img
-                                  src={item.data}
-                                  alt={item.name}
-                                  className="w-full h-full object-cover"
-                                  style={{
-                                    imageRendering: project.pixelArtMode ? 'pixelated' : 'auto',
-                                  }}
-                                />
-                              </div>
-                              <div className="flex-1 min-w-0">
-                                <p className="text-xs font-bold uppercase tracking-tight text-foreground truncate">
-                                  {item.name}
-                                </p>
-                              </div>
-                              <button
-                                onClick={() => removeFromQueue(item.id)}
-                                className="text-muted-foreground hover:text-destructive transition-colors opacity-0 group-hover:opacity-100"
-                              >
-                                <X className="w-4 h-4" />
-                              </button>
-                            </div>
-                          ))}
-                        </div>
-                      )}
-                    </div>
-                  </div>
-
-                  <div className="flex flex-col items-center justify-center min-h-[400px] lg:min-h-[500px]">
-                    <div className="text-center mb-6 sm:mb-8">
-                      <h3 className="text-lg sm:text-xl font-black uppercase tracking-tight text-foreground mb-2">
-                        DIRECT ASSET INJECTION
-                      </h3>
-                      <p className="text-xs sm:text-sm text-muted-foreground font-bold uppercase tracking-tight">
-                        Bypass the blueprint for unique 1-of-1 masterworks
-                      </p>
-                    </div>
+                <div className="space-y-4 sm:space-y-6">
+                  <div className="bg-background/50 border border-border rounded-lg p-4 sm:p-6">
                     <input
                       ref={fileInputRef}
                       type="file"
-                      accept=".png,.jpg,.jpeg,.gif,image/png,image/jpeg,image/gif"
+                      accept="image/png,image/jpeg,image/jpg,image/gif"
                       multiple
                       onChange={handleFileSelect}
                       className="hidden"
+                      disabled={isProcessing}
                     />
                     <Button
                       onClick={() => fileInputRef.current?.click()}
-                      className="bg-primary hover:bg-primary/90 text-primary-foreground font-black h-12 sm:h-14 px-6 sm:px-8 uppercase tracking-tight text-sm sm:text-base transition-all duration-200 shadow-[0_0_20px_rgba(102,102,102,0.3)] hover:shadow-[0_0_30px_rgba(102,102,102,0.5)]"
+                      variant="outline"
+                      className="w-full h-16 sm:h-20 font-black uppercase tracking-tight text-xs sm:text-sm border-2 border-dashed hover:border-primary hover:bg-primary/5 transition-all duration-200"
+                      disabled={isProcessing}
                     >
-                      SELECT MEDIA
+                      {isProcessing ? 'PROCESSING IMAGES...' : 'SELECT IMAGES TO INJECT'}
                     </Button>
+                    <p className="text-xs text-muted-foreground mt-3 text-center font-bold uppercase tracking-tight">
+                      Images will be processed to {project.settings.outputSize}x{project.settings.outputSize}px
+                      {project.pixelArtMode && ' with pixel art mode'}
+                    </p>
                   </div>
+
+                  {uploadQueue.length > 0 && (
+                    <div>
+                      <h3 className="text-xs font-black uppercase tracking-tight text-foreground mb-3">
+                        INJECTION QUEUE ({uploadQueue.length})
+                      </h3>
+                      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4">
+                        {uploadQueue.map((item) => (
+                          <div
+                            key={item.id}
+                            className="bg-background border border-border rounded-lg overflow-hidden group relative"
+                          >
+                            <div className="aspect-square relative">
+                              <img
+                                src={item.data}
+                                alt={item.name}
+                                className="w-full h-full object-cover"
+                                style={{
+                                  imageRendering: project.pixelArtMode ? 'pixelated' : 'auto',
+                                }}
+                              />
+                              <button
+                                onClick={() => removeFromQueue(item.id)}
+                                className="absolute top-1 right-1 w-6 h-6 bg-destructive/90 hover:bg-destructive text-destructive-foreground rounded flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-200"
+                              >
+                                <X className="w-3 h-3" />
+                              </button>
+                            </div>
+                            <div className="p-2">
+                              <p className="text-xs font-bold uppercase tracking-tight text-foreground truncate">
+                                {item.name}
+                              </p>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                 </div>
               )}
             </div>
 
-            <div className="border-t border-border px-4 sm:px-6 lg:px-8 py-4 sm:py-6 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4 sm:gap-6">
-              <div className="bg-background border border-border rounded-lg px-4 sm:px-6 py-3 sm:py-4 flex-shrink-0">
-                <p className="text-xs font-black uppercase tracking-tight text-muted-foreground mb-2">
-                  FORGE SUMMARY
-                </p>
-                <div className="space-y-1">
-                  <div className="flex items-center justify-between gap-4 sm:gap-8">
-                    <span className="text-xs font-bold uppercase tracking-tight text-muted-foreground">
-                      Unit Count
-                    </span>
-                    <span className="text-sm font-black text-primary">{String(unitCount).padStart(2, '0')}</span>
-                  </div>
-                  <div className="flex items-center justify-between gap-4 sm:gap-8">
-                    <span className="text-xs font-bold uppercase tracking-tight text-muted-foreground">
-                      Integrity Check
-                    </span>
-                    <span className={`text-sm font-black ${isValidated ? 'text-accent' : 'text-muted-foreground'}`}>
-                      {isValidated ? 'Validated' : 'Pending'}
-                    </span>
-                  </div>
+            <div className="px-4 sm:px-6 lg:px-8 py-4 sm:py-6 border-t border-border bg-background/50">
+              <div className="flex items-center justify-between gap-4">
+                <div className="flex items-center gap-2">
+                  <div className="w-2 h-2 rounded-full bg-primary animate-pulse"></div>
+                  <span className="text-xs font-black uppercase tracking-tight text-muted-foreground">
+                    {unitCount} UNIT{unitCount !== 1 ? 'S' : ''} READY
+                  </span>
+                </div>
+                <div className="flex gap-2 sm:gap-3">
+                  <Button
+                    onClick={() => setIsForgeOpen(false)}
+                    variant="outline"
+                    className="font-black uppercase tracking-tight text-xs sm:text-sm h-10 sm:h-12 px-4 sm:px-6"
+                  >
+                    CANCEL
+                  </Button>
+                  <Button
+                    onClick={activeTab === 'genesis' ? mintToVault : authorizeInjection}
+                    disabled={!isValidated || isProcessing}
+                    className="bg-primary hover:bg-primary/90 text-primary-foreground font-black uppercase tracking-tight text-xs sm:text-sm h-10 sm:h-12 px-4 sm:px-6 shadow-[0_0_20px_rgba(102,102,102,0.3)] hover:shadow-[0_0_30px_rgba(102,102,102,0.5)] transition-all duration-200"
+                  >
+                    {activeTab === 'genesis' ? 'MINT TO VAULT' : 'AUTHORIZE INJECTION'}
+                  </Button>
                 </div>
               </div>
-
-              <Button
-                onClick={activeTab === 'genesis' ? mintToVault : authorizeInjection}
-                disabled={!isValidated}
-                className="flex-1 sm:flex-initial sm:min-w-[200px] bg-primary hover:bg-primary/90 disabled:bg-muted disabled:text-muted-foreground text-primary-foreground font-black h-12 sm:h-14 uppercase tracking-tight text-sm sm:text-base transition-all duration-200 shadow-[0_0_20px_rgba(102,102,102,0.3)] hover:shadow-[0_0_30px_rgba(102,102,102,0.5)] disabled:shadow-none"
-              >
-                {activeTab === 'genesis' ? 'MINT TO VAULT' : 'AUTHORIZE INJECTION'}
-              </Button>
             </div>
           </div>
         </div>

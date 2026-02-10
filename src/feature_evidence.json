@@ -2,10 +2,11 @@
   "kind": "feature_evidence_report",
   "features": [
     {
-      "featureId": "feature-retry-the-full-application-build-and-ensure-the-project-compiles-successfully-after-changes-with-no-typescript-build-errors-and-no-runtime-crashes-on-initial-load",
-      "featureTitle": "Retry the full application build and ensure the project compiles successfully after changes, with no TypeScript build errors and no runtime crashes on initial load.",
+      "featureId": "feature-ensure-forge-direct-injection-image-uploads-are-processed-into-a-new-square-png-at-the-project-s-configured-output-dimensions-before-being-saved-into-project-state-so-the-stored-image-matches-what-the-app-displays-processing-must-1-resize-to-exactly-project-settings-outputsize-x-project-settings-outputsize-and-2-apply-pixel-mode-by-disabling-canvas-image-smoothing-when-project-pixelartmode-is-enabled",
+      "featureTitle": "Ensure Forge “Direct Injection” image uploads are processed into a new square PNG at the project’s configured output dimensions before being saved into project state (so the stored image matches what the app displays). Processing must: (1) resize to exactly project.settings.outputSize x project.settings.outputSize, and (2) apply pixel mode by disabling canvas image smoothing when project.pixelArtMode is enabled.",
       "files": [
-        "frontend/src/App.tsx"
+        "frontend/src/pages/Builder.tsx",
+        "frontend/src/utils/forgeImageProcessing.ts"
       ],
       "components": [
         "blob-storage@4.0.0",
@@ -21,10 +22,10 @@
       "confidence": "high"
     },
     {
-      "featureId": "feature-review-the-entire-codebase-and-remove-unused-and-redundant-files-and-unnecessary-code-paths-that-are-not-used-by-the-app-while-preserving-all-current-app-behavior-project-creation-layer-trait-workshop-rules-preview-vault-generation-export-settings-pinata-ipfs-publishing-and-localstorage-persistence",
-      "featureTitle": "Review the entire codebase and remove unused and redundant files and unnecessary code paths that are not used by the app, while preserving all current app behavior (project creation, layer/trait workshop, rules, preview, vault generation/export, settings, Pinata/IPFS publishing, and localStorage persistence).",
+      "featureId": "feature-discard-the-original-unprocessed-uploaded-file-once-processing-is-complete-do-not-persist-original-dimensions-or-original-image-bytes-in-project-customtokens-or-any-other-long-lived-project-state-used-for-export-upload",
+      "featureTitle": "Discard the original, unprocessed uploaded file once processing is complete: do not persist original dimensions or original image bytes in project.customTokens or any other long-lived project state used for export/upload.",
       "files": [
-        "frontend/src/hooks/useQueries.ts"
+        "frontend/src/pages/Builder.tsx"
       ],
       "components": [
         "blob-storage@4.0.0",
@@ -40,10 +41,11 @@
       "confidence": "high"
     },
     {
-      "featureId": "feature-perform-a-targeted-cleanup-of-clearly-unused-placeholders-and-legacy-scaffolding-related-to-persistence-querying-and-backend-storage-including-removing-files-that-are-intentionally-empty-or-unused-and-trimming-backend-code-that-is-not-referenced-by-the-frontend-while-keeping-the-single-actor-backend-architecture-intact",
-      "featureTitle": "Perform a targeted cleanup of clearly unused placeholders and legacy scaffolding related to persistence/querying and backend storage, including removing files that are intentionally empty or unused, and trimming backend code that is not referenced by the frontend (while keeping the single-actor backend architecture intact).",
+      "featureId": "feature-verify-the-ipfs-pinata-upload-pipeline-uses-the-processed-images-for-any-nfts-originating-from-forge-uploads-by-ensuring-the-imagedata-that-flows-into-uploadcollectiontoipfs-project-generatednfts-imagedata-is-the-processed-forge-output-rather-than-the-original-upload-data-url",
+      "featureTitle": "Verify the IPFS/Pinata upload pipeline uses the processed images for any NFTs originating from Forge uploads by ensuring the imageData that flows into uploadCollectionToIPFS (project.generatedNFTs[*].imageData) is the processed Forge output rather than the original upload data URL.",
       "files": [
-        "frontend/src/hooks/useQueries.ts"
+        "frontend/src/pages/Builder.tsx",
+        "frontend/src/utils/ipfsPublishing.ts"
       ],
       "components": [
         "blob-storage@4.0.0",

@@ -168,7 +168,7 @@ export default function VaultPublishingControls({ project, onUpdateProject }: Va
     if (hasUploaded) {
       return {
         icon: <CheckCircle2 className="h-3.5 w-3.5 text-green-500" />,
-        text: `Uploaded successfully! Metadata CID: ${publishingState?.metadataCID || 'N/A'}`,
+        text: `Uploaded successfully! Metadata folder CID: ${publishingState?.metadataCID || 'N/A'}`,
         color: 'text-green-600 dark:text-green-400',
       };
     }
@@ -251,7 +251,7 @@ export default function VaultPublishingControls({ project, onUpdateProject }: Va
         </HoverTooltip>
 
         {/* Upload Button */}
-        <HoverTooltip content="Uploads images and metadata to IPFS via Pinata.">
+        <HoverTooltip content="Uploads images and metadata folders to IPFS via Pinata.">
           <Button
             onClick={handleUpload}
             disabled={!canUpload && !canRetry}

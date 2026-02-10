@@ -1,74 +1,81 @@
 {
   "kind": "build_request",
-  "title": "Retry build and clean up unused/redundant code and files",
+  "title": "Upload processed Forge images to Pinata (pixel mode + configured dimensions)",
   "priority": "normal",
   "requirements": [
     {
       "id": "REQ-1",
-      "text": "Retry the full application build and ensure the project compiles successfully after changes, with no TypeScript build errors and no runtime crashes on initial load.",
-      "target": "both",
+      "text": "Ensure Forge “Direct Injection” image uploads are processed into a new square PNG at the project’s configured output dimensions before being saved into project state (so the stored image matches what the app displays). Processing must: (1) resize to exactly project.settings.outputSize x project.settings.outputSize, and (2) apply pixel mode by disabling canvas image smoothing when project.pixelArtMode is enabled.",
+      "target": "frontend",
       "source": {
         "messageIds": [
           "msg-1"
         ],
         "quotes": [
-          "try again"
+          "the file uploaded to Pinata always be the processed version (Pixel Mode + configured Dimensions), matching what the user sees in the app."
         ]
       },
       "acceptanceCriteria": [
-        "`dfx build` (or equivalent project build) completes successfully.",
-        "Frontend builds without TypeScript errors.",
-        "Opening the app shows the Dashboard without a blank screen or crash."
+        "When a user uploads a 1:1 image via Forge > Direct Injection, the resulting saved token imageData is a PNG data URL whose intrinsic pixel dimensions equal project.settings.outputSize x project.settings.outputSize.",
+        "If project.pixelArtMode is enabled, the processing step uses a canvas with imageSmoothingEnabled=false so the output is pixelated rather than anti-aliased.",
+        "The Forge gallery display continues to work and shows the processed image."
       ]
     },
     {
       "id": "REQ-2",
-      "text": "Review the entire codebase and remove unused and redundant files and unnecessary code paths that are not used by the app, while preserving all current app behavior (project creation, layer/trait workshop, rules, preview, vault generation/export, settings, Pinata/IPFS publishing, and localStorage persistence).",
-      "target": "both",
+      "text": "Discard the original, unprocessed uploaded file once processing is complete: do not persist original dimensions or original image bytes in project.customTokens or any other long-lived project state used for export/upload.",
+      "target": "frontend",
       "source": {
         "messageIds": [
           "msg-1"
         ],
         "quotes": [
-          "Pls try again and Please review the entire codebase and storage, and remove any unused, redundant files and unnecessary code that are not used by the app."
+          "discarded once processed"
         ]
       },
       "acceptanceCriteria": [
-        "No unused modules remain that are not imported/used anywhere in the app (as verified by TypeScript/compiler and a repo-wide search).",
-        "Any removed files are also removed from all import sites; the app still runs and core flows still work.",
-        "No dead/unused types, exports, or helper functions remain in modules that are still kept."
+        "After Direct Injection, project.customTokens contains only the processed (resized/pixel-mode) imageData for each injected token.",
+        "Refreshing/reloading the app does not restore any original (pre-processed) Direct Injection image variant because it was never persisted."
       ]
     },
     {
       "id": "REQ-3",
-      "text": "Perform a targeted cleanup of clearly unused placeholders and legacy scaffolding related to persistence/querying and backend storage, including removing files that are intentionally empty or unused, and trimming backend code that is not referenced by the frontend (while keeping the single-actor backend architecture intact).",
-      "target": "both",
+      "text": "Verify the IPFS/Pinata upload pipeline uses the processed images for any NFTs originating from Forge uploads by ensuring the imageData that flows into uploadCollectionToIPFS (project.generatedNFTs[*].imageData) is the processed Forge output rather than the original upload data URL.",
+      "target": "frontend",
       "source": {
         "messageIds": [
           "msg-1"
         ],
         "quotes": [
-          "Please review the entire codebase and storage, and remove any unused, redundant files and unnecessary code that are not used by the app."
+          "the file uploaded to Pinata always be the processed version (Pixel Mode + configured Dimensions)"
         ]
       },
       "acceptanceCriteria": [
-        "Any intentionally-empty placeholder modules (e.g., a hook file that only exports `{}`) are removed if not imported anywhere.",
-        "Backend `backend/main.mo` contains only code that is required for the running app; unused type-only declarations are removed if they are not referenced.",
-        "After cleanup, there are no broken references in build output (no missing file/module errors)."
+        "Uploading a collection to Pinata results in image files whose intrinsic pixel dimensions match project.settings.outputSize x project.settings.outputSize for Forge-upload-derived NFTs.",
+        "No Pinata-uploaded image for Forge-upload-derived NFTs retains the original uploaded pixel dimensions."
       ]
     }
   ],
   "constraints": [
-    "Do not edit files under `frontend/src/hooks/useInternetIdentity.ts`, `frontend/src/hooks/useInternetIdentity.tsx`, `frontend/src/hooks/useActor.ts`, `frontend/src/main.tsx`, `frontend/src/components/ui` (these paths are immutable).",
-    "Keep the backend as a single Motoko actor in `backend/main.mo`.",
-    "Use English for any user-facing text."
+    "Do not edit any files under frontend/src/components/ui or other frontend.immutablePaths listed in SYSTEM_CONTEXT.",
+    "Keep all user-facing text in English."
   ],
   "nonGoals": [
-    "Adding new product features or changing existing UX/flows beyond what is necessary to remove unused/redundant code.",
-    "Introducing new backend services, external databases, or third-party auth providers beyond existing Internet Identity usage."
+    "Do not change the Pinata API endpoints or authentication method.",
+    "Do not add new backend storage or change backend state/schema for this fix."
   ],
   "imageRequirements": {
     "required": [],
     "edits": []
+  },
+  "userProfileUpdate": {
+    "goalsToAdd": [],
+    "goalsToRemove": [],
+    "preferencesToAdd": [],
+    "preferencesToRemove": [],
+    "miscToAdd": [],
+    "miscToRemove": [],
+    "fieldsToSet": {},
+    "fieldsToDelete": []
   }
 }

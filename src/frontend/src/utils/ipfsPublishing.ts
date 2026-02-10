@@ -1,4 +1,4 @@
-import { uploadDirectoryToPinata, uploadJSONToPinata } from './pinata';
+import { uploadDirectoryToPinata } from './pinata';
 import type { GeneratedNFT, ProjectSettings } from '../App';
 import { buildMetadataForNFT } from './metadataPresets';
 
@@ -18,7 +18,10 @@ export interface IPFSUploadResult {
 
 /**
  * Uploads all NFT images and metadata to IPFS via Pinata
- * Images are uploaded as a directory to get a single CID for ipfs://<cid>/<tokenId>.png URIs
+ * Follows industry-standard workflow:
+ * 1. Upload images as a directory (images/1.png, images/2.png, etc.) -> get IMAGES_FOLDER_CID
+ * 2. Generate metadata JSON files with image field as ipfs://IMAGES_FOLDER_CID/<TOKEN_ID>.png
+ * 3. Upload metadata as a directory (metadata/1.json, metadata/2.json, etc.) -> get METADATA_FOLDER_CID
  */
 export async function uploadCollectionToIPFS(
   apiKey: string,
@@ -39,9 +42,14 @@ export async function uploadCollectionToIPFS(
         onProgress({
           current: i + 1,
           total: nfts.length,
-          percentage: ((i + 1) / nfts.length) * 40, // First 40% for preparing images
+          percentage: ((i + 1) / nfts.length) * 30, // First 30% for preparing images
           stage: 'images',
         });
+      }
+
+      // Validate that imageData is a PNG data URL (processed images should be PNG)
+      if (!nft.imageData.startsWith('data:image/png')) {
+        console.warn(`NFT #${nft.id} imageData is not a PNG data URL, may be unprocessed`);
       }
 
       // Convert base64 to blob
@@ -60,17 +68,17 @@ export async function uploadCollectionToIPFS(
       });
     }
 
-    // Upload all images as a directory
+    // Upload all images as a directory with "images" folder prefix
     if (onProgress) {
       onProgress({
         current: nfts.length,
         total: nfts.length,
-        percentage: 50, // 50% for uploading directory
+        percentage: 40, // 40% for uploading images directory
         stage: 'images',
       });
     }
 
-    const imageDirResult = await uploadDirectoryToPinata(apiKey, imageFiles);
+    const imageDirResult = await uploadDirectoryToPinata(apiKey, imageFiles, 'images');
 
     if (!imageDirResult.success || !imageDirResult.cid) {
       return {
@@ -81,8 +89,8 @@ export async function uploadCollectionToIPFS(
 
     const imageDirCID = imageDirResult.cid;
 
-    // Stage 2: Build and upload metadata with IPFS URIs
-    const metadataArray: any[] = [];
+    // Stage 2: Build metadata JSON files with IPFS URIs
+    const metadataFiles: Array<{ filename: string; blob: Blob }> = [];
 
     for (let i = 0; i < nfts.length; i++) {
       const nft = nfts[i];
@@ -91,7 +99,7 @@ export async function uploadCollectionToIPFS(
         onProgress({
           current: i + 1,
           total: nfts.length,
-          percentage: 50 + ((i + 1) / nfts.length) * 50, // Second 50% for metadata
+          percentage: 40 + ((i + 1) / nfts.length) * 30, // 30% for preparing metadata
           stage: 'metadata',
         });
       }
@@ -108,27 +116,47 @@ export async function uploadCollectionToIPFS(
         imageDirCID // Pass CID to generate ipfs:// URIs
       );
 
-      metadataArray.push(metadata);
+      const actualTokenId = settings.startTokenNumberAtZero ? nft.id - 1 : nft.id;
+      const metadataBlob = new Blob([JSON.stringify(metadata, null, 2)], { type: 'application/json' });
+      
+      metadataFiles.push({
+        filename: `${actualTokenId}.json`,
+        blob: metadataBlob,
+      });
     }
 
-    // Upload master metadata JSON
-    const metadataResult = await uploadJSONToPinata(
-      apiKey,
-      metadataArray,
-      `${projectName.replace(/\s+/g, '_')}_metadata.json`
-    );
+    // Upload all metadata as a directory with "metadata" folder prefix
+    if (onProgress) {
+      onProgress({
+        current: nfts.length,
+        total: nfts.length,
+        percentage: 80, // 80% for uploading metadata directory
+        stage: 'metadata',
+      });
+    }
 
-    if (!metadataResult.success || !metadataResult.cid) {
+    const metadataDirResult = await uploadDirectoryToPinata(apiKey, metadataFiles, 'metadata');
+
+    if (!metadataDirResult.success || !metadataDirResult.cid) {
       return {
         success: false,
-        error: metadataResult.error || 'Metadata upload failed',
+        error: metadataDirResult.error || 'Metadata directory upload failed',
       };
+    }
+
+    if (onProgress) {
+      onProgress({
+        current: nfts.length,
+        total: nfts.length,
+        percentage: 100,
+        stage: 'metadata',
+      });
     }
 
     return {
       success: true,
       imageDirCID,
-      metadataCID: metadataResult.cid,
+      metadataCID: metadataDirResult.cid, // This is now the metadata folder CID
     };
   } catch (error) {
     return {

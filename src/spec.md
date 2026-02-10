@@ -1,11 +1,12 @@
 # Specification
 
 ## Summary
-**Goal:** Get the project building cleanly again and remove unused/redundant code and files without changing current app behavior.
+**Goal:** Ensure Forge “Direct Injection” uploads are processed (square PNG at configured output size, with optional pixel mode) and that the processed result is what gets stored and uploaded to Pinata/IPFS.
 
 **Planned changes:**
-- Retry the full build and fix any issues preventing successful compilation, ensuring no TypeScript build errors and no runtime crash/blank screen on initial load.
-- Repo-wide cleanup to remove unused/redundant files, imports, exports, types, and dead code paths while preserving existing core flows (project creation, layer/trait workshop, rules, preview, vault generation/export, settings, Pinata/IPFS publishing, and localStorage persistence).
-- Targeted cleanup of unused persistence/query/backend-storage scaffolding and placeholder modules; trim unreferenced backend code while keeping a single Motoko actor in `backend/main.mo`.
+- Process Direct Injection uploads into a new square PNG at `project.settings.outputSize x project.settings.outputSize` before saving into project state.
+- When `project.pixelArtMode` is enabled, apply pixel-mode processing by rendering with canvas image smoothing disabled.
+- Persist only the processed image data in long-lived project state (discard the original, unprocessed upload bytes/dimensions).
+- Ensure the IPFS/Pinata upload pipeline uses the processed Forge-derived `imageData` for `project.generatedNFTs` when uploading collections.
 
-**User-visible outcome:** The app loads to the Dashboard without crashing, and all existing functionality behaves the same, with a leaner codebase and no broken references.
+**User-visible outcome:** Directly injected Forge images display and export/upload exactly as shown in the app (correct dimensions and pixel mode when enabled), and Pinata receives only the processed versions.

@@ -1,38 +1,34 @@
 {
   "schemaVersion": "1.0.0",
-  "projectStateVersion": 5,
-  "summary": "Studio Art Engine: an NFT collection generator focused on layer-based creation, rarity/rules, preview, and export; expanding Ethereum (ERC-721) workflows with a critical Pinata-based IPFS deployment pipeline (folder CID uploads for images + metadata) and a project immutability/provenance lock.",
+  "projectStateVersion": 3,
+  "summary": "Project to ensure Forge-uploaded NFT images are processed with Pixel Mode + configured Dimensions and the processed result is what gets uploaded to Pinata (discarding originals).",
   "architectural_notes": [
-    "Blockchain selector should include Ethereum/Polygon/Base/BNB (export-only) and default new projects to Ethereum (ERC-721).",
-    "Users can change the target chain later during metadata generation/export (default is not locked-in).",
-    "Cardano (CIP-25) and Tezos (FA2) options/support should be removed.",
-    "Add a Project Settings panel 'Lock Project' toggle; when locked, disable Generate and treat the project as immutable for provenance.",
-    "Pinata IPFS deployment flow: upload images folder -> IMAGES_FOLDER_CID; ERC-721 metadata image field must be ipfs://IMAGES_FOLDER_CID/<TOKEN_ID>.png; upload metadata folder -> METADATA_FOLDER_CID.",
-    "Pinata credentials: users provide their own Pinata API key/secret (store as user-supplied settings/credentials).",
-    "Export requirement: images must be sequentially named (1.png, 2.png, …) and strictly match configured pixel dimensions."
+    "Pinata upload pipeline must upload the post-processed image blob (Pixel Mode + configured Dimensions), not the original upload; original can be discarded after processing."
   ],
-  "known_issues": [],
-  "isFixRequest": false,
+  "known_issues": [
+    "Forge uploads: Pinata receives original image dimensions instead of the processed (Pixel Mode + configured Dimensions) version shown in-app."
+  ],
+  "isFixRequest": true,
   "existing_features": [
     {
-      "id": "feature-retry-the-full-application-build-and-ensure-the-project-compiles-successfully-after-changes-with-no-typescript-build-errors-and-no-runtime-crashes-on-initial-load",
-      "title": "Retry the full application build and ensure the project compiles successfully after changes, with no TypeScript build errors and no runtime crashes on initial load.",
+      "id": "feature-ensure-forge-direct-injection-image-uploads-are-processed-into-a-new-square-png-at-the-project-s-configured-output-dimensions-before-being-saved-into-project-state-so-the-stored-image-matches-what-the-app-displays-processing-must-1-resize-to-exactly-project-settings-outputsize-x-project-settings-outputsize-and-2-apply-pixel-mode-by-disabling-canvas-image-smoothing-when-project-pixelartmode-is-enabled",
+      "title": "Ensure Forge “Direct Injection” image uploads are processed into a new square PNG at the project’s configured output dimensions before being saved into project state (so the stored image matches what the app displays). Processing must: (1) resize to exactly project.settings.outputSize x project.settings.outputSize, and (2) apply pixel mode by disabling canvas image smoothing when project.pixelArtMode is enabled.",
       "reqIds": [
         "REQ-1"
       ],
       "version": 1
     },
     {
-      "id": "feature-review-the-entire-codebase-and-remove-unused-and-redundant-files-and-unnecessary-code-paths-that-are-not-used-by-the-app-while-preserving-all-current-app-behavior-project-creation-layer-trait-workshop-rules-preview-vault-generation-export-settings-pinata-ipfs-publishing-and-localstorage-persistence",
-      "title": "Review the entire codebase and remove unused and redundant files and unnecessary code paths that are not used by the app, while preserving all current app behavior (project creation, layer/trait workshop, rules, preview, vault generation/export, settings, Pinata/IPFS publishing, and localStorage persistence).",
+      "id": "feature-discard-the-original-unprocessed-uploaded-file-once-processing-is-complete-do-not-persist-original-dimensions-or-original-image-bytes-in-project-customtokens-or-any-other-long-lived-project-state-used-for-export-upload",
+      "title": "Discard the original, unprocessed uploaded file once processing is complete: do not persist original dimensions or original image bytes in project.customTokens or any other long-lived project state used for export/upload.",
       "reqIds": [
         "REQ-2"
       ],
       "version": 1
     },
     {
-      "id": "feature-perform-a-targeted-cleanup-of-clearly-unused-placeholders-and-legacy-scaffolding-related-to-persistence-querying-and-backend-storage-including-removing-files-that-are-intentionally-empty-or-unused-and-trimming-backend-code-that-is-not-referenced-by-the-frontend-while-keeping-the-single-actor-backend-architecture-intact",
-      "title": "Perform a targeted cleanup of clearly unused placeholders and legacy scaffolding related to persistence/querying and backend storage, including removing files that are intentionally empty or unused, and trimming backend code that is not referenced by the frontend (while keeping the single-actor backend architecture intact).",
+      "id": "feature-verify-the-ipfs-pinata-upload-pipeline-uses-the-processed-images-for-any-nfts-originating-from-forge-uploads-by-ensuring-the-imagedata-that-flows-into-uploadcollectiontoipfs-project-generatednfts-imagedata-is-the-processed-forge-output-rather-than-the-original-upload-data-url",
+      "title": "Verify the IPFS/Pinata upload pipeline uses the processed images for any NFTs originating from Forge uploads by ensuring the imageData that flows into uploadCollectionToIPFS (project.generatedNFTs[*].imageData) is the processed Forge output rather than the original upload data URL.",
       "reqIds": [
         "REQ-3"
       ],
@@ -42,61 +38,12 @@
   "new_feature_requests": [
     {
       "id": "AR-1",
-      "summary": "Add full export-only metadata support for Polygon (ERC-721), Base (ERC-721), and BNB Chain (BEP-721)",
+      "summary": "Upload to Pinata should use the processed (Pixel Mode + configured Dimensions) image for Forge uploads; discard original after processing",
       "reqIds": [],
-      "status": "pending"
-    },
-    {
-      "id": "AR-2",
-      "summary": "Change default new collection chain/metadata format from Solana (Metaplex) to Ethereum (ERC-721); allow users to switch chain later during metadata generation",
-      "reqIds": [],
-      "status": "pending"
-    },
-    {
-      "id": "AR-3",
-      "summary": "Remove Cardano (CIP-25) and Tezos (FA2) chain options/support from export selector",
-      "reqIds": [],
-      "status": "pending"
-    },
-    {
-      "id": "AR-4",
-      "summary": "Planned: Full ICP-native storage of NFTs (images + metadata + assets stored in canister storage)",
-      "reqIds": [],
-      "status": "pending"
-    },
-    {
-      "id": "AR-5",
-      "summary": "Planned: Project-level cloud sync so artwork/collections persist across sessions",
-      "reqIds": [],
-      "status": "pending"
-    },
-    {
-      "id": "AR-6",
-      "summary": "Planned: Optional on-chain metadata publishing",
-      "reqIds": [],
-      "status": "pending"
-    },
-    {
-      "id": "AR-7",
-      "summary": "Planned: Built-in IPFS pinning automation",
-      "reqIds": [],
-      "status": "pending"
-    },
-    {
-      "id": "AR-8",
-      "summary": "Planned: Advanced rarity analytics and collection-grade statistical reports",
-      "reqIds": [],
-      "status": "pending"
-    },
-    {
-      "id": "AR-9",
-      "summary": "Add critical Pinata-based IPFS deployment workflow: Project Settings 'Lock Project' toggle (disables Generate & makes project immutable), export images as 1.png/2.png… matching configured dimensions, upload image folder to Pinata for IMAGES_FOLDER_CID, generate 1.json/2.json… ERC-721 metadata with image=ipfs://IMAGES_FOLDER_CID/<TOKEN_ID>.png, then upload metadata folder to Pinata for METADATA_FOLDER_CID; users provide Pinata API key/secret",
-      "reqIds": [],
-      "status": "pending"
+      "status": "in_progress"
     }
   ],
-  "gameProjectType": "none",
-  "projectName": "Studio Art Engine",
+  "projectName": "Upload processed Forge images to Pinata (pixel mode + configured dimensions)",
   "clarification_mode": "instant",
   "clarification_rounds": 0
 }

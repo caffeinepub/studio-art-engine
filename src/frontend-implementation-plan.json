@@ -1,68 +1,61 @@
 {
   "kind": "implementation_plan",
   "version": "1.0",
-  "title": "Rebuild verification and frontend codebase cleanup (unused/redundant removal)",
+  "title": "Process Forge Direct Injection images to square PNGs before Pinata upload",
   "requirements": [
     {
       "id": "REQ-1",
-      "summary": "Ensure the frontend compiles cleanly and initial load reliably renders the Dashboard without crashes after cleanup.",
+      "summary": "Process Forge Direct Injection uploads into a square PNG at project.settings.outputSize with optional pixel-mode rendering before saving to project state.",
       "acceptanceCriteria": [
-        "`dfx build` (or equivalent project build) completes successfully.",
-        "Frontend builds without TypeScript errors.",
-        "Opening the app shows the Dashboard without a blank screen or crash."
+        "When a user uploads a 1:1 image via Forge > Direct Injection, the resulting saved token imageData is a PNG data URL whose intrinsic pixel dimensions equal project.settings.outputSize x project.settings.outputSize.",
+        "If project.pixelArtMode is enabled, the processing step uses a canvas with imageSmoothingEnabled=false so the output is pixelated rather than anti-aliased.",
+        "The Forge gallery display continues to work and shows the processed image."
       ],
       "file_operations": [
         {
-          "path": "frontend/src/App.tsx",
-          "operation": "modify",
-          "description": "Re-validate the root view wiring (Dashboard as default), remove/adjust any now-unused imports introduced by cleanup, and ensure the app still mounts/render-stabilizes on first load (no runtime exceptions during storage load/sanitize paths)."
+          "path": "frontend/src/utils/forgeImageProcessing.ts",
+          "operation": "create",
+          "description": "Add a reusable image-processing helper that takes an uploaded image data URL, draws it onto a square canvas sized to project.settings.outputSize x project.settings.outputSize, disables canvas image smoothing when pixel mode is enabled, and returns a PNG data URL. Implement a non-distorting scale-and-crop (cover) strategy so inputs reliably become a square output."
         },
         {
-          "path": "frontend/src/pages/Dashboard.tsx",
+          "path": "frontend/src/pages/Builder.tsx",
           "operation": "modify",
-          "description": "Confirm Dashboard render path remains dependency-clean after cleanup (no missing imports; dialogs/tiles still render) and address any TypeScript issues exposed by deleted/trimmed modules."
+          "description": "Update Forge > Direct Injection flow to process uploads via the new forgeImageProcessing helper before adding items to the injection queue and before persisting forged tokens. Ensure the queue preview and the saved CustomToken.imageData use the processed PNG output, and that pixel mode toggles canvas smoothing behavior during processing."
         }
       ]
     },
     {
       "id": "REQ-2",
-      "summary": "Remove unused/redundant frontend files and dead code paths while preserving all current app behavior (localStorage persistence and all existing flows).",
+      "summary": "Do not persist any original, unprocessed Direct Injection image bytes or dimensions in long-lived project state.",
       "acceptanceCriteria": [
-        "No unused modules remain that are not imported/used anywhere in the app (as verified by TypeScript/compiler and a repo-wide search).",
-        "Any removed files are also removed from all import sites; the app still runs and core flows still work.",
-        "No dead/unused types, exports, or helper functions remain in modules that are still kept."
+        "After Direct Injection, project.customTokens contains only the processed (resized/pixel-mode) imageData for each injected token.",
+        "Refreshing/reloading the app does not restore any original (pre-processed) Direct Injection image variant because it was never persisted."
       ],
       "file_operations": [
         {
-          "path": "frontend/src/hooks/useQueries.ts",
-          "operation": "delete",
-          "description": "Remove the intentionally-empty placeholder hook module (currently only exports `{}`) if it is not imported anywhere; ensure no remaining references/imports exist and the project still type-checks."
-        },
-        {
-          "path": "frontend/src/utils/persistence.ts",
+          "path": "frontend/src/pages/Builder.tsx",
           "operation": "modify",
-          "description": "Trim any dead/unused exports or helper logic that is no longer referenced after removing redundant modules, while preserving localStorage persistence behavior and legacy cleanup behavior."
+          "description": "Ensure Direct Injection never stores the original uploaded data URL into project.customTokens (or any other project state used for persistence/export). Only keep the processed PNG data URL when creating CustomToken entries, and avoid adding any extra fields that retain original file bytes/dimensions."
         }
       ]
     },
     {
       "id": "REQ-3",
-      "summary": "Target cleanup of legacy/persistence/querying scaffolding on the frontend, removing clearly unused placeholders and ensuring no broken references remain.",
+      "summary": "Ensure the IPFS/Pinata upload pipeline uses processed Forge images by keeping project.generatedNFTs[*].imageData sourced from processed forged token imageData.",
       "acceptanceCriteria": [
-        "Any intentionally-empty placeholder modules (e.g., a hook file that only exports `{}`) are removed if not imported anywhere.",
-        "Backend `backend/main.mo` contains only code that is required for the running app; unused type-only declarations are removed if they are not referenced.",
-        "After cleanup, there are no broken references in build output (no missing file/module errors)."
+        "Uploading a collection to Pinata results in image files whose intrinsic pixel dimensions match project.settings.outputSize x project.settings.outputSize for Forge-upload-derived NFTs.",
+        "No Pinata-uploaded image for Forge-upload-derived NFTs retains the original uploaded pixel dimensions."
       ],
       "file_operations": [
         {
-          "path": "frontend/src/hooks/useQueries.ts",
-          "operation": "delete",
-          "description": "As part of legacy scaffolding cleanup, delete this empty placeholder file and ensure all imports (if any) are removed so there are no missing-module build errors."
+          "path": "frontend/src/pages/Builder.tsx",
+          "operation": "modify",
+          "description": "Ensure all Forge Direct Injection CustomToken.imageData values are already processed, so when Vault generation includes forged tokens and populates project.generatedNFTs[*].imageData for those NFTs, the data flowing into Pinata upload is the processed output."
         },
         {
-          "path": "frontend/src/backend.d.ts",
+          "path": "frontend/src/utils/ipfsPublishing.ts",
           "operation": "modify",
-          "description": "Keep the frontend backend typing surface minimal and non-redundant (remove unused declarations if safe), while preserving compatibility with existing immutable actor/auth hooks that reference the backend type."
+          "description": "Add a lightweight guard/validation in the image preparation step to assert uploaded NFT imageData is a PNG data URL and optionally warn/throw if forged-token-derived images are missing or malformed, helping ensure the upload uses the processed imageData already stored in project/generatedNFTs."
         }
       ]
     }
