@@ -507,7 +507,7 @@ function App() {
       />
       
       <main className="flex-1 overflow-hidden">
-        <div key={currentView} className="h-full page-transition">
+        <div key={currentView} className="h-full">
           {currentView === 'dashboard' && (
             <Dashboard
               projects={projects}
@@ -518,60 +518,38 @@ function App() {
             />
           )}
           
-          <Suspense fallback={
-            <div className="h-full flex items-center justify-center">
-              <div className="w-12 h-12 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
-            </div>
-          }>
-            {currentView === 'workshop' && currentProject && (
-              <Workshop
-                project={currentProject}
-                onUpdateProject={updateCurrentProject}
-              />
-            )}
-            
-            {currentView === 'rarity' && currentProject && (
-              <RarityWorkshop
-                project={currentProject}
-                onUpdateProject={updateCurrentProject}
-              />
-            )}
-            
-            {currentView === 'rules' && currentProject && (
-              <Rules
-                project={currentProject}
-                onUpdateProject={updateCurrentProject}
-              />
-            )}
-            
-            {currentView === 'preview' && currentProject && (
-              <Preview
-                project={currentProject}
-                onUpdateProject={updateCurrentProject}
-              />
-            )}
-            
-            {currentView === 'builder' && currentProject && (
-              <Builder
-                project={currentProject}
-                onUpdateProject={updateCurrentProject}
-              />
-            )}
-            
-            {currentView === 'vault' && currentProject && (
-              <Vault
-                project={currentProject}
-                onUpdateProject={updateCurrentProject}
-              />
-            )}
-            
-            {currentView === 'settings' && currentProject && (
-              <Settings
-                project={currentProject}
-                onUpdateProject={updateCurrentProject}
-              />
-            )}
-          </Suspense>
+          {currentView !== 'dashboard' && currentProject && (
+            <Suspense fallback={
+              <div className="h-full flex items-center justify-center">
+                <div className="text-center">
+                  <div className="w-12 h-12 border-2 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-3"></div>
+                  <p className="text-sm font-medium text-muted-foreground">Loading...</p>
+                </div>
+              </div>
+            }>
+              {currentView === 'workshop' && (
+                <Workshop project={currentProject} onUpdateProject={updateCurrentProject} />
+              )}
+              {currentView === 'rarity' && (
+                <RarityWorkshop project={currentProject} onUpdateProject={updateCurrentProject} />
+              )}
+              {currentView === 'rules' && (
+                <Rules project={currentProject} onUpdateProject={updateCurrentProject} />
+              )}
+              {currentView === 'preview' && (
+                <Preview project={currentProject} onUpdateProject={updateCurrentProject} />
+              )}
+              {currentView === 'builder' && (
+                <Builder project={currentProject} onUpdateProject={updateCurrentProject} />
+              )}
+              {currentView === 'vault' && (
+                <Vault project={currentProject} onUpdateProject={updateCurrentProject} />
+              )}
+              {currentView === 'settings' && (
+                <Settings project={currentProject} onUpdateProject={updateCurrentProject} />
+              )}
+            </Suspense>
+          )}
         </div>
       </main>
 

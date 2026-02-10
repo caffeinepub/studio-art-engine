@@ -2,12 +2,10 @@
   "kind": "feature_evidence_report",
   "features": [
     {
-      "featureId": "feature-update-the-ipfs-pinata-upload-workflow-to-exactly-follow-1-upload-the-entire-images-folder-as-a-single-directory-upload-and-receive-images-folder-cid-2-generate-one-metadata-json-file-per-token-with-an-image-field-set-to-ipfs-images-folder-cid-token-id-png-3-upload-the-entire-metadata-folder-as-a-single-directory-upload-and-receive-metadata-folder-cid-and-4-present-the-final-token-uri-format-as-ipfs-metadata-folder-cid-token-id-json",
-      "featureTitle": "Update the IPFS/Pinata upload workflow to exactly follow: (1) upload the entire images folder as a single directory upload and receive IMAGES_FOLDER_CID; (2) generate one metadata JSON file per token with an `image` field set to `ipfs://IMAGES_FOLDER_CID/<TOKEN_ID>.png`; (3) upload the entire metadata folder as a single directory upload and receive METADATA_FOLDER_CID; and (4) present the final token URI format as `ipfs://METADATA_FOLDER_CID/<TOKEN_ID>.json`.",
+      "featureId": "feature-retry-the-full-application-build-and-ensure-the-project-compiles-successfully-after-changes-with-no-typescript-build-errors-and-no-runtime-crashes-on-initial-load",
+      "featureTitle": "Retry the full application build and ensure the project compiles successfully after changes, with no TypeScript build errors and no runtime crashes on initial load.",
       "files": [
-        "frontend/src/components/VaultPublishingControls.tsx",
-        "frontend/src/utils/ipfsPublishing.ts",
-        "frontend/src/utils/metadataPresets.ts"
+        "frontend/src/App.tsx"
       ],
       "components": [
         "blob-storage@4.0.0",
@@ -23,11 +21,10 @@
       "confidence": "high"
     },
     {
-      "featureId": "feature-fix-pinata-directory-upload-construction-so-directory-uploads-cannot-collapse-merge-metadata-into-a-single-file-ensure-every-file-appended-to-formdata-for-directory-uploads-includes-the-intended-per-file-path-name-via-the-third-parameter-of-formdata-append-file-blob-path-and-that-metadata-is-uploaded-as-multiple-files-1-json-2-json-inside-one-directory-upload",
-      "featureTitle": "Fix Pinata directory upload construction so directory uploads cannot collapse/merge metadata into a single file: ensure every file appended to `FormData` for directory uploads includes the intended per-file path/name (via the third parameter of `formData.append('file', blob, <path>)`) and that metadata is uploaded as multiple files (`1.json`, `2.json`, …) inside one directory upload.",
+      "featureId": "feature-review-the-entire-codebase-and-remove-unused-and-redundant-files-and-unnecessary-code-paths-that-are-not-used-by-the-app-while-preserving-all-current-app-behavior-project-creation-layer-trait-workshop-rules-preview-vault-generation-export-settings-pinata-ipfs-publishing-and-localstorage-persistence",
+      "featureTitle": "Review the entire codebase and remove unused and redundant files and unnecessary code paths that are not used by the app, while preserving all current app behavior (project creation, layer/trait workshop, rules, preview, vault generation/export, settings, Pinata/IPFS publishing, and localStorage persistence).",
       "files": [
-        "frontend/src/utils/ipfsPublishing.ts",
-        "frontend/src/utils/pinata.ts"
+        "frontend/src/hooks/useQueries.ts"
       ],
       "components": [
         "blob-storage@4.0.0",
@@ -43,11 +40,10 @@
       "confidence": "high"
     },
     {
-      "featureId": "feature-enforce-1-based-sequential-filenames-for-both-exported-assets-and-pinata-uploads-images-must-be-named-1-png-2-png-3-png-and-metadata-files-must-be-1-json-2-json-3-json-no-0-png-0-json-in-the-ipfs-upload-workflow",
-      "featureTitle": "Enforce 1-based sequential filenames for both exported assets and Pinata uploads: images must be named `1.png`, `2.png`, `3.png`, … and metadata files must be `1.json`, `2.json`, `3.json`, … (no `0.png`/`0.json` in the IPFS upload workflow).",
+      "featureId": "feature-perform-a-targeted-cleanup-of-clearly-unused-placeholders-and-legacy-scaffolding-related-to-persistence-querying-and-backend-storage-including-removing-files-that-are-intentionally-empty-or-unused-and-trimming-backend-code-that-is-not-referenced-by-the-frontend-while-keeping-the-single-actor-backend-architecture-intact",
+      "featureTitle": "Perform a targeted cleanup of clearly unused placeholders and legacy scaffolding related to persistence/querying and backend storage, including removing files that are intentionally empty or unused, and trimming backend code that is not referenced by the frontend (while keeping the single-actor backend architecture intact).",
       "files": [
-        "frontend/src/pages/Vault.tsx",
-        "frontend/src/utils/ipfsPublishing.ts"
+        "frontend/src/hooks/useQueries.ts"
       ],
       "components": [
         "blob-storage@4.0.0",
@@ -59,66 +55,6 @@
       ],
       "testIds": [
         "REQ-3"
-      ],
-      "confidence": "high"
-    },
-    {
-      "featureId": "feature-implement-final-asset-locking-behavior-when-the-collection-is-locked-for-publishing-disable-the-vault-generate-action-and-any-regeneration-actions-that-would-change-the-collection-and-only-re-enable-them-after-the-collection-is-unlocked-without-changing-the-current-app-layout",
-      "featureTitle": "Implement final asset locking behavior: when the collection is locked for publishing, disable the Vault \"Generate\" action (and any regeneration actions that would change the collection) and only re-enable them after the collection is unlocked, without changing the current app layout.",
-      "files": [
-        "frontend/src/pages/Vault.tsx"
-      ],
-      "components": [
-        "blob-storage@4.0.0",
-        "core-infrastructure@1.0.2",
-        "shadcn-ui@1.0.0",
-        "build-template-react@1.0.0",
-        "initial-app@1.0.0",
-        "github-export-icp-cli@1.0.0"
-      ],
-      "testIds": [
-        "REQ-4"
-      ],
-      "confidence": "high"
-    },
-    {
-      "featureId": "feature-ensure-exported-images-match-the-exact-pixel-dimensions-configured-in-the-settings-section-for-the-project-and-that-the-same-sizing-is-used-for-the-images-that-are-uploaded-to-pinata-so-all-assets-in-the-uploaded-images-folder-share-identical-dimensions",
-      "featureTitle": "Ensure exported images match the exact pixel dimensions configured in the Settings section for the project, and that the same sizing is used for the images that are uploaded to Pinata (so all assets in the uploaded images folder share identical dimensions).",
-      "files": [
-        "frontend/src/pages/Vault.tsx",
-        "frontend/src/utils/ipfsPublishing.ts",
-        "frontend/src/utils/vaultGeneratorProtocol.ts",
-        "frontend/src/workers/vaultGenerator.worker.ts"
-      ],
-      "components": [
-        "blob-storage@4.0.0",
-        "core-infrastructure@1.0.2",
-        "shadcn-ui@1.0.0",
-        "build-template-react@1.0.0",
-        "initial-app@1.0.0",
-        "github-export-icp-cli@1.0.0"
-      ],
-      "testIds": [
-        "REQ-5"
-      ],
-      "confidence": "high"
-    },
-    {
-      "featureId": "feature-keep-the-existing-upload-controls-flow-lock-upload-unlock-but-update-status-output-text-to-clearly-show-both-returned-cids-images-folder-cid-and-metadata-folder-cid-and-the-final-token-uri-format-ipfs-metadata-folder-cid-token-id-json-using-english-for-all-user-facing-text",
-      "featureTitle": "Keep the existing upload controls flow (Lock → Upload → Unlock) but update status/output text to clearly show both returned CIDs (IMAGES_FOLDER_CID and METADATA_FOLDER_CID) and the final token URI format `ipfs://METADATA_FOLDER_CID/<TOKEN_ID>.json`, using English for all user-facing text.",
-      "files": [
-        "frontend/src/components/VaultPublishingControls.tsx"
-      ],
-      "components": [
-        "blob-storage@4.0.0",
-        "core-infrastructure@1.0.2",
-        "shadcn-ui@1.0.0",
-        "build-template-react@1.0.0",
-        "initial-app@1.0.0",
-        "github-export-icp-cli@1.0.0"
-      ],
-      "testIds": [
-        "REQ-6"
       ],
       "confidence": "high"
     }

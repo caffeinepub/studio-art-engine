@@ -1,137 +1,68 @@
 {
   "kind": "implementation_plan",
   "version": "1.0",
-  "title": "Pinata directory uploads (images + per-token metadata) with 1-based filenames, correct sizing, and publish locking",
+  "title": "Rebuild verification and frontend codebase cleanup (unused/redundant removal)",
   "requirements": [
     {
       "id": "REQ-1",
-      "summary": "Change IPFS/Pinata publishing to upload images as a single directory CID, generate per-token metadata JSON files referencing those images, upload metadata as a single directory CID, and present final token URI format.",
+      "summary": "Ensure the frontend compiles cleanly and initial load reliably renders the Dashboard without crashes after cleanup.",
       "acceptanceCriteria": [
-        "Running the app’s Upload action results in TWO Pinata uploads: one for images (directory) and one for metadata (directory).",
-        "The images upload returns a CID used in metadata `image` fields as `ipfs://IMAGES_FOLDER_CID/<TOKEN_ID>.png` (no extra subfolder segment like `/images/`).",
-        "The metadata upload returns a CID such that token URIs are `ipfs://METADATA_FOLDER_CID/<TOKEN_ID>.json`.",
-        "The app no longer uploads a single merged metadata JSON (e.g., `MONKE_INDEX_metadata.json`) to Pinata as the primary metadata output."
+        "`dfx build` (or equivalent project build) completes successfully.",
+        "Frontend builds without TypeScript errors.",
+        "Opening the app shows the Dashboard without a blank screen or crash."
       ],
       "file_operations": [
         {
-          "path": "frontend/src/utils/ipfsPublishing.ts",
+          "path": "frontend/src/App.tsx",
           "operation": "modify",
-          "description": "Refactor `uploadCollectionToIPFS` to: (1) upload images as one directory upload and capture IMAGES_FOLDER_CID; (2) build one metadata JSON per token with `image: ipfs://IMAGES_FOLDER_CID/<TOKEN_ID>.png`; (3) upload those JSON files as one directory upload and capture METADATA_FOLDER_CID; (4) return both CIDs and the derived token URI pattern. Ensure the workflow no longer uses `uploadJSONToPinata` for the primary metadata output."
+          "description": "Re-validate the root view wiring (Dashboard as default), remove/adjust any now-unused imports introduced by cleanup, and ensure the app still mounts/render-stabilizes on first load (no runtime exceptions during storage load/sanitize paths)."
         },
         {
-          "path": "frontend/src/utils/metadataPresets.ts",
+          "path": "frontend/src/pages/Dashboard.tsx",
           "operation": "modify",
-          "description": "Update `buildMetadataForNFT` usage for publishing so the generated metadata uses `image: ipfs://<IMAGES_FOLDER_CID>/<TOKEN_ID>.png` without any subdirectory segment, while preserving existing behavior for previews/other flows."
-        },
-        {
-          "path": "frontend/src/components/VaultPublishingControls.tsx",
-          "operation": "modify",
-          "description": "Update the upload success/status output text to clearly show both returned CIDs (IMAGES_FOLDER_CID and METADATA_FOLDER_CID) and display the final token URI pattern exactly as `ipfs://METADATA_FOLDER_CID/<TOKEN_ID>.json`, without changing the existing Lock → Upload → Unlock controls flow or major layout."
+          "description": "Confirm Dashboard render path remains dependency-clean after cleanup (no missing imports; dialogs/tiles still render) and address any TypeScript issues exposed by deleted/trimmed modules."
         }
       ]
     },
     {
       "id": "REQ-2",
-      "summary": "Fix Pinata directory upload FormData construction so each file part includes its intended path/name and metadata is uploaded as multiple per-token JSON files in a single directory upload.",
+      "summary": "Remove unused/redundant frontend files and dead code paths while preserving all current app behavior (localStorage persistence and all existing flows).",
       "acceptanceCriteria": [
-        "Pinata receives multiple multipart `file` parts for metadata (one per token) rather than one aggregated JSON payload.",
-        "The resulting IPFS content for METADATA_FOLDER_CID contains individual files `1.json`, `2.json`, … (not a single `*_metadata.json`).",
-        "Each metadata file contains an `image` field pointing to the corresponding token image IPFS URI."
+        "No unused modules remain that are not imported/used anywhere in the app (as verified by TypeScript/compiler and a repo-wide search).",
+        "Any removed files are also removed from all import sites; the app still runs and core flows still work.",
+        "No dead/unused types, exports, or helper functions remain in modules that are still kept."
       ],
       "file_operations": [
         {
-          "path": "frontend/src/utils/pinata.ts",
-          "operation": "modify",
-          "description": "Adjust directory upload helper to accept and append each file with an explicit per-file path/name via the third parameter of `formData.append('file', blob, <path>)`, ensuring multiple `file` parts are sent. Ensure the helper supports root-level filenames (e.g., `1.json`) so directory uploads do not introduce unwanted subfolders."
+          "path": "frontend/src/hooks/useQueries.ts",
+          "operation": "delete",
+          "description": "Remove the intentionally-empty placeholder hook module (currently only exports `{}`) if it is not imported anywhere; ensure no remaining references/imports exist and the project still type-checks."
         },
         {
-          "path": "frontend/src/utils/ipfsPublishing.ts",
+          "path": "frontend/src/utils/persistence.ts",
           "operation": "modify",
-          "description": "When building metadata for upload, create one JSON Blob per token and pass them to the directory upload helper as individual entries with filenames `1.json`, `2.json`, … (no aggregated array upload)."
+          "description": "Trim any dead/unused exports or helper logic that is no longer referenced after removing redundant modules, while preserving localStorage persistence behavior and legacy cleanup behavior."
         }
       ]
     },
     {
       "id": "REQ-3",
-      "summary": "Enforce 1-based sequential filenames for exported assets and Pinata uploads (no 0-indexed filenames) and keep token IDs consistent across images, metadata, and displayed token URIs.",
+      "summary": "Target cleanup of legacy/persistence/querying scaffolding on the frontend, removing clearly unused placeholders and ensuring no broken references remain.",
       "acceptanceCriteria": [
-        "The images directory upload contains files named exactly `1.png..N.png`.",
-        "The metadata directory upload contains files named exactly `1.json..N.json`.",
-        "The `<TOKEN_ID>` used in both `ipfs://IMAGES_FOLDER_CID/<TOKEN_ID>.png` and `ipfs://METADATA_FOLDER_CID/<TOKEN_ID>.json` matches this 1-based numbering."
+        "Any intentionally-empty placeholder modules (e.g., a hook file that only exports `{}`) are removed if not imported anywhere.",
+        "Backend `backend/main.mo` contains only code that is required for the running app; unused type-only declarations are removed if they are not referenced.",
+        "After cleanup, there are no broken references in build output (no missing file/module errors)."
       ],
       "file_operations": [
         {
-          "path": "frontend/src/utils/ipfsPublishing.ts",
-          "operation": "modify",
-          "description": "Remove any publishing-time use of `startTokenNumberAtZero` for filenames/URIs and ensure the upload workflow always uses 1-based sequential token IDs for image filenames (`1.png..N.png`), metadata filenames (`1.json..N.json`), and the URIs written into metadata."
+          "path": "frontend/src/hooks/useQueries.ts",
+          "operation": "delete",
+          "description": "As part of legacy scaffolding cleanup, delete this empty placeholder file and ensure all imports (if any) are removed so there are no missing-module build errors."
         },
         {
-          "path": "frontend/src/pages/Vault.tsx",
+          "path": "frontend/src/backend.d.ts",
           "operation": "modify",
-          "description": "Ensure any export/ZIP naming logic for generated assets uses 1-based sequential filenames (`1.png..N.png` and `1.json..N.json`) and does not produce `0.png`/`0.json` within the export flow."
-        }
-      ]
-    },
-    {
-      "id": "REQ-4",
-      "summary": "Implement final asset locking behavior by disabling generation/regeneration actions in the Vault when the collection is locked, re-enabling only after unlock, without changing the current layout.",
-      "acceptanceCriteria": [
-        "When `project.collectionLocked` is true, the Generate button in the Vault cannot be clicked and does not trigger generation.",
-        "When the collection is unlocked, the Generate button returns to its prior enabled behavior.",
-        "No new pages or major layout rearrangements are introduced; the existing Vault layout remains intact."
-      ],
-      "file_operations": [
-        {
-          "path": "frontend/src/pages/Vault.tsx",
-          "operation": "modify",
-          "description": "Wire `project.collectionLocked` into the Vault generation UI by disabling the Generate control(s) and guarding generation/regeneration handlers so they no-op (and optionally show an English toast/message) while locked, restoring prior behavior when unlocked."
-        }
-      ]
-    },
-    {
-      "id": "REQ-5",
-      "summary": "Ensure generated/exported images use the exact pixel dimensions from project Settings and that Pinata uploads use those same sized images.",
-      "acceptanceCriteria": [
-        "All generated/exported images use the project’s configured output dimensions (per Settings) rather than a hard-coded size.",
-        "All uploaded images in the Pinata images directory share identical width/height matching Settings.",
-        "If Settings output size is changed and the collection is regenerated, newly exported/uploaded images reflect the updated dimensions."
-      ],
-      "file_operations": [
-        {
-          "path": "frontend/src/workers/vaultGenerator.worker.ts",
-          "operation": "modify",
-          "description": "Replace hard-coded canvas dimensions with the project’s configured `outputSize` so worker-generated images are rendered/exported at the exact Settings size."
-        },
-        {
-          "path": "frontend/src/utils/vaultGeneratorProtocol.ts",
-          "operation": "modify",
-          "description": "Extend the worker start message payload to include the project output dimension (e.g., `outputSize`) so the worker can render at the correct size."
-        },
-        {
-          "path": "frontend/src/pages/Vault.tsx",
-          "operation": "modify",
-          "description": "Pass the project Settings output dimension into the worker start message and ensure any main-thread fallback compositing/export paths (when worker compositing is unavailable) also render/export images at the exact Settings size."
-        },
-        {
-          "path": "frontend/src/utils/ipfsPublishing.ts",
-          "operation": "modify",
-          "description": "Ensure the images uploaded to Pinata are derived from the generated/exported images at Settings dimensions (i.e., do not re-encode/rescale to a hard-coded size during upload preparation)."
-        }
-      ]
-    },
-    {
-      "id": "REQ-6",
-      "summary": "Keep the Lock → Upload → Unlock flow while updating publishing status/output text to show both CIDs and the final token URI format in English.",
-      "acceptanceCriteria": [
-        "After a successful upload, the UI displays the metadata folder CID and the images folder CID (or otherwise makes both accessible to the user).",
-        "The UI shows the final token URI pattern exactly as `ipfs://METADATA_FOLDER_CID/<TOKEN_ID>.json`.",
-        "All newly introduced/modified user-facing strings are in English."
-      ],
-      "file_operations": [
-        {
-          "path": "frontend/src/components/VaultPublishingControls.tsx",
-          "operation": "modify",
-          "description": "Update the publishing status UI to (a) show both CIDs on success and (b) display the token URI pattern exactly as `ipfs://METADATA_FOLDER_CID/<TOKEN_ID>.json`, ensuring all newly added/changed user-facing strings remain in English and the overall layout remains intact."
+          "description": "Keep the frontend backend typing surface minimal and non-redundant (remove unused declarations if safe), while preserving compatibility with existing immutable actor/auth hooks that reference the backend type."
         }
       ]
     }

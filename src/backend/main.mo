@@ -9,7 +9,7 @@ actor {
     renderOrder : Nat;
   };
 
-  public type GenesisCraftPreview = {
+  public type GenesisCraftPreview = { // Kept for frontend compatibility
     craftName : Text;
     inputImageSrc : Text;
     overlayOffsetX : Int;

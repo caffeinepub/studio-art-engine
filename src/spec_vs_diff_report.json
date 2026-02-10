@@ -1,69 +1,65 @@
 {
   "kind": "spec_vs_diff_report",
   "version": "1.0",
-  "generatedAt": "2026-02-08T04:11:46.864Z",
-  "summary": "Diff implements a two-step Pinata directory upload flow in `ipfsPublishing.ts` (images folder CID then metadata folder CID) with 1-based filenames and metadata `image` URIs pointing to `ipfs://<IMAGES_CID>/<TOKEN_ID>.png`. Asset locking state and publishing controls are partially updated, but the diff is truncated around the Pinata directory upload construction and UI output text, so compliance with the FormData path requirement and the exact CID/token-URI display cannot be fully verified. The diff summary also indicates multiple unrelated UI/layout and feature changes not requested by the BuildRequest.",
+  "generatedAt": "2026-02-09T04:36:48.792Z",
+  "summary": "The diff makes limited changes (5 modified files, no files removed). It does not provide evidence that unused/redundant code and placeholder modules were removed as requested, and it introduces/changes product behavior in App-level types/defaults that were not part of the cleanup-focused BuildRequest.",
   "missing_requirements": [
     {
-      "id": "REQ-2",
-      "requirement": "Fix Pinata directory upload construction so directory uploads cannot collapse/merge metadata into a single file: ensure every file appended to FormData includes the intended per-file path/name (third param of formData.append) and metadata is uploaded as multiple files (1.json, 2.json, …) inside one directory upload.",
-      "reason": "The `uploadDirectoryToPinata` implementation is truncated right where it should show how files are appended to `FormData` (including the third-parameter filename/path). The diff does not provide enough visible evidence that each multipart part uses the correct per-file path/name and that metadata cannot collapse into one file.",
+      "id": "REQ-1",
+      "requirement": "Retry the full application build and ensure the project compiles successfully after changes, with no TypeScript build errors and no runtime crashes on initial load.",
+      "reason": "The diff summary contains no evidence of a successful build/run (no build logs, no CI changes, no explicit fixes tied to build errors).",
       "evidence": [
-        "frontend/src/utils/pinata.ts (truncated at: \"Each file must be appended with its filename as the third paramet\")",
-        "frontend/src/utils/ipfsPublishing.ts (truncated before showing metadata files appended/uploaded)"
+        "frontend/src/App.tsx",
+        "backend/main.mo"
       ]
     },
     {
-      "id": "REQ-6",
-      "requirement": "Keep existing Lock → Upload → Unlock flow but update status/output text to clearly show both returned CIDs (IMAGES_FOLDER_CID and METADATA_FOLDER_CID) and the final token URI format `ipfs://METADATA_FOLDER_CID/<TOKEN_ID>.json`, in English.",
-      "reason": "State now stores `imageDirCID` and `metadataCID`, but the provided diff snippet is truncated before showing the rendered status/output text that displays both CIDs and the final token URI pattern. Toast messages alone are not sufficient to confirm the required on-screen output format.",
+      "id": "REQ-2",
+      "requirement": "Remove unused and redundant files and unnecessary code paths not used by the app, while preserving all current app behavior.",
+      "reason": "No files were removed (Removed: 0). The diff does not demonstrate removal of unused modules or dead code, nor does it show cleanup of redundant exports/types across the codebase.",
       "evidence": [
-        "frontend/src/components/VaultPublishingControls.tsx (truncated; shows storing `imageDirCID`/`metadataCID` but not the output text rendering)"
+        "<file-diff> summary: \"Removed: 0\""
+      ]
+    },
+    {
+      "id": "REQ-3",
+      "requirement": "Remove clearly unused placeholders/legacy scaffolding (e.g., intentionally-empty placeholder modules) and trim backend code not referenced by the frontend while keeping a single Motoko actor.",
+      "reason": "An explicitly empty placeholder hook file remains in the repo and is still present/modified rather than removed. The diff also does not show backend trimming based on frontend references; it mainly retains/defines types and includes a storage mixin without evidence of removing unused code.",
+      "evidence": [
+        "frontend/src/hooks/useQueries.ts (described as \"Empty placeholder file\" in frontend-file-summaries.txt)",
+        "backend/main.mo"
       ]
     }
   ],
   "hallucinated_features": [
     {
-      "description": "Major UI/navigation redesign and layout changes across Header/Dashboard/Footer and other pages.",
-      "reason": "BuildRequest explicitly constrained against changing existing features outside the IPFS/Pinata workflow and against major UI restructuring, but the diff summary text describes redesigned navigation, dashboard, footer, and multiple page refinements unrelated to publishing.",
+      "description": "Expanded blockchain/metadata format support and change of default chain/metadata behavior (e.g., adding ETH/POLYGON/BNB/BASE types and default settings mapping changes).",
+      "reason": "The BuildRequest is focused on build retry + cleanup of unused/redundant code without changing existing UX/flows or adding product features. The diff shows App-level type expansion and default-setting logic changes that are feature/behavior changes rather than cleanup.",
       "evidence": [
-        "frontend-file-summaries.txt (mentions redesigned Header, minimalist Footer, GENESIS.ENGINE-style Dashboard, multiple page refinements)"
+        "frontend/src/App.tsx (Blockchain/MetadataFormat unions; getDefaultSettings mapping and defaults)"
       ]
     },
     {
-      "description": "Expanded blockchain support and changing defaults/normalization logic (e.g., default changed from Solana to Ethereum).",
-      "reason": "Not requested; non-goals include avoiding unrelated feature changes outside the IPFS/Pinata workflow.",
+      "description": "Introduction/recording of new feature planning items unrelated to the cleanup request (AR-1..AR-9 and others) in project state.",
+      "reason": "The BuildRequest does not ask to add or modify a roadmap/planning backlog inside project_state.json; this is unrelated scope and not necessary for cleanup/build success.",
       "evidence": [
-        "frontend-file-summaries.txt (\"frontend/src/App.tsx\": expanded blockchain support; default changed from Solana to Ethereum)"
+        "project_state.json (new_feature_requests entries AR-1..AR-12)"
       ]
     },
     {
-      "description": "JSON export functionality replacing ZIP export due to library constraints.",
-      "reason": "Not requested by any REQ; BuildRequest focuses on Pinata directory upload workflow and locking/sizing behavior.",
+      "description": "Backend inclusion of a blob-storage mixin as part of the main actor.",
+      "reason": "The BuildRequest explicitly discourages introducing new backend services; adding an included storage mixin may be an architectural/behavior change rather than a removal of unused code. The diff summary does not justify it as necessary for existing functionality.",
       "evidence": [
-        "frontend-file-summaries.txt (\"frontend/src/pages/Vault.tsx\": \"JSON export functionality (instead of ZIP due to library constraints)\")"
-      ]
-    },
-    {
-      "description": "Worker capability detection and fallback compositing logic (supportsImageCompositing via OffscreenCanvas/createImageBitmap) beyond required IPFS workflow changes.",
-      "reason": "Not requested; BuildRequest non-goals include avoiding changes outside publishing workflow and avoiding broader generation feature work (except enforcing output dimensions/locking).",
-      "evidence": [
-        "frontend/src/workers/vaultGenerator.worker.ts (adds compositing feature detection and conditional generation)",
-        "frontend/src/utils/vaultGeneratorProtocol.ts (adds/extends capability messaging)"
+        "backend/main.mo (import MixinStorage \"blob-storage/Mixin\"; include MixinStorage())"
       ]
     }
   ],
   "confidence": 0.62,
   "changed_files": [
+    "backend/main.mo",
     "frontend-file-summaries.txt",
-    "frontend/src/components/VaultPublishingControls.tsx",
-    "frontend/src/pages/Settings.tsx",
-    "frontend/src/pages/Vault.tsx",
-    "frontend/src/utils/ipfsPublishing.ts",
-    "frontend/src/utils/metadataPresets.ts",
-    "frontend/src/utils/pinata.ts",
-    "frontend/src/utils/vaultGeneratorProtocol.ts",
-    "frontend/src/workers/vaultGenerator.worker.ts",
+    "frontend/src/App.tsx",
+    "frontend/src/hooks/useQueries.ts",
     "project_state.json"
   ]
 }

@@ -1,89 +1,165 @@
-import type { Project, ProjectSettings } from '../App';
+import type { ProjectSettings, MetadataFormat, SolanaCreator } from '../App';
 
 /**
- * Builds metadata for a single NFT based on the project's blockchain format
- * @param projectName - Name of the project
- * @param symbol - Symbol/ticker for the collection
- * @param settings - Project settings including blockchain and metadata format
- * @param tokenId - Token ID (1-based)
- * @param attributes - Array of trait attributes
- * @param ipfsCID - IPFS CID for the image (optional)
- * @param subdirectory - Subdirectory path within the CID (optional, e.g., 'images')
+ * Resolves template placeholders in a string.
+ * Supports {{collection}} and {{id}}.
  */
-export function buildMetadataForNFT(
-  projectName: string,
+function resolveTemplate(
+  template: string,
+  collectionName: string,
+  tokenId: number
+): string {
+  return template
+    .replace(/\{\{collection\}\}/g, collectionName)
+    .replace(/\{\{id\}\}/g, String(tokenId));
+}
+
+/**
+ * Builds a metadata object for preview or export based on project settings.
+ */
+export function buildMetadataPreview(
+  collectionName: string,
   symbol: string,
   settings: ProjectSettings,
-  tokenId: number,
-  attributes: Array<{ trait_type: string; value: string }>,
-  ipfsCID?: string,
-  subdirectory?: string
-): any {
-  // Construct image URI
-  let imageUri: string;
-  if (ipfsCID) {
-    // If subdirectory is provided, include it in the path
-    if (subdirectory) {
-      imageUri = `ipfs://${ipfsCID}/${subdirectory}/${tokenId}.png`;
-    } else {
-      // No subdirectory - image is at root of CID
-      imageUri = `ipfs://${ipfsCID}/${tokenId}.png`;
-    }
-  } else {
-    // Fallback for preview/export without IPFS
-    imageUri = `${tokenId}.png`;
-  }
+  tokenId: number
+): Record<string, unknown> {
+  const actualTokenId = settings.startTokenNumberAtZero ? tokenId - 1 : tokenId;
+  
+  const name = resolveTemplate(settings.tokenNameTemplate, collectionName, actualTokenId);
+  const description = settings.tokenDescription || `${collectionName} NFT Collection`;
+  
+  // Base image path (will be replaced with actual CID/path during export)
+  const imagePath = `${actualTokenId}.png`;
 
-  // Base metadata structure (ERC-721 standard)
-  const baseMetadata = {
-    name: `${projectName} #${tokenId}`,
-    description: `${projectName} NFT Collection`,
-    image: imageUri,
-    attributes,
+  const baseMetadata: Record<string, unknown> = {
+    name,
+    description,
+    image: imagePath,
+    attributes: [
+      {
+        trait_type: 'Layer 1',
+        value: '1.png',
+      },
+    ],
   };
 
-  // Solana (Metaplex) format
+  // Format-specific fields
   if (settings.metadataFormat === 'solana') {
+    const creators = settings.solanaCreators && settings.solanaCreators.length > 0
+      ? settings.solanaCreators.map(c => ({
+          address: c.address || 'YOUR_WALLET_ADDRESS',
+          share: c.share,
+        }))
+      : [{ address: 'YOUR_WALLET_ADDRESS', share: 100 }];
+
     return {
       ...baseMetadata,
-      symbol: symbol,
-      seller_fee_basis_points: (settings.solanaCreators && settings.solanaCreators.length > 0) ? 500 : 500,
-      external_url: '',
+      symbol,
+      seller_fee_basis_points: Math.round(settings.royaltiesPercent * 100),
       properties: {
         files: [
           {
-            uri: imageUri,
+            uri: imagePath,
             type: 'image/png',
           },
         ],
         category: 'image',
-        creators: settings.solanaCreators || [
-          {
-            address: 'YOUR_WALLET_ADDRESS',
-            share: 100,
-          },
-        ],
+        creators,
       },
     };
   }
 
   // ERC-721 standard (Ethereum, Polygon, Base, BNB Chain)
+  if (settings.metadataFormat === 'ethereum' || 
+      settings.metadataFormat === 'polygon' || 
+      settings.metadataFormat === 'base' || 
+      settings.metadataFormat === 'bnb') {
+    return {
+      ...baseMetadata,
+    };
+  }
+
+  if (settings.metadataFormat === 'icp') {
+    return {
+      ...baseMetadata,
+      symbol,
+    };
+  }
+
   return baseMetadata;
 }
 
 /**
- * Builds preview metadata for display in the UI
+ * Builds metadata for a specific NFT during generation or export.
+ * Includes actual trait attributes.
+ * If imageDirCID is provided, uses ipfs:// URIs; otherwise uses local filenames.
  */
-export function buildMetadataPreview(
-  project: Project,
+export function buildMetadataForNFT(
+  collectionName: string,
+  symbol: string,
+  settings: ProjectSettings,
   tokenId: number,
-  attributes: Array<{ trait_type: string; value: string }>
-): any {
-  return buildMetadataForNFT(
-    project.name,
-    project.symbol,
-    project.settings,
-    tokenId,
-    attributes
-  );
+  attributes: Array<{ trait_type: string; value: string }>,
+  imageDirCID?: string
+): Record<string, unknown> {
+  const actualTokenId = settings.startTokenNumberAtZero ? tokenId - 1 : tokenId;
+  
+  const name = resolveTemplate(settings.tokenNameTemplate, collectionName, actualTokenId);
+  const description = settings.tokenDescription || `${collectionName} NFT Collection`;
+  
+  // Use IPFS URI if CID is provided, otherwise local filename
+  const imagePath = imageDirCID 
+    ? `ipfs://${imageDirCID}/${actualTokenId}.png`
+    : `${actualTokenId}.png`;
+
+  const baseMetadata: Record<string, unknown> = {
+    name,
+    description,
+    image: imagePath,
+    attributes,
+  };
+
+  if (settings.metadataFormat === 'solana') {
+    const creators = settings.solanaCreators && settings.solanaCreators.length > 0
+      ? settings.solanaCreators.map(c => ({
+          address: c.address,
+          share: c.share,
+        }))
+      : [{ address: 'YOUR_WALLET_ADDRESS', share: 100 }];
+
+    return {
+      ...baseMetadata,
+      symbol,
+      seller_fee_basis_points: Math.round(settings.royaltiesPercent * 100),
+      properties: {
+        files: [
+          {
+            uri: imagePath,
+            type: 'image/png',
+          },
+        ],
+        category: 'image',
+        creators,
+      },
+    };
+  }
+
+  // ERC-721 standard (Ethereum, Polygon, Base, BNB Chain)
+  if (settings.metadataFormat === 'ethereum' || 
+      settings.metadataFormat === 'polygon' || 
+      settings.metadataFormat === 'base' || 
+      settings.metadataFormat === 'bnb') {
+    return {
+      ...baseMetadata,
+    };
+  }
+
+  if (settings.metadataFormat === 'icp') {
+    return {
+      ...baseMetadata,
+      symbol,
+    };
+  }
+
+  return baseMetadata;
 }

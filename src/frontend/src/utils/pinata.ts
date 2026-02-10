@@ -77,16 +77,10 @@ export async function uploadToPinata(
     });
 
     if (!response.ok) {
-      let errorDetail = '';
-      try {
-        const errorText = await response.text();
-        errorDetail = errorText ? ` - ${errorText.substring(0, 200)}` : '';
-      } catch {
-        // Ignore error text parsing failures
-      }
+      const errorText = await response.text();
       return {
         success: false,
-        error: `Upload failed: ${response.status}${errorDetail}`,
+        error: `Upload failed: ${response.status}`,
       };
     }
 
@@ -127,16 +121,9 @@ export async function uploadJSONToPinata(
     });
 
     if (!response.ok) {
-      let errorDetail = '';
-      try {
-        const errorText = await response.text();
-        errorDetail = errorText ? ` - ${errorText.substring(0, 200)}` : '';
-      } catch {
-        // Ignore error text parsing failures
-      }
       return {
         success: false,
-        error: `Upload failed: ${response.status}${errorDetail}`,
+        error: `Upload failed: ${response.status}`,
       };
     }
 
@@ -159,29 +146,21 @@ export async function uploadJSONToPinata(
  */
 export async function uploadDirectoryToPinata(
   apiKey: string,
-  files: Array<{ filename: string; blob: Blob }>,
-  folderName: string
+  files: Array<{ filename: string; blob: Blob }>
 ): Promise<PinataUploadResult> {
   try {
     const formData = new FormData();
     
-    // Each file must be appended with its filename as the third parameter
-    // This creates a flat directory structure at the root level
+    // Add all files to the form data
     files.forEach(({ filename, blob }) => {
       formData.append('file', blob, filename);
     });
 
-    // Add pinataMetadata for the directory name
+    // Add metadata to wrap as directory
     const metadata = JSON.stringify({
-      name: folderName,
+      name: 'collection-images',
     });
     formData.append('pinataMetadata', metadata);
-
-    // Add pinataOptions to wrap files as a directory
-    const options = JSON.stringify({
-      wrapWithDirectory: true,
-    });
-    formData.append('pinataOptions', options);
 
     const response = await fetch('https://api.pinata.cloud/pinning/pinFileToIPFS', {
       method: 'POST',
@@ -192,16 +171,9 @@ export async function uploadDirectoryToPinata(
     });
 
     if (!response.ok) {
-      let errorDetail = '';
-      try {
-        const errorText = await response.text();
-        errorDetail = errorText ? ` - ${errorText.substring(0, 200)}` : '';
-      } catch {
-        // Ignore error text parsing failures
-      }
       return {
         success: false,
-        error: `Directory upload failed: ${response.status}${errorDetail}`,
+        error: `Directory upload failed: ${response.status}`,
       };
     }
 
