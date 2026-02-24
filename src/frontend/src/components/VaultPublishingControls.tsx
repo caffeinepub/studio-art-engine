@@ -1,10 +1,11 @@
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Lock, Unlock, Upload, Loader2, CheckCircle2, XCircle, AlertTriangle } from 'lucide-react';
+import { Lock, Unlock, Upload, Loader2, CheckCircle2, XCircle, AlertTriangle, Download } from 'lucide-react';
 import { toast } from 'sonner';
 import { useConfirmDestructive } from '@/hooks/useConfirmDestructive';
 import { uploadCollectionToIPFS } from '@/utils/ipfsPublishing';
+import { downloadFromPinata } from '@/utils/pinata';
 import HoverTooltip from './HoverTooltip';
 import type { Project } from '../App';
 
@@ -15,6 +16,7 @@ interface VaultPublishingControlsProps {
 
 export default function VaultPublishingControls({ project, onUpdateProject }: VaultPublishingControlsProps) {
   const [isUploading, setIsUploading] = useState(false);
+  const [isDownloading, setIsDownloading] = useState(false);
   const { confirm } = useConfirmDestructive();
 
   const hasGenerated = project.generatedNFTs.length > 0;
@@ -30,6 +32,7 @@ export default function VaultPublishingControls({ project, onUpdateProject }: Va
   const canUnlock = isLocked || hasUploaded;
   const canUpload = hasGenerated && hasValidKey && isLocked && !isCurrentlyUploading && !hasUploaded;
   const canRetry = hasGenerated && hasValidKey && hasFailed;
+  const canDownload = hasUploaded && publishingState?.imageDirCID && publishingState?.metadataCID;
 
   // Handle Lock
   const handleLock = () => {
@@ -144,6 +147,85 @@ export default function VaultPublishingControls({ project, onUpdateProject }: Va
       toast.error(errorMessage);
     } finally {
       setIsUploading(false);
+    }
+  };
+
+  // Handle Download
+  const handleDownload = async () => {
+    if (!publishingState?.imageDirCID || !publishingState?.metadataCID) {
+      toast.error('No uploaded files to download');
+      return;
+    }
+
+    setIsDownloading(true);
+    toast.info('Starting download...');
+
+    try {
+      const nfts = project.generatedNFTs;
+      const settings = project.settings;
+      let successCount = 0;
+      let errorCount = 0;
+
+      // Download images
+      for (let i = 0; i < nfts.length; i++) {
+        const nft = nfts[i];
+        const actualTokenId = settings.startTokenNumberAtZero ? nft.id - 1 : nft.id;
+        const filename = `${actualTokenId}.png`;
+        
+        const result = await downloadFromPinata(
+          publishingState.imageDirCID,
+          `images/${filename}`,
+          `${project.name}_${filename}`
+        );
+
+        if (result.success) {
+          successCount++;
+        } else {
+          errorCount++;
+          console.error(`Failed to download image ${filename}:`, result.error);
+        }
+
+        // Add a small delay to avoid overwhelming the browser
+        if (i < nfts.length - 1) {
+          await new Promise(resolve => setTimeout(resolve, 100));
+        }
+      }
+
+      // Download metadata files
+      for (let i = 0; i < nfts.length; i++) {
+        const nft = nfts[i];
+        const actualTokenId = settings.startTokenNumberAtZero ? nft.id - 1 : nft.id;
+        const filename = `${actualTokenId}.json`;
+        
+        const result = await downloadFromPinata(
+          publishingState.metadataCID,
+          `metadata/${filename}`,
+          `${project.name}_metadata_${filename}`
+        );
+
+        if (result.success) {
+          successCount++;
+        } else {
+          errorCount++;
+          console.error(`Failed to download metadata ${filename}:`, result.error);
+        }
+
+        // Add a small delay to avoid overwhelming the browser
+        if (i < nfts.length - 1) {
+          await new Promise(resolve => setTimeout(resolve, 100));
+        }
+      }
+
+      if (errorCount === 0) {
+        toast.success(`Successfully downloaded ${successCount} files`);
+      } else {
+        toast.warning(`Downloaded ${successCount} files with ${errorCount} errors`);
+      }
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Download failed';
+      toast.error(errorMessage);
+    } finally {
+      setIsDownloading(false);
     }
   };
 
@@ -272,6 +354,31 @@ export default function VaultPublishingControls({ project, onUpdateProject }: Va
             )}
           </Button>
         </HoverTooltip>
+
+        {/* Download Button - Only visible after successful upload */}
+        {canDownload && (
+          <HoverTooltip content="Download all uploaded images and metadata from Pinata.">
+            <Button
+              onClick={handleDownload}
+              disabled={isDownloading}
+              variant="outline"
+              size="sm"
+              className="h-9 px-4 font-semibold text-xs focus-ring"
+            >
+              {isDownloading ? (
+                <>
+                  <Loader2 className="w-3.5 h-3.5 mr-1.5 animate-spin" />
+                  Downloading...
+                </>
+              ) : (
+                <>
+                  <Download className="w-3.5 h-3.5 mr-1.5" />
+                  Download
+                </>
+              )}
+            </Button>
+          </HoverTooltip>
+        )}
       </div>
     </div>
   );

@@ -1,36 +1,18 @@
 {
   "schemaVersion": "1.0.0",
   "projectStateVersion": 3,
-  "summary": "Project to ensure Forge-uploaded NFT images are processed with Pixel Mode + configured Dimensions and the processed result is what gets uploaded to Pinata (discarding originals).",
+  "summary": "Layer-based NFT generator tool with Pinata integration",
   "architectural_notes": [
-    "Pinata upload pipeline must upload the post-processed image blob (Pixel Mode + configured Dimensions), not the original upload; original can be discarded after processing."
+    "Pinata integration for file storage"
   ],
-  "known_issues": [
-    "Forge uploads: Pinata receives original image dimensions instead of the processed (Pixel Mode + configured Dimensions) version shown in-app."
-  ],
-  "isFixRequest": true,
+  "known_issues": [],
+  "isFixRequest": false,
   "existing_features": [
     {
-      "id": "feature-ensure-forge-direct-injection-image-uploads-are-processed-into-a-new-square-png-at-the-project-s-configured-output-dimensions-before-being-saved-into-project-state-so-the-stored-image-matches-what-the-app-displays-processing-must-1-resize-to-exactly-project-settings-outputsize-x-project-settings-outputsize-and-2-apply-pixel-mode-by-disabling-canvas-image-smoothing-when-project-pixelartmode-is-enabled",
-      "title": "Ensure Forge “Direct Injection” image uploads are processed into a new square PNG at the project’s configured output dimensions before being saved into project state (so the stored image matches what the app displays). Processing must: (1) resize to exactly project.settings.outputSize x project.settings.outputSize, and (2) apply pixel mode by disabling canvas image smoothing when project.pixelArtMode is enabled.",
+      "id": "feature-add-a-download-button-in-the-vault-publishing-controls-that-appears-after-a-successful-ipfs-upload-to-pinata-allowing-users-to-retrieve-and-download-the-uploaded-files-images-and-metadata-json-from-pinata",
+      "title": "Add a download button in the Vault Publishing Controls that appears after a successful IPFS upload to Pinata, allowing users to retrieve and download the uploaded files (images and metadata JSON) from Pinata",
       "reqIds": [
         "REQ-1"
-      ],
-      "version": 1
-    },
-    {
-      "id": "feature-discard-the-original-unprocessed-uploaded-file-once-processing-is-complete-do-not-persist-original-dimensions-or-original-image-bytes-in-project-customtokens-or-any-other-long-lived-project-state-used-for-export-upload",
-      "title": "Discard the original, unprocessed uploaded file once processing is complete: do not persist original dimensions or original image bytes in project.customTokens or any other long-lived project state used for export/upload.",
-      "reqIds": [
-        "REQ-2"
-      ],
-      "version": 1
-    },
-    {
-      "id": "feature-verify-the-ipfs-pinata-upload-pipeline-uses-the-processed-images-for-any-nfts-originating-from-forge-uploads-by-ensuring-the-imagedata-that-flows-into-uploadcollectiontoipfs-project-generatednfts-imagedata-is-the-processed-forge-output-rather-than-the-original-upload-data-url",
-      "title": "Verify the IPFS/Pinata upload pipeline uses the processed images for any NFTs originating from Forge uploads by ensuring the imageData that flows into uploadCollectionToIPFS (project.generatedNFTs[*].imageData) is the processed Forge output rather than the original upload data URL.",
-      "reqIds": [
-        "REQ-3"
       ],
       "version": 1
     }
@@ -38,12 +20,12 @@
   "new_feature_requests": [
     {
       "id": "AR-1",
-      "summary": "Upload to Pinata should use the processed (Pixel Mode + configured Dimensions) image for Forge uploads; discard original after processing",
+      "summary": "Add download button to retrieve files from Pinata after successful upload",
       "reqIds": [],
-      "status": "in_progress"
+      "status": "pending"
     }
   ],
-  "projectName": "Upload processed Forge images to Pinata (pixel mode + configured dimensions)",
+  "projectName": "Layer Studio",
   "clarification_mode": "instant",
   "clarification_rounds": 0
 }

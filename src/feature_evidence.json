@@ -2,11 +2,11 @@
   "kind": "feature_evidence_report",
   "features": [
     {
-      "featureId": "feature-ensure-forge-direct-injection-image-uploads-are-processed-into-a-new-square-png-at-the-project-s-configured-output-dimensions-before-being-saved-into-project-state-so-the-stored-image-matches-what-the-app-displays-processing-must-1-resize-to-exactly-project-settings-outputsize-x-project-settings-outputsize-and-2-apply-pixel-mode-by-disabling-canvas-image-smoothing-when-project-pixelartmode-is-enabled",
-      "featureTitle": "Ensure Forge “Direct Injection” image uploads are processed into a new square PNG at the project’s configured output dimensions before being saved into project state (so the stored image matches what the app displays). Processing must: (1) resize to exactly project.settings.outputSize x project.settings.outputSize, and (2) apply pixel mode by disabling canvas image smoothing when project.pixelArtMode is enabled.",
+      "featureId": "feature-add-a-download-button-in-the-vault-publishing-controls-that-appears-after-a-successful-ipfs-upload-to-pinata-allowing-users-to-retrieve-and-download-the-uploaded-files-images-and-metadata-json-from-pinata",
+      "featureTitle": "Add a download button in the Vault Publishing Controls that appears after a successful IPFS upload to Pinata, allowing users to retrieve and download the uploaded files (images and metadata JSON) from Pinata",
       "files": [
-        "frontend/src/pages/Builder.tsx",
-        "frontend/src/utils/forgeImageProcessing.ts"
+        "frontend/src/components/VaultPublishingControls.tsx",
+        "frontend/src/utils/pinata.ts"
       ],
       "components": [
         "blob-storage@4.0.0",
@@ -18,45 +18,6 @@
       ],
       "testIds": [
         "REQ-1"
-      ],
-      "confidence": "high"
-    },
-    {
-      "featureId": "feature-discard-the-original-unprocessed-uploaded-file-once-processing-is-complete-do-not-persist-original-dimensions-or-original-image-bytes-in-project-customtokens-or-any-other-long-lived-project-state-used-for-export-upload",
-      "featureTitle": "Discard the original, unprocessed uploaded file once processing is complete: do not persist original dimensions or original image bytes in project.customTokens or any other long-lived project state used for export/upload.",
-      "files": [
-        "frontend/src/pages/Builder.tsx"
-      ],
-      "components": [
-        "blob-storage@4.0.0",
-        "core-infrastructure@1.0.2",
-        "shadcn-ui@1.0.0",
-        "build-template-react@1.0.0",
-        "initial-app@1.0.0",
-        "github-export-icp-cli@1.0.0"
-      ],
-      "testIds": [
-        "REQ-2"
-      ],
-      "confidence": "high"
-    },
-    {
-      "featureId": "feature-verify-the-ipfs-pinata-upload-pipeline-uses-the-processed-images-for-any-nfts-originating-from-forge-uploads-by-ensuring-the-imagedata-that-flows-into-uploadcollectiontoipfs-project-generatednfts-imagedata-is-the-processed-forge-output-rather-than-the-original-upload-data-url",
-      "featureTitle": "Verify the IPFS/Pinata upload pipeline uses the processed images for any NFTs originating from Forge uploads by ensuring the imageData that flows into uploadCollectionToIPFS (project.generatedNFTs[*].imageData) is the processed Forge output rather than the original upload data URL.",
-      "files": [
-        "frontend/src/pages/Builder.tsx",
-        "frontend/src/utils/ipfsPublishing.ts"
-      ],
-      "components": [
-        "blob-storage@4.0.0",
-        "core-infrastructure@1.0.2",
-        "shadcn-ui@1.0.0",
-        "build-template-react@1.0.0",
-        "initial-app@1.0.0",
-        "github-export-icp-cli@1.0.0"
-      ],
-      "testIds": [
-        "REQ-3"
       ],
       "confidence": "high"
     }

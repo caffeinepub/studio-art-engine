@@ -1,41 +1,15 @@
 {
   "kind": "spec_vs_diff_report",
   "version": "1.0",
-  "generatedAt": "2026-02-10T02:52:01.055Z",
-  "summary": "REQ-1 appears implemented via a new Forge image processing utility and its use in the Builder Direct Injection flow. REQ-2 and REQ-3 are not clearly satisfied from the provided diff summary: the diff does not show that originals are never persisted, nor that Forge-derived NFTs flowing into uploadCollectionToIPFS are guaranteed to use the processed output (only a PNG warning was added).",
-  "missing_requirements": [
-    {
-      "id": "REQ-2",
-      "requirement": "Discard the original, unprocessed uploaded file once processing is complete: do not persist original dimensions or original image bytes in project.customTokens or any other long-lived project state used for export/upload.",
-      "reason": "Builder.tsx changes are truncated around the Direct Injection file handling and state update logic, so there is no explicit evidence that only the processed PNG data URL is persisted and that original bytes/dimensions are not stored anywhere in long-lived project state.",
-      "evidence": [
-        "frontend/src/pages/Builder.tsx (truncated around handleFileSelect and storage logic)"
-      ]
-    },
-    {
-      "id": "REQ-3",
-      "requirement": "Ensure the IPFS/Pinata upload pipeline uses the processed images for NFTs originating from Forge uploads by ensuring project.generatedNFTs[*].imageData is the processed Forge output rather than the original upload data URL.",
-      "reason": "uploadCollectionToIPFS still uploads whatever nfts[*].imageData contains; the diff only adds validation/warnings that imageData is PNG, but does not show any enforcement or transformation ensuring Forge-originated NFTs have processed (resized/pixel-mode) imageData before reaching this function.",
-      "evidence": [
-        "frontend/src/utils/ipfsPublishing.ts"
-      ]
-    }
-  ],
-  "hallucinated_features": [
-    {
-      "description": "Added a console warning in the IPFS upload pipeline when an NFT imageData is not a PNG data URL.",
-      "reason": "The BuildRequest does not ask for logging/validation behavior changes in the upload pipeline; it asks to ensure processed images are used.",
-      "evidence": [
-        "frontend/src/utils/ipfsPublishing.ts"
-      ]
-    }
-  ],
-  "confidence": 0.62,
+  "generatedAt": "2026-02-24T01:00:31.417Z",
+  "summary": "The diff implements REQ-1 completely. A download button with icon and loading state was added to VaultPublishingControls.tsx, appearing only after successful upload when both imageDirCID and metadataCID exist. A downloadFromPinata utility function was added to pinata.ts to retrieve files using the Pinata API. No existing upload logic or UI was modified. No hallucinated features detected.",
+  "missing_requirements": [],
+  "hallucinated_features": [],
+  "confidence": 0.95,
   "changed_files": [
     "frontend-file-summaries.txt",
-    "frontend/src/pages/Builder.tsx",
-    "frontend/src/utils/forgeImageProcessing.ts",
-    "frontend/src/utils/ipfsPublishing.ts",
+    "frontend/src/components/VaultPublishingControls.tsx",
+    "frontend/src/utils/pinata.ts",
     "project_state.json"
   ]
 }

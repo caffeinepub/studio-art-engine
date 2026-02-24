@@ -1,61 +1,27 @@
 {
   "kind": "implementation_plan",
   "version": "1.0",
-  "title": "Process Forge Direct Injection images to square PNGs before Pinata upload",
+  "title": "Add Pinata file download button",
   "requirements": [
     {
       "id": "REQ-1",
-      "summary": "Process Forge Direct Injection uploads into a square PNG at project.settings.outputSize with optional pixel-mode rendering before saving to project state.",
+      "summary": "Add a download button in the Vault Publishing Controls that appears after a successful IPFS upload to Pinata, allowing users to retrieve and download the uploaded files (images and metadata JSON) from Pinata",
       "acceptanceCriteria": [
-        "When a user uploads a 1:1 image via Forge > Direct Injection, the resulting saved token imageData is a PNG data URL whose intrinsic pixel dimensions equal project.settings.outputSize x project.settings.outputSize.",
-        "If project.pixelArtMode is enabled, the processing step uses a canvas with imageSmoothingEnabled=false so the output is pixelated rather than anti-aliased.",
-        "The Forge gallery display continues to work and shows the processed image."
+        "Download button is visible only after a successful Pinata upload completes",
+        "Button triggers download of the files that were uploaded to Pinata (NFT images and metadata)",
+        "Existing upload functionality and UI remain unchanged",
+        "Button integrates seamlessly with the current VaultPublishingControls component design"
       ],
       "file_operations": [
         {
-          "path": "frontend/src/utils/forgeImageProcessing.ts",
-          "operation": "create",
-          "description": "Add a reusable image-processing helper that takes an uploaded image data URL, draws it onto a square canvas sized to project.settings.outputSize x project.settings.outputSize, disables canvas image smoothing when pixel mode is enabled, and returns a PNG data URL. Implement a non-distorting scale-and-crop (cover) strategy so inputs reliably become a square output."
+          "path": "frontend/src/components/VaultPublishingControls.tsx",
+          "operation": "modify",
+          "description": "Add a download button that appears after successful Pinata upload. Store the uploaded file CIDs from the uploadToIPFS response in component state. Add a handler function that fetches files from Pinata using the stored CIDs and triggers browser downloads for each file. Position the button next to the existing upload controls, visible only when uploadStatus is 'complete' and CIDs are available. Maintain all existing upload logic, UI styling, and state management without modification."
         },
         {
-          "path": "frontend/src/pages/Builder.tsx",
+          "path": "frontend/src/utils/pinata.ts",
           "operation": "modify",
-          "description": "Update Forge > Direct Injection flow to process uploads via the new forgeImageProcessing helper before adding items to the injection queue and before persisting forged tokens. Ensure the queue preview and the saved CustomToken.imageData use the processed PNG output, and that pixel mode toggles canvas smoothing behavior during processing."
-        }
-      ]
-    },
-    {
-      "id": "REQ-2",
-      "summary": "Do not persist any original, unprocessed Direct Injection image bytes or dimensions in long-lived project state.",
-      "acceptanceCriteria": [
-        "After Direct Injection, project.customTokens contains only the processed (resized/pixel-mode) imageData for each injected token.",
-        "Refreshing/reloading the app does not restore any original (pre-processed) Direct Injection image variant because it was never persisted."
-      ],
-      "file_operations": [
-        {
-          "path": "frontend/src/pages/Builder.tsx",
-          "operation": "modify",
-          "description": "Ensure Direct Injection never stores the original uploaded data URL into project.customTokens (or any other project state used for persistence/export). Only keep the processed PNG data URL when creating CustomToken entries, and avoid adding any extra fields that retain original file bytes/dimensions."
-        }
-      ]
-    },
-    {
-      "id": "REQ-3",
-      "summary": "Ensure the IPFS/Pinata upload pipeline uses processed Forge images by keeping project.generatedNFTs[*].imageData sourced from processed forged token imageData.",
-      "acceptanceCriteria": [
-        "Uploading a collection to Pinata results in image files whose intrinsic pixel dimensions match project.settings.outputSize x project.settings.outputSize for Forge-upload-derived NFTs.",
-        "No Pinata-uploaded image for Forge-upload-derived NFTs retains the original uploaded pixel dimensions."
-      ],
-      "file_operations": [
-        {
-          "path": "frontend/src/pages/Builder.tsx",
-          "operation": "modify",
-          "description": "Ensure all Forge Direct Injection CustomToken.imageData values are already processed, so when Vault generation includes forged tokens and populates project.generatedNFTs[*].imageData for those NFTs, the data flowing into Pinata upload is the processed output."
-        },
-        {
-          "path": "frontend/src/utils/ipfsPublishing.ts",
-          "operation": "modify",
-          "description": "Add a lightweight guard/validation in the image preparation step to assert uploaded NFT imageData is a PNG data URL and optionally warn/throw if forged-token-derived images are missing or malformed, helping ensure the upload uses the processed imageData already stored in project/generatedNFTs."
+          "description": "Add a utility function to download files from Pinata given a CID and filename. The function should construct the Pinata gateway URL, fetch the file content, create a blob, and trigger a browser download using an anchor element with the download attribute. Handle errors gracefully and return success/failure status."
         }
       ]
     }

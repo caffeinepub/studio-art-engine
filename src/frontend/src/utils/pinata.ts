@@ -220,3 +220,56 @@ export async function uploadDirectoryToPinata(
     };
   }
 }
+
+/**
+ * Downloads a file from Pinata IPFS gateway given a CID and filename
+ * Triggers a browser download of the file
+ * 
+ * @param cid - The IPFS CID of the file or directory
+ * @param filename - The filename to save as (for single files) or path within directory
+ * @param saveAsFilename - Optional custom filename for the download
+ */
+export async function downloadFromPinata(
+  cid: string,
+  filename: string,
+  saveAsFilename?: string
+): Promise<{ success: boolean; error?: string }> {
+  try {
+    // Construct Pinata gateway URL
+    const gatewayUrl = `https://gateway.pinata.cloud/ipfs/${cid}/${filename}`;
+    
+    // Fetch the file
+    const response = await fetch(gatewayUrl);
+    
+    if (!response.ok) {
+      return {
+        success: false,
+        error: `Download failed: ${response.status}`,
+      };
+    }
+    
+    // Get the blob
+    const blob = await response.blob();
+    
+    // Create a temporary URL for the blob
+    const blobUrl = URL.createObjectURL(blob);
+    
+    // Create a temporary anchor element and trigger download
+    const anchor = document.createElement('a');
+    anchor.href = blobUrl;
+    anchor.download = saveAsFilename || filename;
+    document.body.appendChild(anchor);
+    anchor.click();
+    
+    // Cleanup
+    document.body.removeChild(anchor);
+    URL.revokeObjectURL(blobUrl);
+    
+    return { success: true };
+  } catch (error) {
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Download failed',
+    };
+  }
+}

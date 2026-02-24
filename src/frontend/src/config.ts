@@ -70,7 +70,7 @@ export async function loadConfig(): Promise<Config> {
 
 function extractAgentErrorMessage(error: string): string {
     const errorString = String(error);
-    const match = errorString.match(/with message:\s*'([^']+)'/s);
+    const match = errorString.match(/with message:\s*'([^'].+)'\./s);
     return match ? match[1] : errorString;
 }
 

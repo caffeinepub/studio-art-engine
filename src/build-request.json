@@ -1,81 +1,41 @@
 {
   "kind": "build_request",
-  "title": "Upload processed Forge images to Pinata (pixel mode + configured dimensions)",
+  "title": "Add Pinata file download button",
+  "projectName": "Layer Studio",
   "priority": "normal",
   "requirements": [
     {
       "id": "REQ-1",
-      "text": "Ensure Forge “Direct Injection” image uploads are processed into a new square PNG at the project’s configured output dimensions before being saved into project state (so the stored image matches what the app displays). Processing must: (1) resize to exactly project.settings.outputSize x project.settings.outputSize, and (2) apply pixel mode by disabling canvas image smoothing when project.pixelArtMode is enabled.",
+      "text": "Add a download button in the Vault Publishing Controls that appears after a successful IPFS upload to Pinata, allowing users to retrieve and download the uploaded files (images and metadata JSON) from Pinata",
       "target": "frontend",
       "source": {
         "messageIds": [
-          "msg-1"
+          "msg-recent"
         ],
         "quotes": [
-          "the file uploaded to Pinata always be the processed version (Pixel Mode + configured Dimensions), matching what the user sees in the app."
+          "Add a download button to retrieve the files from Pinata after a successful upload"
         ]
       },
       "acceptanceCriteria": [
-        "When a user uploads a 1:1 image via Forge > Direct Injection, the resulting saved token imageData is a PNG data URL whose intrinsic pixel dimensions equal project.settings.outputSize x project.settings.outputSize.",
-        "If project.pixelArtMode is enabled, the processing step uses a canvas with imageSmoothingEnabled=false so the output is pixelated rather than anti-aliased.",
-        "The Forge gallery display continues to work and shows the processed image."
-      ]
-    },
-    {
-      "id": "REQ-2",
-      "text": "Discard the original, unprocessed uploaded file once processing is complete: do not persist original dimensions or original image bytes in project.customTokens or any other long-lived project state used for export/upload.",
-      "target": "frontend",
-      "source": {
-        "messageIds": [
-          "msg-1"
-        ],
-        "quotes": [
-          "discarded once processed"
-        ]
-      },
-      "acceptanceCriteria": [
-        "After Direct Injection, project.customTokens contains only the processed (resized/pixel-mode) imageData for each injected token.",
-        "Refreshing/reloading the app does not restore any original (pre-processed) Direct Injection image variant because it was never persisted."
-      ]
-    },
-    {
-      "id": "REQ-3",
-      "text": "Verify the IPFS/Pinata upload pipeline uses the processed images for any NFTs originating from Forge uploads by ensuring the imageData that flows into uploadCollectionToIPFS (project.generatedNFTs[*].imageData) is the processed Forge output rather than the original upload data URL.",
-      "target": "frontend",
-      "source": {
-        "messageIds": [
-          "msg-1"
-        ],
-        "quotes": [
-          "the file uploaded to Pinata always be the processed version (Pixel Mode + configured Dimensions)"
-        ]
-      },
-      "acceptanceCriteria": [
-        "Uploading a collection to Pinata results in image files whose intrinsic pixel dimensions match project.settings.outputSize x project.settings.outputSize for Forge-upload-derived NFTs.",
-        "No Pinata-uploaded image for Forge-upload-derived NFTs retains the original uploaded pixel dimensions."
+        "Download button is visible only after a successful Pinata upload completes",
+        "Button triggers download of the files that were uploaded to Pinata (NFT images and metadata)",
+        "Existing upload functionality and UI remain unchanged",
+        "Button integrates seamlessly with the current VaultPublishingControls component design"
       ]
     }
   ],
   "constraints": [
-    "Do not edit any files under frontend/src/components/ui or other frontend.immutablePaths listed in SYSTEM_CONTEXT.",
-    "Keep all user-facing text in English."
+    "Do not modify any existing upload logic or UI behavior",
+    "Keep all other features and components exactly as they are in the current draft version",
+    "Maintain the current Pinata integration approach using JWT authentication"
   ],
   "nonGoals": [
-    "Do not change the Pinata API endpoints or authentication method.",
-    "Do not add new backend storage or change backend state/schema for this fix."
+    "Changing the upload process or Pinata configuration",
+    "Modifying the NFT generation workflow",
+    "Altering any other pages or components beyond VaultPublishingControls"
   ],
   "imageRequirements": {
     "required": [],
     "edits": []
-  },
-  "userProfileUpdate": {
-    "goalsToAdd": [],
-    "goalsToRemove": [],
-    "preferencesToAdd": [],
-    "preferencesToRemove": [],
-    "miscToAdd": [],
-    "miscToRemove": [],
-    "fieldsToSet": {},
-    "fieldsToDelete": []
   }
 }
