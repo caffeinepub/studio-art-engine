@@ -1,54 +1,41 @@
 {
   "kind": "coverage_report",
   "version": "1.0",
-  "generatedAt": "2026-02-25T03:17:04.266Z",
+  "generatedAt": "2026-02-26T02:59:34.784Z",
   "sources": {
     "buildRequest": true,
     "implementationPlan": true
   },
   "requirements": {
     "total": 2,
-    "implemented": 2,
+    "implemented": 0,
     "items": [
       {
         "id": "REQ-1",
-        "summary": "In the Vault generator worker (vaultGenerator.worker.ts), when compositing NFT trait layers, detect if any trait is an animated GIF. If so, extract all frames from every animated GIF trait, synchronize frame counts across all animated traits (looping shorter animations to match the longest), and composite each frame by rendering all static trait layers (as a fixed base) plus the corresponding animated frame from each animated trait in the correct layer order. Encode the result as a single animated GIF with the correct frame delays and deliver it as the NFT output instead of a static PNG.",
-        "status": "implemented",
+        "summary": "Add vertical scrolling to the Vault sidebar so that all sidebar content (layers, filters, controls) is accessible when it overflows the viewport height, without altering any existing sidebar styling, layout, or visual design.",
+        "status": "missing",
         "plannedFiles": [
-          "frontend/src/workers/vaultGenerator.worker.ts",
-          "frontend/src/utils/vaultGeneratorProtocol.ts"
+          "frontend/src/pages/Vault.tsx"
         ],
-        "matchedFiles": [
-          "frontend/src/workers/vaultGenerator.worker.ts"
-        ]
+        "matchedFiles": []
       },
       {
         "id": "REQ-2",
-        "summary": "Update the Vault page (Vault.tsx) and any related export/ZIP logic to handle animated GIF outputs: ensure generated NFTs that are animated GIFs are saved with a .gif extension in ZIP exports and uploaded to IPFS with the correct MIME type (image/gif), rather than being treated as PNGs.",
-        "status": "implemented",
+        "summary": "Add vertical scrolling to the NFT preview panel/page within the Vault so that all NFT preview content (image, metadata, traits) is accessible when it overflows the available height, without altering any existing preview panel styling, layout, or visual design.",
+        "status": "missing",
         "plannedFiles": [
-          "frontend/src/pages/Vault.tsx",
-          "frontend/src/utils/ipfsPublishing.ts",
-          "frontend/src/utils/metadataPresets.ts"
+          "frontend/src/pages/Vault.tsx"
         ],
-        "matchedFiles": [
-          "frontend/src/pages/Vault.tsx",
-          "frontend/src/utils/ipfsPublishing.ts",
-          "frontend/src/utils/metadataPresets.ts"
-        ]
+        "matchedFiles": []
       }
     ]
   },
   "changedFiles": [
     "build-request.json",
+    "build-template/README.md",
     "caffeine.lock.json",
     "feature_evidence.json",
-    "frontend-file-summaries.txt",
     "frontend-implementation-plan.json",
-    "frontend/src/pages/Vault.tsx",
-    "frontend/src/utils/ipfsPublishing.ts",
-    "frontend/src/utils/metadataPresets.ts",
-    "frontend/src/workers/vaultGenerator.worker.ts",
     "project_state.json",
     "scratch/component-selection.json",
     "spec.md",

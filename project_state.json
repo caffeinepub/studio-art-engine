@@ -1,43 +1,39 @@
 {
   "schemaVersion": "1.0.0",
   "projectStateVersion": 3,
-  "summary": "NFT Vault project where users can generate NFTs by stacking multiple trait layers. When any trait is an animated GIF, the final NFT output should be a combined animated GIF with all static trait layers rendered on every frame.",
+  "summary": "Project with a Vault UI featuring a sidebar and NFT preview page. Working on adding scrolling to the Vault sidebar and NFT preview page without changing the existing design.",
   "architectural_notes": [
-    "NFT images are composed by stacking multiple trait layers on top of each other in the Vault",
-    "When GIF traits are present, all layers must be combined into one animated GIF (static traits rendered on every frame)"
+    "Vault UI has a sidebar and NFT preview page; scroll behavior should be added without altering layout or styling"
   ],
-  "known_issues": [
-    "NFTs generated in the Vault that include GIF traits are not animated — they display as static images"
-  ],
-  "isFixRequest": true,
-  "existing_features": [
-    {
-      "id": "feature-in-the-vault-generator-worker-vaultgenerator-worker-ts-when-compositing-nft-trait-layers-detect-if-any-trait-is-an-animated-gif-if-so-extract-all-frames-from-every-animated-gif-trait-synchronize-frame-counts-across-all-animated-traits-looping-shorter-animations-to-match-the-longest-and-composite-each-frame-by-rendering-all-static-trait-layers-as-a-fixed-base-plus-the-corresponding-animated-frame-from-each-animated-trait-in-the-correct-layer-order-encode-the-result-as-a-single-animated-gif-with-the-correct-frame-delays-and-deliver-it-as-the-nft-output-instead-of-a-static-png",
-      "title": "In the Vault generator worker (vaultGenerator.worker.ts), when compositing NFT trait layers, detect if any trait is an animated GIF. If so, extract all frames from every animated GIF trait, synchronize frame counts across all animated traits (looping shorter animations to match the longest), and composite each frame by rendering all static trait layers (as a fixed base) plus the corresponding animated frame from each animated trait in the correct layer order. Encode the result as a single animated GIF with the correct frame delays and deliver it as the NFT output instead of a static PNG.",
-      "reqIds": [
-        "REQ-1"
-      ],
-      "version": 1
-    },
-    {
-      "id": "feature-update-the-vault-page-vault-tsx-and-any-related-export-zip-logic-to-handle-animated-gif-outputs-ensure-generated-nfts-that-are-animated-gifs-are-saved-with-a-gif-extension-in-zip-exports-and-uploaded-to-ipfs-with-the-correct-mime-type-image-gif-rather-than-being-treated-as-pngs",
-      "title": "Update the Vault page (Vault.tsx) and any related export/ZIP logic to handle animated GIF outputs: ensure generated NFTs that are animated GIFs are saved with a .gif extension in ZIP exports and uploaded to IPFS with the correct MIME type (image/gif), rather than being treated as PNGs.",
-      "reqIds": [
-        "REQ-2"
-      ],
-      "version": 1
-    }
-  ],
+  "known_issues": [],
+  "isFixRequest": false,
+  "existing_features": [],
   "new_feature_requests": [
     {
       "id": "AR-1",
-      "summary": "When generating NFTs in the Vault, if any trait is an animated GIF, compose all trait layers (static and animated) into a single animated GIF with static traits on every frame",
+      "summary": "Add scrolling to the Vault sidebar and NFT preview page so users can view all content without changing the current Vault design",
       "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-2",
+      "summary": "Add vertical scrolling to the Vault sidebar so that all sidebar content (layers, filters, controls) is accessible when it overflows the viewport height, without altering any existing sidebar styling, layout, or visual design.",
+      "reqIds": [
+        "REQ-1"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "AR-3",
+      "summary": "Add vertical scrolling to the NFT preview panel/page within the Vault so that all NFT preview content (image, metadata, traits) is accessible when it overflows the available height, without altering any existing preview panel styling, layout, or visual design.",
+      "reqIds": [
+        "REQ-2"
+      ],
       "status": "pending"
     }
   ],
   "gameProjectType": "none",
-  "projectName": "NFT Generator",
+  "projectName": "NFT Vault Generator",
   "clarification_mode": "instant",
   "clarification_rounds": 0
 }

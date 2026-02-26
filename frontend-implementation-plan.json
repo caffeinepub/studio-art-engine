@@ -1,57 +1,39 @@
 {
   "kind": "implementation_plan",
   "version": "1.0",
-  "title": "Fix animated GIF composition in Vault NFT generation",
+  "title": "Add scrolling to Vault sidebar and NFT preview page",
   "requirements": [
     {
       "id": "REQ-1",
-      "summary": "Implement animated GIF composition in the Vault generator worker by detecting animated GIF traits, extracting and synchronizing frames across all animated traits, compositing each frame with static layers in correct order, and encoding the result as an animated GIF output",
+      "summary": "Add vertical scrolling to the Vault sidebar so that all sidebar content (layers, filters, controls) is accessible when it overflows the viewport height",
       "acceptanceCriteria": [
-        "Generating an NFT in the Vault where at least one trait is an animated GIF produces an animated GIF output (not a static image).",
-        "All static trait layers appear on every frame of the output GIF.",
-        "All animated GIF traits have their frames composited in the correct layer order on each frame.",
-        "Shorter animations loop to fill the duration of the longest animated trait.",
-        "Frame delays in the output GIF match the source animated trait's frame timing.",
-        "NFTs with no animated GIF traits continue to be output as static PNG images (no regression).",
-        "The animated NFT is correctly displayed in the Vault grid/list view."
-      ],
-      "file_operations": [
-        {
-          "path": "frontend/src/workers/vaultGenerator.worker.ts",
-          "operation": "modify",
-          "description": "Enhance the GIF detection and frame extraction logic to parse all frames from animated GIF traits. Implement frame synchronization by looping shorter animations to match the longest animation's frame count. Modify the compositing logic to iterate through each frame, rendering all static trait layers plus the corresponding animated frame from each animated trait in the correct layer order. Update the encoding step to produce an animated GIF with correct frame delays when any trait is animated, while preserving static PNG output for non-animated NFTs. Ensure the worker returns the correct MIME type (image/gif or image/png) in the output message."
-        },
-        {
-          "path": "frontend/src/utils/vaultGeneratorProtocol.ts",
-          "operation": "modify",
-          "description": "Update the WorkerOutputMessage type to include a mimeType field (e.g., 'image/png' | 'image/gif') so the Vault page can determine the correct file extension and content type for each generated NFT. Ensure the protocol supports communicating whether the output is animated or static."
-        }
-      ]
-    },
-    {
-      "id": "REQ-2",
-      "summary": "Update Vault page and export logic to handle animated GIF outputs with correct file extensions (.gif) in ZIP exports and proper MIME type (image/gif) for IPFS uploads",
-      "acceptanceCriteria": [
-        "Animated NFTs exported in a ZIP download use the .gif file extension.",
-        "Static NFTs exported in a ZIP download continue to use the .png file extension.",
-        "IPFS uploads via Pinata use image/gif MIME type for animated NFT files and image/png for static ones.",
-        "Metadata references the correct file extension (.gif or .png) matching the actual output format."
+        "The Vault sidebar scrolls vertically when its content exceeds the available viewport height.",
+        "The sidebar scrollbar does not appear when content fits within the viewport.",
+        "No existing sidebar styles, colors, spacing, or layout are changed.",
+        "The sidebar header/title and any sticky controls remain visually anchored (do not scroll away if previously fixed)."
       ],
       "file_operations": [
         {
           "path": "frontend/src/pages/Vault.tsx",
           "operation": "modify",
-          "description": "Update the NFT display logic to correctly render animated GIF outputs (using blob URLs or data URLs) in the grid/list view. Modify the ZIP export logic in the SimpleZipCreator or export handler to determine the file extension based on the NFT's MIME type (use .gif for image/gif, .png for image/png). Ensure the GeneratedNFT interface or state includes the MIME type information received from the worker. Update any metadata generation calls to pass the correct file extension to the metadata builder."
-        },
+          "description": "Add overflow-y-auto CSS class to the Vault sidebar container element to enable vertical scrolling when content exceeds viewport height. Ensure the sidebar maintains its existing width, background, border, and padding styles. If the sidebar has a fixed header or title section, wrap only the scrollable content area (layers, filters, controls) with the overflow-y-auto class while keeping the header outside the scrollable region to remain visually anchored."
+        }
+      ]
+    },
+    {
+      "id": "REQ-2",
+      "summary": "Add vertical scrolling to the NFT preview panel/page within the Vault so that all NFT preview content (image, metadata, traits) is accessible when it overflows the available height",
+      "acceptanceCriteria": [
+        "The NFT preview panel scrolls vertically when its content exceeds the available height.",
+        "The scrollbar does not appear when all preview content fits within the viewport.",
+        "No existing preview panel styles, colors, spacing, typography, or layout are changed.",
+        "The overall Vault page layout (sidebar + main content + preview) remains structurally identical to Draft 169."
+      ],
+      "file_operations": [
         {
-          "path": "frontend/src/utils/ipfsPublishing.ts",
+          "path": "frontend/src/pages/Vault.tsx",
           "operation": "modify",
-          "description": "Update the image upload logic to use the correct MIME type (image/gif or image/png) when uploading NFT files to Pinata. Ensure the metadata generation step uses the correct file extension (.gif or .png) in IPFS URIs based on each NFT's MIME type. Modify the upload functions to handle both PNG and GIF blob data with their respective content types."
-        },
-        {
-          "path": "frontend/src/utils/metadataPresets.ts",
-          "operation": "modify",
-          "description": "Update the metadata building functions to accept and use the correct file extension (.gif or .png) for the image field or URI. Ensure that when generating metadata for animated NFTs, the image reference uses .gif, and for static NFTs, it uses .png. This applies to both IPFS URI generation and local filename references."
+          "description": "Add overflow-y-auto CSS class to the NFT preview panel container element to enable vertical scrolling when preview content (image, metadata, traits) exceeds the available height. Preserve all existing preview panel styles including background, border, padding, typography, and spacing. Ensure the scrollable area encompasses all preview content while maintaining the structural layout of the Vault page (sidebar + main content + preview)."
         }
       ]
     }
