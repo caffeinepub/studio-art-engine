@@ -1,0 +1,69 @@
+{
+  "kind": "build_request",
+  "title": "Fix animated GIF composition in Vault NFT generation",
+  "projectName": "NFT Generator",
+  "priority": "high",
+  "requirements": [
+    {
+      "id": "REQ-1",
+      "text": "In the Vault generator worker (vaultGenerator.worker.ts), when compositing NFT trait layers, detect if any trait is an animated GIF. If so, extract all frames from every animated GIF trait, synchronize frame counts across all animated traits (looping shorter animations to match the longest), and composite each frame by rendering all static trait layers (as a fixed base) plus the corresponding animated frame from each animated trait in the correct layer order. Encode the result as a single animated GIF with the correct frame delays and deliver it as the NFT output instead of a static PNG.",
+      "target": "frontend",
+      "source": {
+        "messageIds": [
+          "msg-recent-5",
+          "msg-recent-7",
+          "msg-recent-9"
+        ],
+        "quotes": [
+          "when I add a GIF trait (with animation), then after generating in the Vault, if the NFT includes that trait, it should also be animated within the NFT",
+          "multiple trait layers stacked on top of each other",
+          "combine all layers into one animated GIF"
+        ]
+      },
+      "acceptanceCriteria": [
+        "Generating an NFT in the Vault where at least one trait is an animated GIF produces an animated GIF output (not a static image).",
+        "All static trait layers appear on every frame of the output GIF.",
+        "All animated GIF traits have their frames composited in the correct layer order on each frame.",
+        "Shorter animations loop to fill the duration of the longest animated trait.",
+        "Frame delays in the output GIF match the source animated trait's frame timing.",
+        "NFTs with no animated GIF traits continue to be output as static PNG images (no regression).",
+        "The animated NFT is correctly displayed in the Vault grid/list view."
+      ]
+    },
+    {
+      "id": "REQ-2",
+      "text": "Update the Vault page (Vault.tsx) and any related export/ZIP logic to handle animated GIF outputs: ensure generated NFTs that are animated GIFs are saved with a .gif extension in ZIP exports and uploaded to IPFS with the correct MIME type (image/gif), rather than being treated as PNGs.",
+      "target": "frontend",
+      "source": {
+        "messageIds": [
+          "msg-recent-5",
+          "msg-recent-7"
+        ],
+        "quotes": [
+          "when I add a GIF trait (with animation), then after generating in the Vault, if the NFT includes that trait, it should also be animated within the NFT"
+        ]
+      },
+      "acceptanceCriteria": [
+        "Animated NFTs exported in a ZIP download use the .gif file extension.",
+        "Static NFTs exported in a ZIP download continue to use the .png file extension.",
+        "IPFS uploads via Pinata use image/gif MIME type for animated NFT files and image/png for static ones.",
+        "Metadata references the correct file extension (.gif or .png) matching the actual output format."
+      ]
+    }
+  ],
+  "constraints": [
+    "Do not change the backend schema or any Motoko files.",
+    "Do not modify any files under frontend/src/hooks/useInternetIdentity.ts, frontend/src/hooks/useActor.ts, frontend/src/main.tsx, or frontend/src/components/ui.",
+    "NFTs with only static PNG traits must continue to be generated as static PNG images without regression."
+  ],
+  "nonGoals": [
+    "Adding new UI controls for configuring GIF frame rate or loop count.",
+    "Server-side GIF processing or backend involvement in image compositing.",
+    "Support for video formats other than animated GIF.",
+    "Changes to the Workshop, Rules, Rarity, or Preview pages."
+  ],
+  "imageRequirements": {
+    "required": [],
+    "edits": []
+  }
+}

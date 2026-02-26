@@ -1,0 +1,17 @@
+{
+  "kind": "spec_vs_diff_report",
+  "version": "1.0",
+  "generatedAt": "2026-02-25T03:17:04.264Z",
+  "summary": "The diff implements both REQ-1 and REQ-2. The worker (vaultGenerator.worker.ts) gains a pure-TypeScript GIF parser, frame extraction, frame-count synchronization, per-frame compositing, and GIF encoding. Vault.tsx gains GIF badge display and ZIP export with correct extensions. ipfsPublishing.ts and metadataPresets.ts gain MIME-type and file-extension handling for GIF vs PNG. All major acceptance criteria appear addressed.",
+  "missing_requirements": [],
+  "hallucinated_features": [],
+  "confidence": 0.82,
+  "changed_files": [
+    "frontend-file-summaries.txt",
+    "frontend/src/pages/Vault.tsx",
+    "frontend/src/utils/ipfsPublishing.ts",
+    "frontend/src/utils/metadataPresets.ts",
+    "frontend/src/workers/vaultGenerator.worker.ts",
+    "project_state.json"
+  ]
+}
