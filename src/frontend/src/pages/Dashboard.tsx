@@ -1,32 +1,50 @@
-import { useState } from 'react';
-import { useConfirmDestructive } from '@/hooks/useConfirmDestructive';
-import { toast } from 'sonner';
-import ProjectTile from '@/components/dashboard/ProjectTile';
-import NewProjectTile from '@/components/dashboard/NewProjectTile';
-import CreateProjectDialog from '@/components/dashboard/CreateProjectDialog';
-import ProjectSettingsDialog from '@/components/dashboard/ProjectSettingsDialog';
-import type { Project } from '../App';
+import CreateProjectDialog from "@/components/dashboard/CreateProjectDialog";
+import NewProjectTile from "@/components/dashboard/NewProjectTile";
+import ProjectSettingsDialog from "@/components/dashboard/ProjectSettingsDialog";
+import ProjectTile from "@/components/dashboard/ProjectTile";
+import { useConfirmDestructive } from "@/hooks/useConfirmDestructive";
+import { useState } from "react";
+import { toast } from "sonner";
+import type { Project } from "../App";
 
 interface DashboardProps {
   projects: Project[];
-  onCreateProject: (project: Omit<Project, 'id' | 'createdAt' | 'settings'> & { settings?: Partial<Project['settings']> }) => void;
+  onCreateProject: (
+    project: Omit<Project, "id" | "createdAt" | "settings"> & {
+      settings?: Partial<Project["settings"]>;
+    },
+  ) => void;
   onOpenProject: (id: string) => void;
   onDeleteProject: (id: string) => void;
-  onUpdateProject: (projectId: string, updater: (project: Project) => Project) => void;
+  onUpdateProject: (
+    projectId: string,
+    updater: (project: Project) => Project,
+  ) => void;
 }
 
-export default function Dashboard({ projects, onCreateProject, onOpenProject, onDeleteProject, onUpdateProject }: DashboardProps) {
+export default function Dashboard({
+  projects,
+  onCreateProject,
+  onOpenProject,
+  onDeleteProject,
+  onUpdateProject,
+}: DashboardProps) {
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [editingProject, setEditingProject] = useState<Project | null>(null);
 
   const { confirm } = useConfirmDestructive();
 
-  const handleCreate = (data: { name: string; symbol: string; collectionSize: number; pixelArtMode: boolean }) => {
+  const handleCreate = (data: {
+    name: string;
+    symbol: string;
+    collectionSize: number;
+    pixelArtMode: boolean;
+  }) => {
     onCreateProject({
       name: data.name,
       symbol: data.symbol,
-      blockchain: 'SOL',
+      blockchain: "SOL",
       collectionSize: data.collectionSize,
       pixelArtMode: data.pixelArtMode,
       layers: [],
@@ -34,7 +52,7 @@ export default function Dashboard({ projects, onCreateProject, onOpenProject, on
       customTokens: [],
       generatedNFTs: [],
     });
-    
+
     setIsCreateOpen(false);
   };
 
@@ -43,7 +61,12 @@ export default function Dashboard({ projects, onCreateProject, onOpenProject, on
     setIsSettingsOpen(true);
   };
 
-  const handleSaveSettings = (data: { name: string; symbol: string; collectionSize: number; pixelArtMode: boolean }) => {
+  const handleSaveSettings = (data: {
+    name: string;
+    symbol: string;
+    collectionSize: number;
+    pixelArtMode: boolean;
+  }) => {
     if (!editingProject) return;
 
     onUpdateProject(editingProject.id, (p) => ({
@@ -56,12 +79,12 @@ export default function Dashboard({ projects, onCreateProject, onOpenProject, on
 
     setIsSettingsOpen(false);
     setEditingProject(null);
-    toast.success('Project updated');
+    toast.success("Project updated");
   };
 
   const handleDeleteProject = async (project: Project) => {
     const confirmed = await confirm({
-      title: 'Delete project?',
+      title: "Delete project?",
       description: `Are you sure you want to delete "${project.name}"? This action cannot be undone.`,
     });
 
@@ -91,26 +114,26 @@ export default function Dashboard({ projects, onCreateProject, onOpenProject, on
                 </div>
                 <div className="lg:text-right lg:max-w-xs">
                   <p className="text-sm text-muted-foreground leading-relaxed">
-                    Industrial-grade generative architecture for high-fidelity digital artifacts.
+                    Industrial-grade generative architecture for high-fidelity
+                    digital artifacts.
                   </p>
                 </div>
               </div>
             </div>
 
             {/* Projects Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8 stagger-grid">
               {/* New Project Tile */}
               <NewProjectTile onClick={() => setIsCreateOpen(true)} />
 
               {/* Existing Projects */}
-              {projects.map((project, index) => (
+              {projects.map((project) => (
                 <ProjectTile
                   key={project.id}
                   project={project}
                   onOpen={() => onOpenProject(project.id)}
                   onSettings={() => openSettings(project)}
                   onDelete={() => handleDeleteProject(project)}
-                  index={index}
                 />
               ))}
             </div>
@@ -134,4 +157,3 @@ export default function Dashboard({ projects, onCreateProject, onOpenProject, on
     </div>
   );
 }
-

@@ -1,4 +1,4 @@
-import type { ProjectSettings, MetadataFormat, SolanaCreator } from '../App';
+import type { MetadataFormat, ProjectSettings, SolanaCreator } from "../App";
 
 /**
  * Resolves template placeholders in a string.
@@ -7,7 +7,7 @@ import type { ProjectSettings, MetadataFormat, SolanaCreator } from '../App';
 function resolveTemplate(
   template: string,
   collectionName: string,
-  tokenId: number
+  tokenId: number,
 ): string {
   return template
     .replace(/\{\{collection\}\}/g, collectionName)
@@ -21,13 +21,18 @@ export function buildMetadataPreview(
   collectionName: string,
   symbol: string,
   settings: ProjectSettings,
-  tokenId: number
+  tokenId: number,
 ): Record<string, unknown> {
   const actualTokenId = settings.startTokenNumberAtZero ? tokenId - 1 : tokenId;
-  
-  const name = resolveTemplate(settings.tokenNameTemplate, collectionName, actualTokenId);
-  const description = settings.tokenDescription || `${collectionName} NFT Collection`;
-  
+
+  const name = resolveTemplate(
+    settings.tokenNameTemplate,
+    collectionName,
+    actualTokenId,
+  );
+  const description =
+    settings.tokenDescription || `${collectionName} NFT Collection`;
+
   // Base image path (will be replaced with actual CID/path during export)
   const imagePath = `${actualTokenId}.png`;
 
@@ -37,20 +42,21 @@ export function buildMetadataPreview(
     image: imagePath,
     attributes: [
       {
-        trait_type: 'Layer 1',
-        value: '1.png',
+        trait_type: "Layer 1",
+        value: "1.png",
       },
     ],
   };
 
   // Format-specific fields
-  if (settings.metadataFormat === 'solana') {
-    const creators = settings.solanaCreators && settings.solanaCreators.length > 0
-      ? settings.solanaCreators.map(c => ({
-          address: c.address || 'YOUR_WALLET_ADDRESS',
-          share: c.share,
-        }))
-      : [{ address: 'YOUR_WALLET_ADDRESS', share: 100 }];
+  if (settings.metadataFormat === "solana") {
+    const creators =
+      settings.solanaCreators && settings.solanaCreators.length > 0
+        ? settings.solanaCreators.map((c) => ({
+            address: c.address || "YOUR_WALLET_ADDRESS",
+            share: c.share,
+          }))
+        : [{ address: "YOUR_WALLET_ADDRESS", share: 100 }];
 
     return {
       ...baseMetadata,
@@ -60,26 +66,28 @@ export function buildMetadataPreview(
         files: [
           {
             uri: imagePath,
-            type: 'image/png',
+            type: "image/png",
           },
         ],
-        category: 'image',
+        category: "image",
         creators,
       },
     };
   }
 
   // ERC-721 standard (Ethereum, Polygon, Base, BNB Chain)
-  if (settings.metadataFormat === 'ethereum' || 
-      settings.metadataFormat === 'polygon' || 
-      settings.metadataFormat === 'base' || 
-      settings.metadataFormat === 'bnb') {
+  if (
+    settings.metadataFormat === "ethereum" ||
+    settings.metadataFormat === "polygon" ||
+    settings.metadataFormat === "base" ||
+    settings.metadataFormat === "bnb"
+  ) {
     return {
       ...baseMetadata,
     };
   }
 
-  if (settings.metadataFormat === 'icp') {
+  if (settings.metadataFormat === "icp") {
     return {
       ...baseMetadata,
       symbol,
@@ -100,15 +108,20 @@ export function buildMetadataForNFT(
   settings: ProjectSettings,
   tokenId: number,
   attributes: Array<{ trait_type: string; value: string }>,
-  imageDirCID?: string
+  imageDirCID?: string,
 ): Record<string, unknown> {
   const actualTokenId = settings.startTokenNumberAtZero ? tokenId - 1 : tokenId;
-  
-  const name = resolveTemplate(settings.tokenNameTemplate, collectionName, actualTokenId);
-  const description = settings.tokenDescription || `${collectionName} NFT Collection`;
-  
+
+  const name = resolveTemplate(
+    settings.tokenNameTemplate,
+    collectionName,
+    actualTokenId,
+  );
+  const description =
+    settings.tokenDescription || `${collectionName} NFT Collection`;
+
   // Use IPFS URI if CID is provided, otherwise local filename
-  const imagePath = imageDirCID 
+  const imagePath = imageDirCID
     ? `ipfs://${imageDirCID}/${actualTokenId}.png`
     : `${actualTokenId}.png`;
 
@@ -119,13 +132,14 @@ export function buildMetadataForNFT(
     attributes,
   };
 
-  if (settings.metadataFormat === 'solana') {
-    const creators = settings.solanaCreators && settings.solanaCreators.length > 0
-      ? settings.solanaCreators.map(c => ({
-          address: c.address,
-          share: c.share,
-        }))
-      : [{ address: 'YOUR_WALLET_ADDRESS', share: 100 }];
+  if (settings.metadataFormat === "solana") {
+    const creators =
+      settings.solanaCreators && settings.solanaCreators.length > 0
+        ? settings.solanaCreators.map((c) => ({
+            address: c.address,
+            share: c.share,
+          }))
+        : [{ address: "YOUR_WALLET_ADDRESS", share: 100 }];
 
     return {
       ...baseMetadata,
@@ -135,26 +149,28 @@ export function buildMetadataForNFT(
         files: [
           {
             uri: imagePath,
-            type: 'image/png',
+            type: "image/png",
           },
         ],
-        category: 'image',
+        category: "image",
         creators,
       },
     };
   }
 
   // ERC-721 standard (Ethereum, Polygon, Base, BNB Chain)
-  if (settings.metadataFormat === 'ethereum' || 
-      settings.metadataFormat === 'polygon' || 
-      settings.metadataFormat === 'base' || 
-      settings.metadataFormat === 'bnb') {
+  if (
+    settings.metadataFormat === "ethereum" ||
+    settings.metadataFormat === "polygon" ||
+    settings.metadataFormat === "base" ||
+    settings.metadataFormat === "bnb"
+  ) {
     return {
       ...baseMetadata,
     };
   }
 
-  if (settings.metadataFormat === 'icp') {
+  if (settings.metadataFormat === "icp") {
     return {
       ...baseMetadata,
       symbol,

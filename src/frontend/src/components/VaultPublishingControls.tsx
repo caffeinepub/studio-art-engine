@@ -1,38 +1,53 @@
-import { useState } from 'react';
-import { Button } from '@/components/ui/button';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Lock, Unlock, Upload, Loader2, CheckCircle2, XCircle, AlertTriangle, Download } from 'lucide-react';
-import { toast } from 'sonner';
-import { useConfirmDestructive } from '@/hooks/useConfirmDestructive';
-import { uploadCollectionToIPFS } from '@/utils/ipfsPublishing';
-import { downloadFromPinata } from '@/utils/pinata';
-import HoverTooltip from './HoverTooltip';
-import type { Project } from '../App';
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Button } from "@/components/ui/button";
+import { useConfirmDestructive } from "@/hooks/useConfirmDestructive";
+import { uploadCollectionToIPFS } from "@/utils/ipfsPublishing";
+import {
+  AlertTriangle,
+  CheckCircle2,
+  Loader2,
+  Lock,
+  Unlock,
+  Upload,
+  XCircle,
+} from "lucide-react";
+import { useState } from "react";
+import { toast } from "sonner";
+import type { Project } from "../App";
+import HoverTooltip from "./HoverTooltip";
 
 interface VaultPublishingControlsProps {
   project: Project;
   onUpdateProject: (updater: (project: Project) => Project) => void;
 }
 
-export default function VaultPublishingControls({ project, onUpdateProject }: VaultPublishingControlsProps) {
-  const [isUploading, setIsUploading] = useState(false);
-  const [isDownloading, setIsDownloading] = useState(false);
+export default function VaultPublishingControls({
+  project,
+  onUpdateProject,
+}: VaultPublishingControlsProps) {
+  const [_isUploading, setIsUploading] = useState(false);
   const { confirm } = useConfirmDestructive();
 
   const hasGenerated = project.generatedNFTs.length > 0;
-  const hasValidKey = project.settings.pinataApiKey && project.settings.pinataApiKey.trim().length > 0;
+  const hasValidKey =
+    project.settings.pinataApiKey &&
+    project.settings.pinataApiKey.trim().length > 0;
   const isLocked = project.collectionLocked || false;
   const publishingState = project.ipfsPublishing;
-  const isCurrentlyUploading = publishingState?.status === 'uploading';
-  const hasUploaded = publishingState?.status === 'uploaded';
-  const hasFailed = publishingState?.status === 'upload-failed';
+  const isCurrentlyUploading = publishingState?.status === "uploading";
+  const hasUploaded = publishingState?.status === "uploaded";
+  const hasFailed = publishingState?.status === "upload-failed";
 
   // Determine what actions are available
   const canLock = hasGenerated && !isLocked && !hasUploaded;
   const canUnlock = isLocked || hasUploaded;
-  const canUpload = hasGenerated && hasValidKey && isLocked && !isCurrentlyUploading && !hasUploaded;
+  const canUpload =
+    hasGenerated &&
+    hasValidKey &&
+    isLocked &&
+    !isCurrentlyUploading &&
+    !hasUploaded;
   const canRetry = hasGenerated && hasValidKey && hasFailed;
-  const canDownload = hasUploaded && publishingState?.imageDirCID && publishingState?.metadataCID;
 
   // Handle Lock
   const handleLock = () => {
@@ -41,19 +56,19 @@ export default function VaultPublishingControls({ project, onUpdateProject }: Va
       collectionLocked: true,
       ipfsPublishing: {
         ...p.ipfsPublishing,
-        status: 'ready-to-upload',
+        status: "ready-to-upload",
       },
     }));
-    toast.success('Collection locked and ready to upload');
+    toast.success("Collection locked and ready to upload");
   };
 
   // Handle Unlock (destructive)
   const handleUnlock = async () => {
     const confirmed = await confirm({
-      title: 'Unlock collection?',
-      description: hasUploaded 
-        ? 'Unlocking will allow you to regenerate the collection, but you will need to re-upload to IPFS.'
-        : 'Unlocking will allow you to regenerate the collection. You can lock it again when ready.',
+      title: "Unlock collection?",
+      description: hasUploaded
+        ? "Unlocking will allow you to regenerate the collection, but you will need to re-upload to IPFS."
+        : "Unlocking will allow you to regenerate the collection. You can lock it again when ready.",
     });
 
     if (confirmed) {
@@ -61,21 +76,21 @@ export default function VaultPublishingControls({ project, onUpdateProject }: Va
         ...p,
         collectionLocked: false,
         ipfsPublishing: {
-          status: 'ready',
+          status: "ready",
           uploadProgress: undefined,
           errorMessage: undefined,
           imageDirCID: undefined,
           metadataCID: undefined,
         },
       }));
-      toast.success('Collection unlocked');
+      toast.success("Collection unlocked");
     }
   };
 
   // Handle Upload
   const handleUpload = async () => {
     if (!project.settings.pinataApiKey) {
-      toast.error('Pinata JWT token is required');
+      toast.error("Pinata JWT token is required");
       return;
     }
 
@@ -86,7 +101,7 @@ export default function VaultPublishingControls({ project, onUpdateProject }: Va
       ...p,
       ipfsPublishing: {
         ...p.ipfsPublishing,
-        status: 'uploading',
+        status: "uploading",
         uploadProgress: 0,
         errorMessage: undefined,
       },
@@ -104,43 +119,44 @@ export default function VaultPublishingControls({ project, onUpdateProject }: Va
             ...p,
             ipfsPublishing: {
               ...p.ipfsPublishing,
-              status: 'uploading',
+              status: "uploading",
               uploadProgress: Math.round(progress.percentage),
             },
           }));
-        }
+        },
       );
 
       if (result.success) {
         onUpdateProject((p) => ({
           ...p,
           ipfsPublishing: {
-            status: 'uploaded',
+            status: "uploaded",
             uploadProgress: 100,
             errorMessage: undefined,
             imageDirCID: result.imageDirCID,
             metadataCID: result.metadataCID,
           },
         }));
-        toast.success('Collection uploaded to IPFS successfully!');
+        toast.success("Collection uploaded to IPFS successfully!");
       } else {
         onUpdateProject((p) => ({
           ...p,
           ipfsPublishing: {
             ...p.ipfsPublishing,
-            status: 'upload-failed',
-            errorMessage: result.error || 'Upload failed',
+            status: "upload-failed",
+            errorMessage: result.error || "Upload failed",
           },
         }));
-        toast.error(result.error || 'Upload failed');
+        toast.error(result.error || "Upload failed");
       }
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Upload failed';
+      const errorMessage =
+        error instanceof Error ? error.message : "Upload failed";
       onUpdateProject((p) => ({
         ...p,
         ipfsPublishing: {
           ...p.ipfsPublishing,
-          status: 'upload-failed',
+          status: "upload-failed",
           errorMessage,
         },
       }));
@@ -150,108 +166,29 @@ export default function VaultPublishingControls({ project, onUpdateProject }: Va
     }
   };
 
-  // Handle Download
-  const handleDownload = async () => {
-    if (!publishingState?.imageDirCID || !publishingState?.metadataCID) {
-      toast.error('No uploaded files to download');
-      return;
-    }
-
-    setIsDownloading(true);
-    toast.info('Starting download...');
-
-    try {
-      const nfts = project.generatedNFTs;
-      const settings = project.settings;
-      let successCount = 0;
-      let errorCount = 0;
-
-      // Download images
-      for (let i = 0; i < nfts.length; i++) {
-        const nft = nfts[i];
-        const actualTokenId = settings.startTokenNumberAtZero ? nft.id - 1 : nft.id;
-        const filename = `${actualTokenId}.png`;
-        
-        const result = await downloadFromPinata(
-          publishingState.imageDirCID,
-          `images/${filename}`,
-          `${project.name}_${filename}`
-        );
-
-        if (result.success) {
-          successCount++;
-        } else {
-          errorCount++;
-          console.error(`Failed to download image ${filename}:`, result.error);
-        }
-
-        // Add a small delay to avoid overwhelming the browser
-        if (i < nfts.length - 1) {
-          await new Promise(resolve => setTimeout(resolve, 100));
-        }
-      }
-
-      // Download metadata files
-      for (let i = 0; i < nfts.length; i++) {
-        const nft = nfts[i];
-        const actualTokenId = settings.startTokenNumberAtZero ? nft.id - 1 : nft.id;
-        const filename = `${actualTokenId}.json`;
-        
-        const result = await downloadFromPinata(
-          publishingState.metadataCID,
-          `metadata/${filename}`,
-          `${project.name}_metadata_${filename}`
-        );
-
-        if (result.success) {
-          successCount++;
-        } else {
-          errorCount++;
-          console.error(`Failed to download metadata ${filename}:`, result.error);
-        }
-
-        // Add a small delay to avoid overwhelming the browser
-        if (i < nfts.length - 1) {
-          await new Promise(resolve => setTimeout(resolve, 100));
-        }
-      }
-
-      if (errorCount === 0) {
-        toast.success(`Successfully downloaded ${successCount} files`);
-      } else {
-        toast.warning(`Downloaded ${successCount} files with ${errorCount} errors`);
-      }
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Download failed';
-      toast.error(errorMessage);
-    } finally {
-      setIsDownloading(false);
-    }
-  };
-
   // Determine status message
   const getStatusMessage = () => {
     if (!hasGenerated) {
       return {
         icon: <AlertTriangle className="h-3.5 w-3.5 text-amber-500" />,
-        text: 'Generate your collection first',
-        color: 'text-amber-600 dark:text-amber-400',
+        text: "Generate your collection first",
+        color: "text-amber-600 dark:text-amber-400",
       };
     }
 
     if (!hasValidKey) {
       return {
         icon: <AlertTriangle className="h-3.5 w-3.5 text-amber-500" />,
-        text: 'Add your Pinata JWT token in Settings',
-        color: 'text-amber-600 dark:text-amber-400',
+        text: "Add your Pinata JWT token in Settings",
+        color: "text-amber-600 dark:text-amber-400",
       };
     }
 
     if (hasUploaded) {
       return {
         icon: <CheckCircle2 className="h-3.5 w-3.5 text-green-500" />,
-        text: `Uploaded successfully! Metadata folder CID: ${publishingState?.metadataCID || 'N/A'}`,
-        color: 'text-green-600 dark:text-green-400',
+        text: `Uploaded successfully! Metadata folder CID: ${publishingState?.metadataCID || "N/A"}`,
+        color: "text-green-600 dark:text-green-400",
       };
     }
 
@@ -259,30 +196,30 @@ export default function VaultPublishingControls({ project, onUpdateProject }: Va
       return {
         icon: <Loader2 className="h-3.5 w-3.5 animate-spin text-blue-500" />,
         text: `Uploading to IPFS... ${publishingState?.uploadProgress || 0}%`,
-        color: 'text-blue-600 dark:text-blue-400',
+        color: "text-blue-600 dark:text-blue-400",
       };
     }
 
     if (hasFailed) {
       return {
         icon: <XCircle className="h-3.5 w-3.5 text-red-500" />,
-        text: `Upload failed: ${publishingState?.errorMessage || 'Unknown error'}`,
-        color: 'text-red-600 dark:text-red-400',
+        text: `Upload failed: ${publishingState?.errorMessage || "Unknown error"}`,
+        color: "text-red-600 dark:text-red-400",
       };
     }
 
     if (isLocked) {
       return {
         icon: <CheckCircle2 className="h-3.5 w-3.5 text-green-500" />,
-        text: 'Collection locked and ready to upload',
-        color: 'text-green-600 dark:text-green-400',
+        text: "Collection locked and ready to upload",
+        color: "text-green-600 dark:text-green-400",
       };
     }
 
     return {
       icon: <AlertTriangle className="h-3.5 w-3.5 text-blue-500" />,
-      text: 'Lock your collection to enable upload',
-      color: 'text-blue-600 dark:text-blue-400',
+      text: "Lock your collection to enable upload",
+      color: "text-blue-600 dark:text-blue-400",
     };
   };
 
@@ -294,8 +231,12 @@ export default function VaultPublishingControls({ project, onUpdateProject }: Va
       <Alert className="border py-2 px-3">
         <AlertDescription>
           <div className="flex items-center gap-2">
-            {statusMessage.icon}
-            <span className={`text-xs font-medium ${statusMessage.color}`}>
+            <span className={isCurrentlyUploading ? "loading-pulse" : ""}>
+              {statusMessage.icon}
+            </span>
+            <span
+              className={`text-xs font-medium ${statusMessage.color} ${isLocked && !isCurrentlyUploading && !hasUploaded ? "loading-pulse" : ""}`}
+            >
               {statusMessage.text}
             </span>
           </div>
@@ -309,9 +250,9 @@ export default function VaultPublishingControls({ project, onUpdateProject }: Va
           <Button
             onClick={handleLock}
             disabled={!canLock}
-            variant={isLocked ? 'outline' : 'default'}
+            variant={isLocked ? "outline" : "default"}
             size="sm"
-            className="h-9 px-4 font-semibold text-xs focus-ring"
+            className="motion-button motion-press-snappy h-9 px-4 font-semibold text-xs focus-ring"
           >
             <Lock className="w-3.5 h-3.5 mr-1.5" />
             Lock
@@ -325,7 +266,7 @@ export default function VaultPublishingControls({ project, onUpdateProject }: Va
             disabled={!canUnlock}
             variant="outline"
             size="sm"
-            className="h-9 px-4 font-semibold text-xs focus-ring"
+            className="motion-button motion-press-snappy h-9 px-4 font-semibold text-xs focus-ring"
           >
             <Unlock className="w-3.5 h-3.5 mr-1.5" />
             Unlock
@@ -337,9 +278,9 @@ export default function VaultPublishingControls({ project, onUpdateProject }: Va
           <Button
             onClick={handleUpload}
             disabled={!canUpload && !canRetry}
-            variant={canUpload || canRetry ? 'default' : 'outline'}
+            variant={canUpload || canRetry ? "default" : "outline"}
             size="sm"
-            className="h-9 px-4 font-semibold text-xs focus-ring"
+            className="motion-button motion-press-snappy h-9 px-4 font-semibold text-xs focus-ring"
           >
             {isCurrentlyUploading ? (
               <>
@@ -349,36 +290,11 @@ export default function VaultPublishingControls({ project, onUpdateProject }: Va
             ) : (
               <>
                 <Upload className="w-3.5 h-3.5 mr-1.5" />
-                {canRetry ? 'Retry Upload' : 'Upload'}
+                {canRetry ? "Retry Upload" : "Upload"}
               </>
             )}
           </Button>
         </HoverTooltip>
-
-        {/* Download Button - Only visible after successful upload */}
-        {canDownload && (
-          <HoverTooltip content="Download all uploaded images and metadata from Pinata.">
-            <Button
-              onClick={handleDownload}
-              disabled={isDownloading}
-              variant="outline"
-              size="sm"
-              className="h-9 px-4 font-semibold text-xs focus-ring"
-            >
-              {isDownloading ? (
-                <>
-                  <Loader2 className="w-3.5 h-3.5 mr-1.5 animate-spin" />
-                  Downloading...
-                </>
-              ) : (
-                <>
-                  <Download className="w-3.5 h-3.5 mr-1.5" />
-                  Download
-                </>
-              )}
-            </Button>
-          </HoverTooltip>
-        )}
       </div>
     </div>
   );

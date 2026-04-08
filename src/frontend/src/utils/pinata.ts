@@ -16,42 +16,47 @@ export interface PinataUploadResult {
 /**
  * Validates a Pinata JWT (secret access token) by making a test request
  */
-export async function validatePinataKey(apiKey: string): Promise<PinataValidationResult> {
+export async function validatePinataKey(
+  apiKey: string,
+): Promise<PinataValidationResult> {
   if (!apiKey || apiKey.trim().length === 0) {
     return {
       valid: false,
-      message: 'Please enter your JWT token',
+      message: "Please enter your JWT token",
     };
   }
 
   try {
-    const response = await fetch('https://api.pinata.cloud/data/testAuthentication', {
-      method: 'GET',
-      headers: {
-        'Authorization': `Bearer ${apiKey}`,
+    const response = await fetch(
+      "https://api.pinata.cloud/data/testAuthentication",
+      {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${apiKey}`,
+        },
       },
-    });
+    );
 
     if (response.ok) {
       return {
         valid: true,
-        message: 'JWT token is valid',
-      };
-    } else if (response.status === 401) {
-      return {
-        valid: false,
-        message: 'This JWT token is not valid',
-      };
-    } else {
-      return {
-        valid: false,
-        message: 'Could not validate JWT token',
+        message: "JWT token is valid",
       };
     }
-  } catch (error) {
+    if (response.status === 401) {
+      return {
+        valid: false,
+        message: "This JWT token is not valid",
+      };
+    }
     return {
       valid: false,
-      message: 'Could not connect to Pinata',
+      message: "Could not validate JWT token",
+    };
+  } catch (_error) {
+    return {
+      valid: false,
+      message: "Could not connect to Pinata",
     };
   }
 }
@@ -62,22 +67,25 @@ export async function validatePinataKey(apiKey: string): Promise<PinataValidatio
 export async function uploadToPinata(
   apiKey: string,
   file: File | Blob,
-  filename: string
+  filename: string,
 ): Promise<PinataUploadResult> {
   try {
     const formData = new FormData();
-    formData.append('file', file, filename);
+    formData.append("file", file, filename);
 
-    const response = await fetch('https://api.pinata.cloud/pinning/pinFileToIPFS', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${apiKey}`,
+    const response = await fetch(
+      "https://api.pinata.cloud/pinning/pinFileToIPFS",
+      {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${apiKey}`,
+        },
+        body: formData,
       },
-      body: formData,
-    });
+    );
 
     if (!response.ok) {
-      const errorText = await response.text();
+      const _errorText = await response.text();
       return {
         success: false,
         error: `Upload failed: ${response.status}`,
@@ -92,7 +100,7 @@ export async function uploadToPinata(
   } catch (error) {
     return {
       success: false,
-      error: error instanceof Error ? error.message : 'Upload failed',
+      error: error instanceof Error ? error.message : "Upload failed",
     };
   }
 }
@@ -103,22 +111,25 @@ export async function uploadToPinata(
 export async function uploadJSONToPinata(
   apiKey: string,
   jsonData: any,
-  filename: string
+  filename: string,
 ): Promise<PinataUploadResult> {
   try {
-    const response = await fetch('https://api.pinata.cloud/pinning/pinJSONToIPFS', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${apiKey}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        pinataContent: jsonData,
-        pinataMetadata: {
-          name: filename,
+    const response = await fetch(
+      "https://api.pinata.cloud/pinning/pinJSONToIPFS",
+      {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${apiKey}`,
+          "Content-Type": "application/json",
         },
-      }),
-    });
+        body: JSON.stringify({
+          pinataContent: jsonData,
+          pinataMetadata: {
+            name: filename,
+          },
+        }),
+      },
+    );
 
     if (!response.ok) {
       return {
@@ -135,7 +146,7 @@ export async function uploadJSONToPinata(
   } catch (error) {
     return {
       success: false,
-      error: error instanceof Error ? error.message : 'Upload failed',
+      error: error instanceof Error ? error.message : "Upload failed",
     };
   }
 }
@@ -146,23 +157,23 @@ export async function uploadJSONToPinata(
  */
 function sanitizeFilename(filename: string): string {
   // Remove any absolute path indicators (C:\, /Users/, etc.)
-  let sanitized = filename.replace(/^[A-Za-z]:\\/, ''); // Windows absolute paths
-  sanitized = sanitized.replace(/^\/[^/]+\//, ''); // Unix-style absolute paths
-  sanitized = sanitized.replace(/^\.\//, ''); // Relative ./ prefix
-  sanitized = sanitized.replace(/^\.\.\//, ''); // Relative ../ prefix
-  
+  let sanitized = filename.replace(/^[A-Za-z]:\\/, ""); // Windows absolute paths
+  sanitized = sanitized.replace(/^\/[^/]+\//, ""); // Unix-style absolute paths
+  sanitized = sanitized.replace(/^\.\//, ""); // Relative ./ prefix
+  sanitized = sanitized.replace(/^\.\.\//, ""); // Relative ../ prefix
+
   // Normalize to forward slashes
-  sanitized = sanitized.replace(/\\/g, '/');
-  
+  sanitized = sanitized.replace(/\\/g, "/");
+
   // Extract just the basename if it still contains path separators
-  const parts = sanitized.split('/');
+  const parts = sanitized.split("/");
   return parts[parts.length - 1];
 }
 
 /**
  * Uploads multiple files as a directory to Pinata IPFS
  * Returns a single directory CID that can be used to construct ipfs://<cid>/<filename> URIs
- * 
+ *
  * @param apiKey - Pinata JWT Bearer token
  * @param files - Array of files with filenames and blobs
  * @param folderPrefix - Folder name to prefix all files with (e.g., "images", "metadata")
@@ -170,36 +181,39 @@ function sanitizeFilename(filename: string): string {
 export async function uploadDirectoryToPinata(
   apiKey: string,
   files: Array<{ filename: string; blob: Blob }>,
-  folderPrefix: string
+  folderPrefix: string,
 ): Promise<PinataUploadResult> {
   try {
     const formData = new FormData();
-    
+
     // Add all files to the form data with sanitized relative paths
-    files.forEach(({ filename, blob }) => {
+    for (const { filename, blob } of files) {
       // Sanitize the filename to remove any absolute path segments
       const sanitizedBasename = sanitizeFilename(filename);
-      
+
       // Construct the relative path with folder prefix
       const relativePath = `${folderPrefix}/${sanitizedBasename}`;
-      
+
       // Append to FormData with the relative path as the multipart filename
-      formData.append('file', blob, relativePath);
-    });
+      formData.append("file", blob, relativePath);
+    }
 
     // Add metadata to name the directory
     const metadata = JSON.stringify({
       name: `${folderPrefix}-directory`,
     });
-    formData.append('pinataMetadata', metadata);
+    formData.append("pinataMetadata", metadata);
 
-    const response = await fetch('https://api.pinata.cloud/pinning/pinFileToIPFS', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${apiKey}`,
+    const response = await fetch(
+      "https://api.pinata.cloud/pinning/pinFileToIPFS",
+      {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${apiKey}`,
+        },
+        body: formData,
       },
-      body: formData,
-    });
+    );
 
     if (!response.ok) {
       return {
@@ -216,60 +230,7 @@ export async function uploadDirectoryToPinata(
   } catch (error) {
     return {
       success: false,
-      error: error instanceof Error ? error.message : 'Directory upload failed',
-    };
-  }
-}
-
-/**
- * Downloads a file from Pinata IPFS gateway given a CID and filename
- * Triggers a browser download of the file
- * 
- * @param cid - The IPFS CID of the file or directory
- * @param filename - The filename to save as (for single files) or path within directory
- * @param saveAsFilename - Optional custom filename for the download
- */
-export async function downloadFromPinata(
-  cid: string,
-  filename: string,
-  saveAsFilename?: string
-): Promise<{ success: boolean; error?: string }> {
-  try {
-    // Construct Pinata gateway URL
-    const gatewayUrl = `https://gateway.pinata.cloud/ipfs/${cid}/${filename}`;
-    
-    // Fetch the file
-    const response = await fetch(gatewayUrl);
-    
-    if (!response.ok) {
-      return {
-        success: false,
-        error: `Download failed: ${response.status}`,
-      };
-    }
-    
-    // Get the blob
-    const blob = await response.blob();
-    
-    // Create a temporary URL for the blob
-    const blobUrl = URL.createObjectURL(blob);
-    
-    // Create a temporary anchor element and trigger download
-    const anchor = document.createElement('a');
-    anchor.href = blobUrl;
-    anchor.download = saveAsFilename || filename;
-    document.body.appendChild(anchor);
-    anchor.click();
-    
-    // Cleanup
-    document.body.removeChild(anchor);
-    URL.revokeObjectURL(blobUrl);
-    
-    return { success: true };
-  } catch (error) {
-    return {
-      success: false,
-      error: error instanceof Error ? error.message : 'Download failed',
+      error: error instanceof Error ? error.message : "Directory upload failed",
     };
   }
 }

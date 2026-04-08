@@ -1,4 +1,4 @@
-import { ReactNode, useState } from 'react';
+import { type ReactNode, useState } from "react";
 
 interface HoverTooltipProps {
   content: string;
@@ -9,7 +9,7 @@ export default function HoverTooltip({ content, children }: HoverTooltipProps) {
   const [isVisible, setIsVisible] = useState(false);
 
   return (
-    <div 
+    <div
       className="relative inline-block"
       onMouseEnter={() => setIsVisible(true)}
       onMouseLeave={() => setIsVisible(false)}
@@ -18,7 +18,7 @@ export default function HoverTooltip({ content, children }: HoverTooltipProps) {
     >
       {children}
       {isVisible && (
-        <div 
+        <div
           className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-3 py-1.5 bg-popover text-popover-foreground text-xs rounded-md shadow-lg border border-border whitespace-nowrap z-50 pointer-events-none transition-all duration-component ease-apple animate-fade-in-scale"
           role="tooltip"
         >
@@ -29,4 +29,3 @@ export default function HoverTooltip({ content, children }: HoverTooltipProps) {
     </div>
   );
 }
-

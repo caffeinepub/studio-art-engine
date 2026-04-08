@@ -5,14 +5,14 @@
  */
 
 import type {
-  WorkerInputMessage,
-  WorkerOutputMessage,
-  LayerData,
-  TraitData,
-  RuleData,
   ForgedTokenData,
   GeneratedNFTData,
-} from '../utils/vaultGeneratorProtocol';
+  LayerData,
+  RuleData,
+  TraitData,
+  WorkerInputMessage,
+  WorkerOutputMessage,
+} from "../utils/vaultGeneratorProtocol";
 
 let isCancelled = false;
 let supportsImageCompositing = false;
@@ -21,15 +21,15 @@ let supportsImageCompositing = false;
 function detectImageCompositing(): boolean {
   try {
     // Check for OffscreenCanvas support
-    if (typeof OffscreenCanvas === 'undefined') {
+    if (typeof OffscreenCanvas === "undefined") {
       return false;
     }
-    
+
     // Check for createImageBitmap support
-    if (typeof createImageBitmap === 'undefined') {
+    if (typeof createImageBitmap === "undefined") {
       return false;
     }
-    
+
     return true;
   } catch {
     return false;
@@ -40,27 +40,32 @@ function detectImageCompositing(): boolean {
 supportsImageCompositing = detectImageCompositing();
 
 // Generate deterministic DNA string from ordered layer list
-function generateDNA(traits: Record<string, string>, layers: LayerData[]): string {
-  return layers.map(layer => traits[layer.id] || '').join('-');
+function generateDNA(
+  traits: Record<string, string>,
+  layers: LayerData[],
+): string {
+  return layers.map((layer) => traits[layer.id] || "").join("-");
 }
 
 // Validate trait combination against rules
 function isValidCombination(
   traits: Record<string, string>,
-  rules: RuleData[]
+  rules: RuleData[],
 ): boolean {
   for (const rule of rules) {
-    const hasPrimary = traits[rule.primaryTrait.layerId] === rule.primaryTrait.traitId;
-    
+    const hasPrimary =
+      traits[rule.primaryTrait.layerId] === rule.primaryTrait.traitId;
+
     if (!hasPrimary) continue;
 
     for (const incompatibleTrait of rule.incompatibleTraits) {
-      const hasIncompatible = traits[incompatibleTrait.layerId] === incompatibleTrait.traitId;
-      
-      if (rule.type === 'exclude' && hasIncompatible) {
+      const hasIncompatible =
+        traits[incompatibleTrait.layerId] === incompatibleTrait.traitId;
+
+      if (rule.type === "exclude" && hasIncompatible) {
         return false;
       }
-      if (rule.type === 'force' && !hasIncompatible) {
+      if (rule.type === "force" && !hasIncompatible) {
         return false;
       }
     }
@@ -79,7 +84,7 @@ async function loadImage(dataUrl: string): Promise<ImageBitmap> {
 async function generateImage(
   traits: Record<string, string>,
   layers: LayerData[],
-  pixelArtMode: boolean
+  pixelArtMode: boolean,
 ): Promise<string | null> {
   if (!supportsImageCompositing) {
     return null;
@@ -87,7 +92,10 @@ async function generateImage(
 
   try {
     const canvas = new OffscreenCanvas(800, 800);
-    const ctx = canvas.getContext('2d', { alpha: true, willReadFrequently: false });
+    const ctx = canvas.getContext("2d", {
+      alpha: true,
+      willReadFrequently: false,
+    });
     if (!ctx) return null;
 
     if (pixelArtMode) {
@@ -107,15 +115,16 @@ async function generateImage(
 
       ctx.save();
       ctx.globalAlpha = layer.opacity / 100;
-      ctx.globalCompositeOperation = layer.blendMode as GlobalCompositeOperation;
+      ctx.globalCompositeOperation =
+        layer.blendMode as GlobalCompositeOperation;
       ctx.drawImage(img, 0, 0, 800, 800);
       ctx.restore();
     }
 
     // Convert to PNG data URL
-    const blob = await canvas.convertToBlob({ type: 'image/png' });
+    const blob = await canvas.convertToBlob({ type: "image/png" });
     const reader = new FileReader();
-    
+
     return new Promise((resolve) => {
       reader.onloadend = () => {
         resolve(reader.result as string);
@@ -123,7 +132,7 @@ async function generateImage(
       reader.readAsDataURL(blob);
     });
   } catch (error) {
-    console.error('Worker image generation error:', error);
+    console.error("Worker image generation error:", error);
     return null;
   }
 }
@@ -135,7 +144,7 @@ function createMetadata(
   layers: LayerData[],
   projectName: string,
   blockchain: string,
-  symbol: string
+  symbol: string,
 ) {
   const attributes = layers
     .filter((l) => traits[l.id])
@@ -143,7 +152,7 @@ function createMetadata(
       const trait = layer.traits.find((t) => t.id === traits[layer.id]);
       return {
         trait_type: layer.name,
-        value: trait?.name || 'Unknown',
+        value: trait?.name || "Unknown",
       };
     });
 
@@ -154,14 +163,14 @@ function createMetadata(
     attributes,
   };
 
-  if (blockchain === 'SOL') {
+  if (blockchain === "SOL") {
     return {
       ...baseMetadata,
       symbol: symbol,
       seller_fee_basis_points: 500,
       creators: [
         {
-          address: 'YOUR_WALLET_ADDRESS',
+          address: "YOUR_WALLET_ADDRESS",
           share: 100,
         },
       ],
@@ -181,15 +190,15 @@ async function generateCollection(
   blockchain: string,
   symbol: string,
   pixelArtMode: boolean,
-  batchSize: number
+  batchSize: number,
 ) {
   isCancelled = false;
 
   const validLayers = layers.filter((l) => l.traits.length > 0);
   if (validLayers.length === 0) {
     postMessage({
-      type: 'error',
-      payload: { message: 'No valid layers found' },
+      type: "error",
+      payload: { message: "No valid layers found" },
     } as WorkerOutputMessage);
     return;
   }
@@ -199,24 +208,24 @@ async function generateCollection(
   for (let i = 1; i <= collectionSize; i++) {
     allTokenNumbers.push(i);
   }
-  
+
   const shuffledNumbers = [...allTokenNumbers].sort(() => Math.random() - 0.5);
-  
+
   const forgedNFTs: GeneratedNFTData[] = forgedTokens.map((token, index) => {
     const newTokenNumber = shuffledNumbers[index];
-    
+
     const metadata = {
       name: `${projectName} #${newTokenNumber}`,
       description: `${projectName} - Custom 1-of-1`,
       image: `${newTokenNumber}.png`,
-      attributes: [{ trait_type: 'Type', value: '1-of-1' }],
+      attributes: [{ trait_type: "Type", value: "1-of-1" }],
     };
 
-    if (blockchain === 'SOL') {
+    if (blockchain === "SOL") {
       Object.assign(metadata, {
         symbol: symbol,
         seller_fee_basis_points: 500,
-        creators: [{ address: 'YOUR_WALLET_ADDRESS', share: 100 }],
+        creators: [{ address: "YOUR_WALLET_ADDRESS", share: 100 }],
       });
     }
 
@@ -233,7 +242,7 @@ async function generateCollection(
   // Send forged tokens as first batch
   if (forgedNFTs.length > 0) {
     postMessage({
-      type: 'batch',
+      type: "batch",
       payload: {
         nfts: forgedNFTs,
         supportsImageCompositing,
@@ -241,7 +250,7 @@ async function generateCollection(
     } as WorkerOutputMessage);
 
     postMessage({
-      type: 'progress',
+      type: "progress",
       payload: {
         generatedCount: forgedNFTs.length,
         totalCount: collectionSize,
@@ -250,9 +259,11 @@ async function generateCollection(
     } as WorkerOutputMessage);
   }
 
-  const usedTokenNumbers = new Set(forgedNFTs.map(t => t.id));
-  const availableNumbers: number[] = shuffledNumbers.filter(num => !usedTokenNumbers.has(num));
-  const usedDNAs = new Set<string>(forgedNFTs.map(t => t.dna));
+  const usedTokenNumbers = new Set(forgedNFTs.map((t) => t.id));
+  const availableNumbers: number[] = shuffledNumbers.filter(
+    (num) => !usedTokenNumbers.has(num),
+  );
+  const usedDNAs = new Set<string>(forgedNFTs.map((t) => t.dna));
 
   let attempts = 0;
   const maxAttempts = collectionSize * 100;
@@ -260,11 +271,15 @@ async function generateCollection(
   let currentBatch: GeneratedNFTData[] = [];
   let totalGenerated = forgedNFTs.length;
 
-  while (totalGenerated < collectionSize && attempts < maxAttempts && availableIndex < availableNumbers.length) {
+  while (
+    totalGenerated < collectionSize &&
+    attempts < maxAttempts &&
+    availableIndex < availableNumbers.length
+  ) {
     // Check for cancellation
     if (isCancelled) {
       postMessage({
-        type: 'cancelAck',
+        type: "cancelAck",
       } as WorkerOutputMessage);
       return;
     }
@@ -296,9 +311,20 @@ async function generateCollection(
       availableIndex++;
 
       // Try to generate image in worker
-      const imageData = await generateImage(selectedTraits, layers, pixelArtMode);
-      
-      const metadata = createMetadata(tokenNumber, selectedTraits, layers, projectName, blockchain, symbol);
+      const imageData = await generateImage(
+        selectedTraits,
+        layers,
+        pixelArtMode,
+      );
+
+      const metadata = createMetadata(
+        tokenNumber,
+        selectedTraits,
+        layers,
+        projectName,
+        blockchain,
+        symbol,
+      );
 
       const nft: GeneratedNFTData = {
         id: tokenNumber,
@@ -314,7 +340,7 @@ async function generateCollection(
 
       // Send progress update
       postMessage({
-        type: 'progress',
+        type: "progress",
         payload: {
           generatedCount: totalGenerated,
           totalCount: collectionSize,
@@ -325,24 +351,24 @@ async function generateCollection(
       // Send batch when full
       if (currentBatch.length >= batchSize) {
         postMessage({
-          type: 'batch',
+          type: "batch",
           payload: {
             nfts: currentBatch,
             supportsImageCompositing,
           },
         } as WorkerOutputMessage);
-        
+
         currentBatch = [];
       }
     } catch (error) {
-      console.error('Error generating NFT in worker:', error);
+      console.error("Error generating NFT in worker:", error);
     }
   }
 
   // Send final batch if any remaining
   if (currentBatch.length > 0) {
     postMessage({
-      type: 'batch',
+      type: "batch",
       payload: {
         nfts: currentBatch,
         supportsImageCompositing,
@@ -352,7 +378,7 @@ async function generateCollection(
 
   // Send completion message
   postMessage({
-    type: 'complete',
+    type: "complete",
     payload: {
       totalGenerated,
     },
@@ -363,17 +389,27 @@ async function generateCollection(
 self.onmessage = async (event: MessageEvent<WorkerInputMessage>) => {
   const message = event.data;
 
-  if (message.type === 'start') {
+  if (message.type === "start") {
     // Send capability info first
     postMessage({
-      type: 'capability',
+      type: "capability",
       payload: {
         supportsImageCompositing,
       },
     } as WorkerOutputMessage);
 
-    const { layers, rules, forgedTokens, collectionSize, projectName, blockchain, symbol, pixelArtMode, batchSize } = message.payload;
-    
+    const {
+      layers,
+      rules,
+      forgedTokens,
+      collectionSize,
+      projectName,
+      blockchain,
+      symbol,
+      pixelArtMode,
+      batchSize,
+    } = message.payload;
+
     await generateCollection(
       layers,
       rules,
@@ -383,9 +419,9 @@ self.onmessage = async (event: MessageEvent<WorkerInputMessage>) => {
       blockchain,
       symbol,
       pixelArtMode,
-      batchSize
+      batchSize,
     );
-  } else if (message.type === 'cancel') {
+  } else if (message.type === "cancel") {
     isCancelled = true;
   }
 };

@@ -8,10 +8,10 @@
   },
   "scripts": {
     "build": "pnpm -r --if-present run build",
-    "prebuild": "pnpm -r --if-present run prebuild",
-    "pretest": "pnpm -r --if-present run prebuild",
-    "start": "pnpm -r --if-present run start",
-    "test": "pnpm -r --if-present run test"
+    "typecheck": "pnpm -r --if-present run typecheck",
+    "check": "pnpm -r --if-present run check",
+    "fix": "pnpm -r --if-present run fix",
+    "bindgen": "caffeine-bindgen --did-file ./src/backend/dist/backend.did --out-dir ./src/frontend/src --actor-interface-file --force"
   },
   "devDependencies": {
     "sharp": "^0.34.4"

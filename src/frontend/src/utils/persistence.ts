@@ -1,7 +1,7 @@
 // Centralized persistence utility for single canonical snapshot with last-write-wins
 // No temp keys, no backups, no history - just one overwrite per save
 
-const STORAGE_KEY = 'studioArtEngine_projects';
+const STORAGE_KEY = "studioArtEngine_projects";
 const LEGACY_TEMP_KEY = `${STORAGE_KEY}_temp`;
 const LEGACY_BACKUP_PREFIX = `${STORAGE_KEY}_backup_`;
 
@@ -16,13 +16,14 @@ export interface SaveResult {
 export function atomicSave(data: any): SaveResult {
   try {
     const serialized = JSON.stringify(data);
-    
+
     // Single overwrite to canonical key
     localStorage.setItem(STORAGE_KEY, serialized);
-    
+
     return { success: true };
   } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    const errorMessage =
+      error instanceof Error ? error.message : "Unknown error";
     return { success: false, error: errorMessage };
   }
 }
@@ -36,7 +37,7 @@ export function loadCanonical(): any | null {
     if (!stored) return null;
     return JSON.parse(stored);
   } catch (error) {
-    console.error('Error loading canonical snapshot:', error);
+    console.error("Error loading canonical snapshot:", error);
     return null;
   }
 }
@@ -58,14 +59,14 @@ export function cleanupLegacyArtifacts(): { removed: number; errors: number } {
       }
     } catch (err) {
       errors++;
-      console.warn('Failed to remove legacy temp key:', err);
+      console.warn("Failed to remove legacy temp key:", err);
     }
 
     // Remove all legacy backup keys
     const keysToRemove: string[] = [];
     for (let i = 0; i < localStorage.length; i++) {
       const key = localStorage.key(i);
-      if (key && key.startsWith(LEGACY_BACKUP_PREFIX)) {
+      if (key?.startsWith(LEGACY_BACKUP_PREFIX)) {
         keysToRemove.push(key);
       }
     }
@@ -81,7 +82,7 @@ export function cleanupLegacyArtifacts(): { removed: number; errors: number } {
     }
   } catch (error) {
     errors++;
-    console.error('Error during legacy artifact cleanup:', error);
+    console.error("Error during legacy artifact cleanup:", error);
   }
 
   return { removed, errors };
@@ -94,7 +95,7 @@ export function getStorageSize(data: any): number {
   try {
     const serialized = JSON.stringify(data);
     return new Blob([serialized]).size;
-  } catch (error) {
+  } catch (_error) {
     return 0;
   }
 }

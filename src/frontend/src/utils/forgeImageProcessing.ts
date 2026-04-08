@@ -15,18 +15,18 @@ export interface ProcessImageOptions {
  */
 export async function processForgeImage(
   imageDataUrl: string,
-  options: ProcessImageOptions
+  options: ProcessImageOptions,
 ): Promise<string> {
   return new Promise((resolve, reject) => {
     const img = new Image();
-    
+
     img.onload = () => {
       try {
-        const canvas = document.createElement('canvas');
-        const ctx = canvas.getContext('2d');
-        
+        const canvas = document.createElement("canvas");
+        const ctx = canvas.getContext("2d");
+
         if (!ctx) {
-          reject(new Error('Failed to get canvas context'));
+          reject(new Error("Failed to get canvas context"));
           return;
         }
 
@@ -42,7 +42,7 @@ export async function processForgeImage(
         // Calculate scale and crop to fit square (cover strategy)
         const scale = Math.max(
           canvas.width / img.width,
-          canvas.height / img.height
+          canvas.height / img.height,
         );
 
         const scaledWidth = img.width * scale;
@@ -61,11 +61,11 @@ export async function processForgeImage(
           offsetX,
           offsetY,
           scaledWidth,
-          scaledHeight
+          scaledHeight,
         );
 
         // Convert to PNG data URL
-        const processedDataUrl = canvas.toDataURL('image/png');
+        const processedDataUrl = canvas.toDataURL("image/png");
         resolve(processedDataUrl);
       } catch (error) {
         reject(error);
@@ -73,7 +73,7 @@ export async function processForgeImage(
     };
 
     img.onerror = () => {
-      reject(new Error('Failed to load image'));
+      reject(new Error("Failed to load image"));
     };
 
     img.src = imageDataUrl;

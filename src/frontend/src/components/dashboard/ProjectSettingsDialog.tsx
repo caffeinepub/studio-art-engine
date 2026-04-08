@@ -1,11 +1,18 @@
-import { useState, useEffect } from 'react';
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Switch } from '@/components/ui/switch';
-import { Button } from '@/components/ui/button';
-import { toast } from 'sonner';
-import type { Project } from '../../App';
+import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
+import { useEffect, useState } from "react";
+import { toast } from "sonner";
+import type { Project } from "../../App";
 
 interface ProjectSettingsDialogProps {
   open: boolean;
@@ -19,10 +26,15 @@ interface ProjectSettingsDialogProps {
   }) => void;
 }
 
-export default function ProjectSettingsDialog({ open, onOpenChange, project, onSave }: ProjectSettingsDialogProps) {
-  const [name, setName] = useState('');
-  const [symbol, setSymbol] = useState('');
-  const [collectionSize, setCollectionSize] = useState('');
+export default function ProjectSettingsDialog({
+  open,
+  onOpenChange,
+  project,
+  onSave,
+}: ProjectSettingsDialogProps) {
+  const [name, setName] = useState("");
+  const [symbol, setSymbol] = useState("");
+  const [collectionSize, setCollectionSize] = useState("");
   const [pixelArtMode, setPixelArtMode] = useState(false);
 
   useEffect(() => {
@@ -37,9 +49,9 @@ export default function ProjectSettingsDialog({ open, onOpenChange, project, onS
   const handleSave = () => {
     if (!name || !symbol || !collectionSize) return;
 
-    const newTokenCount = parseInt(collectionSize);
-    if (isNaN(newTokenCount) || newTokenCount < 1) {
-      toast.error('Invalid token count');
+    const newTokenCount = Number.parseInt(collectionSize);
+    if (Number.isNaN(newTokenCount) || newTokenCount < 1) {
+      toast.error("Invalid token count");
       return;
     }
 
@@ -55,15 +67,22 @@ export default function ProjectSettingsDialog({ open, onOpenChange, project, onS
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="bg-card border border-border max-w-xl rounded-2xl">
         <DialogHeader>
-          <DialogTitle className="text-xl font-semibold text-foreground">Project settings</DialogTitle>
+          <DialogTitle className="text-xl font-semibold text-foreground">
+            Project settings
+          </DialogTitle>
           <DialogDescription className="text-muted-foreground text-sm">
             Update your project configuration
           </DialogDescription>
         </DialogHeader>
-        
+
         <div className="space-y-5 py-4">
           <div className="space-y-2">
-            <Label htmlFor="edit-name" className="text-foreground font-medium text-sm">Name</Label>
+            <Label
+              htmlFor="edit-name"
+              className="text-foreground font-medium text-sm"
+            >
+              Name
+            </Label>
             <Input
               id="edit-name"
               value={name}
@@ -72,9 +91,14 @@ export default function ProjectSettingsDialog({ open, onOpenChange, project, onS
               className="bg-background border border-border focus:border-primary h-11 rounded-lg transition-all duration-component ease-apple"
             />
           </div>
-          
+
           <div className="space-y-2">
-            <Label htmlFor="edit-symbol" className="text-foreground font-medium text-sm">Symbol</Label>
+            <Label
+              htmlFor="edit-symbol"
+              className="text-foreground font-medium text-sm"
+            >
+              Symbol
+            </Label>
             <Input
               id="edit-symbol"
               value={symbol}
@@ -85,7 +109,12 @@ export default function ProjectSettingsDialog({ open, onOpenChange, project, onS
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="edit-token-count" className="text-foreground font-medium text-sm">Collection size</Label>
+            <Label
+              htmlFor="edit-token-count"
+              className="text-foreground font-medium text-sm"
+            >
+              Collection size
+            </Label>
             <Input
               id="edit-token-count"
               type="number"
@@ -96,9 +125,14 @@ export default function ProjectSettingsDialog({ open, onOpenChange, project, onS
               className="bg-background border border-border focus:border-primary h-11 rounded-lg transition-all duration-component ease-apple"
             />
           </div>
-          
+
           <div className="flex items-center justify-between p-4 bg-muted/30 border border-border rounded-xl transition-all duration-hover ease-apple hover:bg-muted/40">
-            <Label htmlFor="edit-pixel" className="text-foreground font-medium text-sm">Pixel art mode</Label>
+            <Label
+              htmlFor="edit-pixel"
+              className="text-foreground font-medium text-sm"
+            >
+              Pixel art mode
+            </Label>
             <Switch
               id="edit-pixel"
               checked={pixelArtMode}
@@ -107,7 +141,7 @@ export default function ProjectSettingsDialog({ open, onOpenChange, project, onS
             />
           </div>
         </div>
-        
+
         <DialogFooter>
           <Button
             onClick={handleSave}
@@ -120,4 +154,3 @@ export default function ProjectSettingsDialog({ open, onOpenChange, project, onS
     </Dialog>
   );
 }
-

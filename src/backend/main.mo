@@ -1,7 +1,7 @@
-import MixinStorage "blob-storage/Mixin";
+import MixinObjectStorage "mo:caffeineai-object-storage/Mixin";
 
 actor {
-  include MixinStorage();
+  include MixinObjectStorage();
 
   public type RenderOrderRule = {
     timeLeft : Nat; // milliseconds before auto-removal

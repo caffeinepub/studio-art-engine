@@ -1,21 +1,24 @@
-import { useState, useMemo, useCallback, useEffect } from 'react';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
-import { Label } from '@/components/ui/label';
-import { Slider } from '@/components/ui/slider';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import { toast } from 'sonner';
-import { Lock, Unlock, Shuffle, Equal } from 'lucide-react';
-import type { Project, Trait } from '../App';
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { Label } from "@/components/ui/label";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Slider } from "@/components/ui/slider";
+import { Equal, Lock, Shuffle, Unlock } from "lucide-react";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { toast } from "sonner";
+import type { Project, Trait } from "../App";
 
 interface RarityWorkshopProps {
   project: Project;
   onUpdateProject: (updater: (project: Project) => Project) => void;
 }
 
-export default function RarityWorkshop({ project, onUpdateProject }: RarityWorkshopProps) {
+export default function RarityWorkshop({
+  project,
+  onUpdateProject,
+}: RarityWorkshopProps) {
   const [selectedLayerId, setSelectedLayerId] = useState<string | null>(
-    project.layers.length > 0 ? project.layers[0].id : null
+    project.layers.length > 0 ? project.layers[0].id : null,
   );
 
   const selectedLayer = project.layers.find((l) => l.id === selectedLayerId);
@@ -24,12 +27,17 @@ export default function RarityWorkshop({ project, onUpdateProject }: RarityWorks
   useEffect(() => {
     if (!selectedLayer || selectedLayer.traits.length === 0) return;
 
-    const hasUninitializedWeights = selectedLayer.traits.some(t => 
-      typeof t.weight !== 'number' || isNaN(t.weight) || t.weight < 0
+    const hasUninitializedWeights = selectedLayer.traits.some(
+      (t) =>
+        typeof t.weight !== "number" || Number.isNaN(t.weight) || t.weight < 0,
     );
 
-    const totalWeight = selectedLayer.traits.reduce((sum, t) => sum + (t.weight || 0), 0);
-    const needsInitialization = hasUninitializedWeights || Math.abs(totalWeight) < 0.01;
+    const totalWeight = selectedLayer.traits.reduce(
+      (sum, t) => sum + (t.weight || 0),
+      0,
+    );
+    const needsInitialization =
+      hasUninitializedWeights || Math.abs(totalWeight) < 0.01;
 
     if (needsInitialization) {
       const equalWeight = 100 / selectedLayer.traits.length;
@@ -41,9 +49,12 @@ export default function RarityWorkshop({ project, onUpdateProject }: RarityWorks
             ...l,
             traits: l.traits.map((t, i) => ({
               ...t,
-              weight: i === 0 
-                ? parseFloat((100 - equalWeight * (l.traits.length - 1)).toFixed(2))
-                : parseFloat(equalWeight.toFixed(2)),
+              weight:
+                i === 0
+                  ? Number.parseFloat(
+                      (100 - equalWeight * (l.traits.length - 1)).toFixed(2),
+                    )
+                  : Number.parseFloat(equalWeight.toFixed(2)),
               locked: false,
             })),
           };
@@ -55,25 +66,29 @@ export default function RarityWorkshop({ project, onUpdateProject }: RarityWorks
   // Normalize weights to ensure they sum to 100.00
   const normalizeWeights = useCallback((traits: Trait[]): Trait[] => {
     if (traits.length === 0) return traits;
-    
+
     // Filter out invalid weights
-    const validTraits = traits.map(t => ({
+    const validTraits = traits.map((t) => ({
       ...t,
-      weight: typeof t.weight === 'number' && !isNaN(t.weight) && t.weight >= 0 
-        ? t.weight 
-        : 0,
+      weight:
+        typeof t.weight === "number" && !Number.isNaN(t.weight) && t.weight >= 0
+          ? t.weight
+          : 0,
     }));
 
     const total = validTraits.reduce((sum, t) => sum + t.weight, 0);
-    
+
     // If total is zero, distribute equally
     if (total === 0) {
       const equalWeight = 100 / validTraits.length;
       return validTraits.map((t, i) => ({
         ...t,
-        weight: i === 0
-          ? parseFloat((100 - equalWeight * (validTraits.length - 1)).toFixed(2))
-          : parseFloat(equalWeight.toFixed(2)),
+        weight:
+          i === 0
+            ? Number.parseFloat(
+                (100 - equalWeight * (validTraits.length - 1)).toFixed(2),
+              )
+            : Number.parseFloat(equalWeight.toFixed(2)),
       }));
     }
 
@@ -81,16 +96,16 @@ export default function RarityWorkshop({ project, onUpdateProject }: RarityWorks
 
     const normalized = validTraits.map((t) => ({
       ...t,
-      weight: parseFloat(((t.weight / total) * 100).toFixed(2)),
+      weight: Number.parseFloat(((t.weight / total) * 100).toFixed(2)),
     }));
 
     // Adjust rounding errors
     const newTotal = normalized.reduce((sum, t) => sum + t.weight, 0);
     if (Math.abs(newTotal - 100) > 0.01) {
-      const diff = parseFloat((100 - newTotal).toFixed(2));
+      const diff = Number.parseFloat((100 - newTotal).toFixed(2));
       normalized[0] = {
         ...normalized[0],
-        weight: parseFloat((normalized[0].weight + diff).toFixed(2)),
+        weight: Number.parseFloat((normalized[0].weight + diff).toFixed(2)),
       };
     }
 
@@ -101,12 +116,12 @@ export default function RarityWorkshop({ project, onUpdateProject }: RarityWorks
   const updateTraitWeight = useCallback(
     (layerId: string, traitId: string, newWeight: number) => {
       // Validate input
-      if (typeof newWeight !== 'number' || isNaN(newWeight)) {
-        toast.error('INVALID WEIGHT VALUE');
+      if (typeof newWeight !== "number" || Number.isNaN(newWeight)) {
+        toast.error("INVALID WEIGHT VALUE");
         return;
       }
 
-      newWeight = Math.max(0, Math.min(100, newWeight));
+      const clampedWeight = Math.max(0, Math.min(100, newWeight));
 
       onUpdateProject((p) => ({
         ...p,
@@ -118,29 +133,37 @@ export default function RarityWorkshop({ project, onUpdateProject }: RarityWorks
           if (targetIndex === -1) return l;
 
           const oldWeight = traits[targetIndex].weight || 0;
-          const delta = newWeight - oldWeight;
+          const delta = clampedWeight - oldWeight;
 
           // If delta is negligible, skip update
           if (Math.abs(delta) < 0.01) return l;
 
           // Update target trait
-          traits[targetIndex] = { ...traits[targetIndex], weight: parseFloat(newWeight.toFixed(2)) };
+          traits[targetIndex] = {
+            ...traits[targetIndex],
+            weight: Number.parseFloat(clampedWeight.toFixed(2)),
+          };
 
           // Get unlocked traits (excluding target)
-          const unlockedTraits = traits.filter((t, i) => i !== targetIndex && !t.locked);
-          
+          const unlockedTraits = traits.filter(
+            (t, i) => i !== targetIndex && !t.locked,
+          );
+
           if (unlockedTraits.length === 0) {
             // If all other traits are locked, revert
             traits[targetIndex] = { ...traits[targetIndex], weight: oldWeight };
-            toast.error('CANNOT ADJUST: ALL OTHER TRAITS LOCKED');
+            toast.error("CANNOT ADJUST: ALL OTHER TRAITS LOCKED");
             return l;
           }
 
-          const totalUnlockedWeight = unlockedTraits.reduce((sum, t) => sum + (t.weight || 0), 0);
+          const totalUnlockedWeight = unlockedTraits.reduce(
+            (sum, t) => sum + (t.weight || 0),
+            0,
+          );
 
           if (totalUnlockedWeight <= 0.01) {
             traits[targetIndex] = { ...traits[targetIndex], weight: oldWeight };
-            toast.error('CANNOT ADJUST: INSUFFICIENT UNLOCKED WEIGHT');
+            toast.error("CANNOT ADJUST: INSUFFICIENT UNLOCKED WEIGHT");
             return l;
           }
 
@@ -149,19 +172,22 @@ export default function RarityWorkshop({ project, onUpdateProject }: RarityWorks
           unlockedTraits.forEach((trait, i) => {
             const traitIndex = traits.findIndex((t) => t.id === trait.id);
             const proportion = (trait.weight || 0) / totalUnlockedWeight;
-            
+
             let adjustment: number;
             if (i === unlockedTraits.length - 1) {
               // Last trait gets remaining delta to ensure exact 100%
               adjustment = remainingDelta;
             } else {
-              adjustment = parseFloat((proportion * -delta).toFixed(2));
+              adjustment = Number.parseFloat((proportion * -delta).toFixed(2));
             }
 
-            const newTraitWeight = Math.max(0, Math.min(100, (trait.weight || 0) + adjustment));
+            const newTraitWeight = Math.max(
+              0,
+              Math.min(100, (trait.weight || 0) + adjustment),
+            );
             traits[traitIndex] = {
               ...traits[traitIndex],
-              weight: parseFloat(newTraitWeight.toFixed(2)),
+              weight: Number.parseFloat(newTraitWeight.toFixed(2)),
             };
             remainingDelta -= adjustment;
           });
@@ -171,7 +197,7 @@ export default function RarityWorkshop({ project, onUpdateProject }: RarityWorks
         }),
       }));
     },
-    [onUpdateProject, normalizeWeights]
+    [onUpdateProject, normalizeWeights],
   );
 
   // Toggle lock state
@@ -184,13 +210,13 @@ export default function RarityWorkshop({ project, onUpdateProject }: RarityWorks
           return {
             ...l,
             traits: l.traits.map((t) =>
-              t.id === traitId ? { ...t, locked: !t.locked } : t
+              t.id === traitId ? { ...t, locked: !t.locked } : t,
             ),
           };
         }),
       }));
     },
-    [onUpdateProject]
+    [onUpdateProject],
   );
 
   // Equalize all weights
@@ -200,18 +226,25 @@ export default function RarityWorkshop({ project, onUpdateProject }: RarityWorks
         ...p,
         layers: p.layers.map((l) => {
           if (l.id !== layerId) return l;
-          const equalWeight = parseFloat((100 / l.traits.length).toFixed(2));
+          const equalWeight = Number.parseFloat(
+            (100 / l.traits.length).toFixed(2),
+          );
           const traits = l.traits.map((t, i) => ({
             ...t,
-            weight: i === 0 ? parseFloat((100 - equalWeight * (l.traits.length - 1)).toFixed(2)) : equalWeight,
+            weight:
+              i === 0
+                ? Number.parseFloat(
+                    (100 - equalWeight * (l.traits.length - 1)).toFixed(2),
+                  )
+                : equalWeight,
             locked: false,
           }));
           return { ...l, traits: normalizeWeights(traits) };
         }),
       }));
-      toast.success('WEIGHTS EQUALIZED');
+      toast.success("WEIGHTS EQUALIZED");
     },
-    [onUpdateProject, normalizeWeights]
+    [onUpdateProject, normalizeWeights],
   );
 
   // Randomize distribution
@@ -221,36 +254,38 @@ export default function RarityWorkshop({ project, onUpdateProject }: RarityWorks
         ...p,
         layers: p.layers.map((l) => {
           if (l.id !== layerId) return l;
-          
+
           const randomWeights = l.traits.map(() => Math.random() + 0.1); // Ensure minimum weight
           const total = randomWeights.reduce((sum, w) => sum + w, 0);
-          
+
           const traits = l.traits.map((t, i) => ({
             ...t,
-            weight: parseFloat(((randomWeights[i] / total) * 100).toFixed(2)),
+            weight: Number.parseFloat(
+              ((randomWeights[i] / total) * 100).toFixed(2),
+            ),
             locked: false,
           }));
-          
+
           return { ...l, traits: normalizeWeights(traits) };
         }),
       }));
-      toast.success('WEIGHTS RANDOMIZED');
+      toast.success("WEIGHTS RANDOMIZED");
     },
-    [onUpdateProject, normalizeWeights]
+    [onUpdateProject, normalizeWeights],
   );
 
   // Calculate expected count for a trait
   const calculateExpectedCount = useCallback(
     (weight: number): number => {
-      if (typeof weight !== 'number' || isNaN(weight)) return 0;
+      if (typeof weight !== "number" || Number.isNaN(weight)) return 0;
       return Math.round((weight / 100) * project.collectionSize);
     },
-    [project.collectionSize]
+    [project.collectionSize],
   );
 
   // Check if trait is rare (<1%)
   const isRare = useCallback((weight: number): boolean => {
-    return typeof weight === 'number' && !isNaN(weight) && weight < 1;
+    return typeof weight === "number" && !Number.isNaN(weight) && weight < 1;
   }, []);
 
   const totalWeight = useMemo(() => {
@@ -285,7 +320,8 @@ export default function RarityWorkshop({ project, onUpdateProject }: RarityWorks
             LAYER SELECTION
           </h2>
           <div className="text-xs text-muted-foreground font-bold">
-            {project.layers.length} Layer{project.layers.length !== 1 ? 's' : ''}
+            {project.layers.length} Layer
+            {project.layers.length !== 1 ? "s" : ""}
           </div>
         </div>
 
@@ -293,19 +329,21 @@ export default function RarityWorkshop({ project, onUpdateProject }: RarityWorks
           <div className="p-3 space-y-2">
             {project.layers.map((layer) => (
               <button
+                type="button"
                 key={layer.id}
                 onClick={() => setSelectedLayerId(layer.id)}
                 className={`w-full p-3 border-2 transition-all text-left ${
                   selectedLayerId === layer.id
-                    ? 'bg-muted border-primary sharp-shadow'
-                    : 'bg-card border-border hover:border-muted-foreground'
+                    ? "bg-muted border-primary sharp-shadow"
+                    : "bg-card border-border hover:border-muted-foreground"
                 }`}
               >
                 <div className="font-black text-xs text-foreground truncate uppercase tracking-tight">
                   {layer.name}
                 </div>
                 <div className="text-xs text-muted-foreground font-bold mt-1">
-                  {layer.traits.length} Trait{layer.traits.length !== 1 ? 's' : ''}
+                  {layer.traits.length} Trait
+                  {layer.traits.length !== 1 ? "s" : ""}
                 </div>
               </button>
             ))}
@@ -318,13 +356,17 @@ export default function RarityWorkshop({ project, onUpdateProject }: RarityWorks
         {!selectedLayer ? (
           <div className="h-full flex items-center justify-center text-muted-foreground">
             <div className="text-center">
-              <p className="text-sm font-black tracking-tight uppercase">SELECT A LAYER</p>
+              <p className="text-sm font-black tracking-tight uppercase">
+                SELECT A LAYER
+              </p>
             </div>
           </div>
         ) : selectedLayer.traits.length === 0 ? (
           <div className="h-full flex items-center justify-center text-muted-foreground">
             <div className="text-center">
-              <p className="text-sm font-black tracking-tight uppercase">NO TRAITS IN LAYER</p>
+              <p className="text-sm font-black tracking-tight uppercase">
+                NO TRAITS IN LAYER
+              </p>
               <p className="text-xs text-muted-foreground mt-2 font-bold">
                 Add traits in the Workshop first
               </p>
@@ -341,7 +383,8 @@ export default function RarityWorkshop({ project, onUpdateProject }: RarityWorks
                       {selectedLayer.name}
                     </h2>
                     <p className="text-sm text-muted-foreground font-bold mt-1">
-                      {selectedLayer.traits.length} Traits • Total: {totalWeight.toFixed(2)}%
+                      {selectedLayer.traits.length} Traits • Total:{" "}
+                      {totalWeight.toFixed(2)}%
                     </p>
                   </div>
                   <div className="flex items-center gap-2">
@@ -369,7 +412,8 @@ export default function RarityWorkshop({ project, onUpdateProject }: RarityWorks
                 {/* Total Weight Warning */}
                 {Math.abs(totalWeight - 100) > 0.01 && (
                   <div className="p-3 bg-destructive/10 border-2 border-destructive text-destructive text-sm font-bold">
-                    ⚠ TOTAL WEIGHT: {totalWeight.toFixed(2)}% (Should be 100.00%)
+                    ⚠ TOTAL WEIGHT: {totalWeight.toFixed(2)}% (Should be
+                    100.00%)
                   </div>
                 )}
               </div>
@@ -385,8 +429,8 @@ export default function RarityWorkshop({ project, onUpdateProject }: RarityWorks
                       key={trait.id}
                       className={`bg-card border-2 transition-all ${
                         rare
-                          ? 'border-yellow-500 animate-pulse-subtle'
-                          : 'border-border'
+                          ? "border-yellow-500 animate-pulse-subtle"
+                          : "border-border"
                       }`}
                     >
                       <CardContent className="p-4">
@@ -394,7 +438,7 @@ export default function RarityWorkshop({ project, onUpdateProject }: RarityWorks
                           {/* Thumbnail */}
                           <div
                             className={`w-20 h-20 bg-muted border-2 flex-shrink-0 overflow-hidden ${
-                              rare ? 'border-yellow-500' : 'border-border'
+                              rare ? "border-yellow-500" : "border-border"
                             }`}
                           >
                             <img
@@ -402,7 +446,9 @@ export default function RarityWorkshop({ project, onUpdateProject }: RarityWorks
                               alt={trait.name}
                               className="w-full h-full object-contain"
                               style={{
-                                imageRendering: project.pixelArtMode ? 'pixelated' : 'auto',
+                                imageRendering: project.pixelArtMode
+                                  ? "pixelated"
+                                  : "auto",
                               }}
                             />
                           </div>
@@ -415,17 +461,21 @@ export default function RarityWorkshop({ project, onUpdateProject }: RarityWorks
                                   {trait.name}
                                 </div>
                                 <div className="text-xs text-muted-foreground font-bold mt-1">
-                                  Expected: {expectedCount} / {project.collectionSize} items
+                                  Expected: {expectedCount} /{" "}
+                                  {project.collectionSize} items
                                 </div>
                               </div>
 
                               {/* Lock Toggle */}
                               <button
-                                onClick={() => toggleLock(selectedLayer.id, trait.id)}
+                                type="button"
+                                onClick={() =>
+                                  toggleLock(selectedLayer.id, trait.id)
+                                }
                                 className={`flex items-center gap-1 px-2 py-1 border-2 transition-all ${
                                   trait.locked
-                                    ? 'bg-primary text-primary-foreground border-primary'
-                                    : 'bg-background text-muted-foreground border-border hover:border-muted-foreground'
+                                    ? "bg-primary text-primary-foreground border-primary"
+                                    : "bg-background text-muted-foreground border-border hover:border-muted-foreground"
                                 }`}
                               >
                                 {trait.locked ? (
@@ -434,7 +484,7 @@ export default function RarityWorkshop({ project, onUpdateProject }: RarityWorks
                                   <Unlock className="w-3 h-3" />
                                 )}
                                 <span className="text-xs font-black uppercase">
-                                  {trait.locked ? 'LOCKED' : 'LOCK'}
+                                  {trait.locked ? "LOCKED" : "LOCK"}
                                 </span>
                               </button>
                             </div>
@@ -446,7 +496,7 @@ export default function RarityWorkshop({ project, onUpdateProject }: RarityWorks
                               </Label>
                               <span
                                 className={`text-sm font-black transition-all ${
-                                  rare ? 'text-yellow-500' : 'text-foreground'
+                                  rare ? "text-yellow-500" : "text-foreground"
                                 }`}
                               >
                                 {(trait.weight || 0).toFixed(2)}%
@@ -458,7 +508,11 @@ export default function RarityWorkshop({ project, onUpdateProject }: RarityWorks
                               <Slider
                                 value={[trait.weight || 0]}
                                 onValueChange={([value]) =>
-                                  updateTraitWeight(selectedLayer.id, trait.id, value)
+                                  updateTraitWeight(
+                                    selectedLayer.id,
+                                    trait.id,
+                                    value,
+                                  )
                                 }
                                 min={0}
                                 max={100}
@@ -469,11 +523,12 @@ export default function RarityWorkshop({ project, onUpdateProject }: RarityWorks
                               <div
                                 className="absolute inset-0 pointer-events-none rounded-full"
                                 style={{
-                                  background: 'linear-gradient(to right, #7c3aed 0%, #0d9488 100%)',
+                                  background:
+                                    "linear-gradient(to right, #7c3aed 0%, #0d9488 100%)",
                                   opacity: 0.2,
-                                  height: '8px',
-                                  top: '50%',
-                                  transform: 'translateY(-50%)',
+                                  height: "8px",
+                                  top: "50%",
+                                  transform: "translateY(-50%)",
                                 }}
                               />
                             </div>

@@ -1,12 +1,12 @@
-import { uploadDirectoryToPinata } from './pinata';
-import type { GeneratedNFT, ProjectSettings } from '../App';
-import { buildMetadataForNFT } from './metadataPresets';
+import type { GeneratedNFT, ProjectSettings } from "../App";
+import { buildMetadataForNFT } from "./metadataPresets";
+import { uploadDirectoryToPinata } from "./pinata";
 
 export interface IPFSUploadProgress {
   current: number;
   total: number;
   percentage: number;
-  stage: 'images' | 'metadata';
+  stage: "images" | "metadata";
 }
 
 export interface IPFSUploadResult {
@@ -29,39 +29,43 @@ export async function uploadCollectionToIPFS(
   projectName: string,
   symbol: string,
   settings: ProjectSettings,
-  onProgress?: (progress: IPFSUploadProgress) => void
+  onProgress?: (progress: IPFSUploadProgress) => void,
 ): Promise<IPFSUploadResult> {
   try {
     // Stage 1: Prepare all images for directory upload
     const imageFiles: Array<{ filename: string; blob: Blob }> = [];
-    
+
     for (let i = 0; i < nfts.length; i++) {
       const nft = nfts[i];
-      
+
       if (onProgress) {
         onProgress({
           current: i + 1,
           total: nfts.length,
           percentage: ((i + 1) / nfts.length) * 30, // First 30% for preparing images
-          stage: 'images',
+          stage: "images",
         });
       }
 
       // Validate that imageData is a PNG data URL (processed images should be PNG)
-      if (!nft.imageData.startsWith('data:image/png')) {
-        console.warn(`NFT #${nft.id} imageData is not a PNG data URL, may be unprocessed`);
+      if (!nft.imageData.startsWith("data:image/png")) {
+        console.warn(
+          `NFT #${nft.id} imageData is not a PNG data URL, may be unprocessed`,
+        );
       }
 
       // Convert base64 to blob
-      const base64Data = nft.imageData.split(',')[1];
+      const base64Data = nft.imageData.split(",")[1];
       const binaryString = atob(base64Data);
       const bytes = new Uint8Array(binaryString.length);
       for (let j = 0; j < binaryString.length; j++) {
         bytes[j] = binaryString.charCodeAt(j);
       }
-      const imageBlob = new Blob([bytes], { type: 'image/png' });
+      const imageBlob = new Blob([bytes], { type: "image/png" });
 
-      const actualTokenId = settings.startTokenNumberAtZero ? nft.id - 1 : nft.id;
+      const actualTokenId = settings.startTokenNumberAtZero
+        ? nft.id - 1
+        : nft.id;
       imageFiles.push({
         filename: `${actualTokenId}.png`,
         blob: imageBlob,
@@ -74,16 +78,20 @@ export async function uploadCollectionToIPFS(
         current: nfts.length,
         total: nfts.length,
         percentage: 40, // 40% for uploading images directory
-        stage: 'images',
+        stage: "images",
       });
     }
 
-    const imageDirResult = await uploadDirectoryToPinata(apiKey, imageFiles, 'images');
+    const imageDirResult = await uploadDirectoryToPinata(
+      apiKey,
+      imageFiles,
+      "images",
+    );
 
     if (!imageDirResult.success || !imageDirResult.cid) {
       return {
         success: false,
-        error: imageDirResult.error || 'Image directory upload failed',
+        error: imageDirResult.error || "Image directory upload failed",
       };
     }
 
@@ -94,18 +102,21 @@ export async function uploadCollectionToIPFS(
 
     for (let i = 0; i < nfts.length; i++) {
       const nft = nfts[i];
-      
+
       if (onProgress) {
         onProgress({
           current: i + 1,
           total: nfts.length,
           percentage: 40 + ((i + 1) / nfts.length) * 30, // 30% for preparing metadata
-          stage: 'metadata',
+          stage: "metadata",
         });
       }
 
-      const attributes = nft.metadata.attributes as Array<{ trait_type: string; value: string }>;
-      
+      const attributes = nft.metadata.attributes as Array<{
+        trait_type: string;
+        value: string;
+      }>;
+
       // Build metadata with IPFS image URI
       const metadata = buildMetadataForNFT(
         projectName,
@@ -113,12 +124,16 @@ export async function uploadCollectionToIPFS(
         settings,
         nft.id,
         attributes,
-        imageDirCID // Pass CID to generate ipfs:// URIs
+        imageDirCID, // Pass CID to generate ipfs:// URIs
       );
 
-      const actualTokenId = settings.startTokenNumberAtZero ? nft.id - 1 : nft.id;
-      const metadataBlob = new Blob([JSON.stringify(metadata, null, 2)], { type: 'application/json' });
-      
+      const actualTokenId = settings.startTokenNumberAtZero
+        ? nft.id - 1
+        : nft.id;
+      const metadataBlob = new Blob([JSON.stringify(metadata, null, 2)], {
+        type: "application/json",
+      });
+
       metadataFiles.push({
         filename: `${actualTokenId}.json`,
         blob: metadataBlob,
@@ -131,16 +146,20 @@ export async function uploadCollectionToIPFS(
         current: nfts.length,
         total: nfts.length,
         percentage: 80, // 80% for uploading metadata directory
-        stage: 'metadata',
+        stage: "metadata",
       });
     }
 
-    const metadataDirResult = await uploadDirectoryToPinata(apiKey, metadataFiles, 'metadata');
+    const metadataDirResult = await uploadDirectoryToPinata(
+      apiKey,
+      metadataFiles,
+      "metadata",
+    );
 
     if (!metadataDirResult.success || !metadataDirResult.cid) {
       return {
         success: false,
-        error: metadataDirResult.error || 'Metadata directory upload failed',
+        error: metadataDirResult.error || "Metadata directory upload failed",
       };
     }
 
@@ -149,7 +168,7 @@ export async function uploadCollectionToIPFS(
         current: nfts.length,
         total: nfts.length,
         percentage: 100,
-        stage: 'metadata',
+        stage: "metadata",
       });
     }
 
@@ -161,7 +180,7 @@ export async function uploadCollectionToIPFS(
   } catch (error) {
     return {
       success: false,
-      error: error instanceof Error ? error.message : 'Upload failed',
+      error: error instanceof Error ? error.message : "Upload failed",
     };
   }
 }

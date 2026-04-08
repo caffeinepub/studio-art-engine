@@ -1,10 +1,10 @@
-import { useState, useMemo } from 'react';
-import { Button } from '@/components/ui/button';
-import { Dialog, DialogContent } from '@/components/ui/dialog';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import { toast } from 'sonner';
-import { X, Copy } from 'lucide-react';
-import type { Project, Rule } from '../App';
+import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Copy, X } from "lucide-react";
+import { useMemo, useState } from "react";
+import { toast } from "sonner";
+import type { Project, Rule } from "../App";
 
 interface RulesProps {
   project: Project;
@@ -15,17 +15,22 @@ export default function Rules({ project, onUpdateProject }: RulesProps) {
   const [isAddRuleOpen, setIsAddRuleOpen] = useState(false);
   const [isEditMode, setIsEditMode] = useState(false);
   const [editingRuleId, setEditingRuleId] = useState<string | null>(null);
-  const [ruleType, setRuleType] = useState<'exclude' | 'force'>('exclude');
-  const [primaryTrait, setPrimaryTrait] = useState<{ layerId: string; traitId: string } | null>(null);
-  const [selectedIncompatibleTraits, setSelectedIncompatibleTraits] = useState<Set<string>>(new Set());
+  const [ruleType, setRuleType] = useState<"exclude" | "force">("exclude");
+  const [primaryTrait, setPrimaryTrait] = useState<{
+    layerId: string;
+    traitId: string;
+  } | null>(null);
+  const [selectedIncompatibleTraits, setSelectedIncompatibleTraits] = useState<
+    Set<string>
+  >(new Set());
 
   const validLayers = useMemo(
     () => project.layers.filter((l) => l.traits.length > 0),
-    [project.layers]
+    [project.layers],
   );
 
   const resetForm = () => {
-    setRuleType('exclude');
+    setRuleType("exclude");
     setPrimaryTrait(null);
     setSelectedIncompatibleTraits(new Set());
     setIsEditMode(false);
@@ -41,12 +46,15 @@ export default function Rules({ project, onUpdateProject }: RulesProps) {
     setIsEditMode(true);
     setEditingRuleId(rule.id);
     setRuleType(rule.type);
-    setPrimaryTrait({ layerId: rule.primaryTrait.layerId, traitId: rule.primaryTrait.traitId });
-    
-    const incompatibleSet = new Set<string>();
-    rule.incompatibleTraits.forEach(trait => {
-      incompatibleSet.add(`${trait.layerId}:${trait.traitId}`);
+    setPrimaryTrait({
+      layerId: rule.primaryTrait.layerId,
+      traitId: rule.primaryTrait.traitId,
     });
+
+    const incompatibleSet = new Set<string>();
+    for (const trait of rule.incompatibleTraits) {
+      incompatibleSet.add(`${trait.layerId}:${trait.traitId}`);
+    }
     setSelectedIncompatibleTraits(incompatibleSet);
     setIsAddRuleOpen(true);
   };
@@ -56,56 +64,66 @@ export default function Rules({ project, onUpdateProject }: RulesProps) {
       id: Date.now().toString(),
       type: rule.type,
       primaryTrait: { ...rule.primaryTrait },
-      incompatibleTraits: rule.incompatibleTraits.map(t => ({ ...t })),
+      incompatibleTraits: rule.incompatibleTraits.map((t) => ({ ...t })),
     };
 
     onUpdateProject((p) => ({
       ...p,
       rules: [...p.rules, newRule],
     }));
-    toast.success('RULE DUPLICATED');
+    toast.success("RULE DUPLICATED");
   };
 
   const addOrUpdateRule = () => {
     if (!primaryTrait || selectedIncompatibleTraits.size === 0) {
-      toast.error('SELECT PRIMARY AND INCOMPATIBLE TRAITS');
+      toast.error("SELECT PRIMARY AND INCOMPATIBLE TRAITS");
       return;
     }
 
-    const incompatibleTraits = Array.from(selectedIncompatibleTraits).map(key => {
-      const [layerId, traitId] = key.split(':');
-      return { layerId, traitId };
-    });
+    const incompatibleTraits = Array.from(selectedIncompatibleTraits).map(
+      (key) => {
+        const [layerId, traitId] = key.split(":");
+        return { layerId, traitId };
+      },
+    );
 
     const hasSelfReference = incompatibleTraits.some(
-      trait => trait.layerId === primaryTrait.layerId && trait.traitId === primaryTrait.traitId
+      (trait) =>
+        trait.layerId === primaryTrait.layerId &&
+        trait.traitId === primaryTrait.traitId,
     );
 
     if (hasSelfReference) {
-      toast.error('CANNOT USE SAME TRAIT');
+      toast.error("CANNOT USE SAME TRAIT");
       return;
     }
 
     if (isEditMode && editingRuleId) {
       onUpdateProject((p) => ({
         ...p,
-        rules: p.rules.map(r => 
-          r.id === editingRuleId 
+        rules: p.rules.map((r) =>
+          r.id === editingRuleId
             ? {
                 ...r,
                 type: ruleType,
-                primaryTrait: { layerId: primaryTrait.layerId, traitId: primaryTrait.traitId },
+                primaryTrait: {
+                  layerId: primaryTrait.layerId,
+                  traitId: primaryTrait.traitId,
+                },
                 incompatibleTraits,
               }
-            : r
+            : r,
         ),
       }));
-      toast.success('RULE UPDATED');
+      toast.success("RULE UPDATED");
     } else {
       const newRule: Rule = {
         id: Date.now().toString(),
         type: ruleType,
-        primaryTrait: { layerId: primaryTrait.layerId, traitId: primaryTrait.traitId },
+        primaryTrait: {
+          layerId: primaryTrait.layerId,
+          traitId: primaryTrait.traitId,
+        },
         incompatibleTraits,
       };
 
@@ -113,7 +131,7 @@ export default function Rules({ project, onUpdateProject }: RulesProps) {
         ...p,
         rules: [...p.rules, newRule],
       }));
-      toast.success('RULE ADDED');
+      toast.success("RULE ADDED");
     }
 
     setIsAddRuleOpen(false);
@@ -125,19 +143,29 @@ export default function Rules({ project, onUpdateProject }: RulesProps) {
       ...p,
       rules: p.rules.filter((r) => r.id !== ruleId),
     }));
-    toast.success('RULE DELETED');
+    toast.success("RULE DELETED");
   };
 
-  const getTraitInfo = (layerId: string, traitId: string): { name: string; imageData: string; layerName: string } | null => {
+  const getTraitInfo = (
+    layerId: string,
+    traitId: string,
+  ): { name: string; imageData: string; layerName: string } | null => {
     const layer = project.layers.find((l) => l.id === layerId);
     if (!layer) return null;
     const trait = layer.traits.find((t) => t.id === traitId);
     if (!trait) return null;
-    return { name: trait.name, imageData: trait.imageData, layerName: layer.name };
+    return {
+      name: trait.name,
+      imageData: trait.imageData,
+      layerName: layer.name,
+    };
   };
 
   const togglePrimaryTrait = (layerId: string, traitId: string) => {
-    if (primaryTrait?.layerId === layerId && primaryTrait?.traitId === traitId) {
+    if (
+      primaryTrait?.layerId === layerId &&
+      primaryTrait?.traitId === traitId
+    ) {
       setPrimaryTrait(null);
     } else {
       setPrimaryTrait({ layerId, traitId });
@@ -159,9 +187,9 @@ export default function Rules({ project, onUpdateProject }: RulesProps) {
   };
 
   const getPrimaryTraitDisplay = () => {
-    if (!primaryTrait) return 'SELECT A TRAIT';
+    if (!primaryTrait) return "SELECT A TRAIT";
     const info = getTraitInfo(primaryTrait.layerId, primaryTrait.traitId);
-    return info ? info.name.toUpperCase() : 'UNKNOWN';
+    return info ? info.name.toUpperCase() : "UNKNOWN";
   };
 
   return (
@@ -179,7 +207,8 @@ export default function Rules({ project, onUpdateProject }: RulesProps) {
                   <span className="text-2xl">🚫</span>
                 </div>
                 <p className="text-sm text-muted-foreground">
-                  Make sure items look good together. E.g. don't wear a hat with a helmet!
+                  Make sure items look good together. E.g. don't wear a hat with
+                  a helmet!
                 </p>
               </div>
               <Button
@@ -207,8 +236,11 @@ export default function Rules({ project, onUpdateProject }: RulesProps) {
             ) : (
               <div className="space-y-4">
                 {project.rules.map((rule) => {
-                  const primaryInfo = getTraitInfo(rule.primaryTrait.layerId, rule.primaryTrait.traitId);
-                  
+                  const primaryInfo = getTraitInfo(
+                    rule.primaryTrait.layerId,
+                    rule.primaryTrait.traitId,
+                  );
+
                   return (
                     <div
                       key={rule.id}
@@ -218,10 +250,10 @@ export default function Rules({ project, onUpdateProject }: RulesProps) {
                         {/* Left: Category Label and Trait Name */}
                         <div className="flex-1 min-w-0">
                           <div className="text-xs text-muted-foreground font-bold uppercase tracking-wider mb-2">
-                            {primaryInfo?.layerName || 'UNKNOWN'}
+                            {primaryInfo?.layerName || "UNKNOWN"}
                           </div>
                           <div className="text-2xl font-black text-foreground uppercase tracking-tight">
-                            {primaryInfo?.name || 'UNKNOWN TRAIT'}
+                            {primaryInfo?.name || "UNKNOWN TRAIT"}
                           </div>
                         </div>
 
@@ -229,26 +261,33 @@ export default function Rules({ project, onUpdateProject }: RulesProps) {
                         <div className="flex items-center gap-4 flex-shrink-0">
                           {/* Trait Image Gallery */}
                           <div className="flex items-center gap-2">
-                            {rule.incompatibleTraits.slice(0, 4).map((trait, idx) => {
-                              const traitInfo = getTraitInfo(trait.layerId, trait.traitId);
-                              if (!traitInfo) return null;
-                              
-                              return (
-                                <div
-                                  key={idx}
-                                  className="w-12 h-12 bg-background border border-border rounded overflow-hidden"
-                                >
-                                  <img
-                                    src={traitInfo.imageData}
-                                    alt={traitInfo.name}
-                                    className="w-full h-full object-contain"
-                                    style={{
-                                      imageRendering: project.pixelArtMode ? 'pixelated' : 'auto',
-                                    }}
-                                  />
-                                </div>
-                              );
-                            })}
+                            {rule.incompatibleTraits
+                              .slice(0, 4)
+                              .map((trait) => {
+                                const traitInfo = getTraitInfo(
+                                  trait.layerId,
+                                  trait.traitId,
+                                );
+                                if (!traitInfo) return null;
+
+                                return (
+                                  <div
+                                    key={`${trait.layerId}-${trait.traitId}`}
+                                    className="w-12 h-12 bg-background border border-border rounded overflow-hidden"
+                                  >
+                                    <img
+                                      src={traitInfo.imageData}
+                                      alt={traitInfo.name}
+                                      className="w-full h-full object-contain"
+                                      style={{
+                                        imageRendering: project.pixelArtMode
+                                          ? "pixelated"
+                                          : "auto",
+                                      }}
+                                    />
+                                  </div>
+                                );
+                              })}
                             {rule.incompatibleTraits.length > 4 && (
                               <div className="w-12 h-12 bg-background border border-border rounded flex items-center justify-center">
                                 <span className="text-xs font-black text-muted-foreground">
@@ -260,18 +299,22 @@ export default function Rules({ project, onUpdateProject }: RulesProps) {
 
                           {/* Status Button */}
                           <button
+                            type="button"
                             className={`px-5 py-2.5 rounded-lg font-black text-xs uppercase tracking-tight transition-all ${
-                              rule.type === 'exclude'
-                                ? 'bg-red-500/20 text-red-400 border border-red-500/50 hover:bg-red-500/30'
-                                : 'bg-teal-500/20 text-teal-400 border border-teal-500/50 hover:bg-teal-500/30'
+                              rule.type === "exclude"
+                                ? "bg-red-500/20 text-red-400 border border-red-500/50 hover:bg-red-500/30"
+                                : "bg-teal-500/20 text-teal-400 border border-teal-500/50 hover:bg-teal-500/30"
                             }`}
                           >
-                            {rule.type === 'exclude' ? "CAN'T WEAR" : 'MUST WEAR'}
+                            {rule.type === "exclude"
+                              ? "CAN'T WEAR"
+                              : "MUST WEAR"}
                           </button>
 
                           {/* Edit/Duplicate/Delete Actions */}
                           <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                             <button
+                              type="button"
                               onClick={() => duplicateRule(rule)}
                               className="w-8 h-8 flex items-center justify-center text-primary hover:bg-primary/10 rounded transition-colors"
                               title="Duplicate rule"
@@ -279,6 +322,7 @@ export default function Rules({ project, onUpdateProject }: RulesProps) {
                               <Copy className="w-4 h-4" />
                             </button>
                             <button
+                              type="button"
                               onClick={() => openEditRuleModal(rule)}
                               className="w-8 h-8 flex items-center justify-center text-primary hover:bg-primary/10 rounded transition-colors"
                               title="Edit rule"
@@ -286,6 +330,7 @@ export default function Rules({ project, onUpdateProject }: RulesProps) {
                               <span className="text-base font-black">✎</span>
                             </button>
                             <button
+                              type="button"
                               onClick={() => deleteRule(rule.id)}
                               className="w-8 h-8 flex items-center justify-center text-destructive hover:bg-destructive/10 rounded transition-colors"
                               title="Delete rule"
@@ -305,43 +350,49 @@ export default function Rules({ project, onUpdateProject }: RulesProps) {
       </div>
 
       {/* Add/Edit Rule Modal */}
-      <Dialog open={isAddRuleOpen} onOpenChange={(open) => {
-        setIsAddRuleOpen(open);
-        if (!open) resetForm();
-      }}>
+      <Dialog
+        open={isAddRuleOpen}
+        onOpenChange={(open) => {
+          setIsAddRuleOpen(open);
+          if (!open) resetForm();
+        }}
+      >
         <DialogContent className="bg-[#1a1a1a] border-2 border-border w-[900px] max-w-[90vw] h-[700px] max-h-[85vh] p-0 flex flex-col overflow-hidden">
           {/* Header with Rule Type Toggle and Close */}
           <div className="shrink-0 px-8 pt-6 pb-4 border-b border-border/50">
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-lg font-black text-foreground uppercase tracking-tight">
-                {isEditMode ? 'EDIT RULE' : 'SET A RULE'}
+                {isEditMode ? "EDIT RULE" : "SET A RULE"}
               </h3>
               <button
+                type="button"
                 onClick={() => setIsAddRuleOpen(false)}
                 className="text-muted-foreground hover:text-foreground transition-colors"
               >
                 <X className="w-5 h-5" />
               </button>
             </div>
-            
+
             {/* Rule Type Toggle */}
             <div className="flex gap-3">
               <button
-                onClick={() => setRuleType('exclude')}
+                type="button"
+                onClick={() => setRuleType("exclude")}
                 className={`flex-1 px-6 py-2.5 rounded-full font-black text-sm uppercase tracking-tight transition-all ${
-                  ruleType === 'exclude'
-                    ? 'bg-destructive text-destructive-foreground shadow-[0_0_20px_rgba(239,68,68,0.5)]'
-                    : 'bg-muted text-muted-foreground hover:bg-muted/80'
+                  ruleType === "exclude"
+                    ? "bg-destructive text-destructive-foreground shadow-[0_0_20px_rgba(239,68,68,0.5)]"
+                    : "bg-muted text-muted-foreground hover:bg-muted/80"
                 }`}
               >
                 DON'T MATCH
               </button>
               <button
-                onClick={() => setRuleType('force')}
+                type="button"
+                onClick={() => setRuleType("force")}
                 className={`flex-1 px-6 py-2.5 rounded-full font-black text-sm uppercase tracking-tight transition-all ${
-                  ruleType === 'force'
-                    ? 'bg-primary text-primary-foreground shadow-[0_0_20px_rgba(139,92,246,0.5)]'
-                    : 'bg-muted text-muted-foreground hover:bg-muted/80'
+                  ruleType === "force"
+                    ? "bg-primary text-primary-foreground shadow-[0_0_20px_rgba(139,92,246,0.5)]"
+                    : "bg-muted text-muted-foreground hover:bg-muted/80"
                 }`}
               >
                 MUST MATCH
@@ -361,7 +412,7 @@ export default function Rules({ project, onUpdateProject }: RulesProps) {
                   {getPrimaryTraitDisplay()}
                 </div>
               </div>
-              
+
               <ScrollArea className="flex-1 min-h-0">
                 <div className="p-6 space-y-6">
                   {validLayers.map((layer) => (
@@ -371,16 +422,21 @@ export default function Rules({ project, onUpdateProject }: RulesProps) {
                       </div>
                       <div className="grid grid-cols-4 gap-3">
                         {layer.traits.map((trait) => {
-                          const isSelected = primaryTrait?.layerId === layer.id && primaryTrait?.traitId === trait.id;
-                          
+                          const isSelected =
+                            primaryTrait?.layerId === layer.id &&
+                            primaryTrait?.traitId === trait.id;
+
                           return (
                             <button
+                              type="button"
                               key={trait.id}
-                              onClick={() => togglePrimaryTrait(layer.id, trait.id)}
+                              onClick={() =>
+                                togglePrimaryTrait(layer.id, trait.id)
+                              }
                               className={`aspect-square bg-background border-2 overflow-hidden transition-all duration-200 ease-in-out group/trait ${
                                 isSelected
-                                  ? 'border-primary shadow-[0_0_15px_rgba(139,92,246,0.4)]'
-                                  : 'border-border hover:border-primary/50 hover:shadow-[0_0_12px_rgba(139,92,246,0.25)]'
+                                  ? "border-primary shadow-[0_0_15px_rgba(139,92,246,0.4)]"
+                                  : "border-border hover:border-primary/50 hover:shadow-[0_0_12px_rgba(139,92,246,0.25)]"
                               }`}
                             >
                               <div className="w-full h-full flex items-center justify-center overflow-hidden">
@@ -389,7 +445,9 @@ export default function Rules({ project, onUpdateProject }: RulesProps) {
                                   alt={trait.name}
                                   className="w-full h-full object-contain transition-transform duration-200 ease-in-out group-hover/trait:scale-110"
                                   style={{
-                                    imageRendering: project.pixelArtMode ? 'pixelated' : 'auto',
+                                    imageRendering: project.pixelArtMode
+                                      ? "pixelated"
+                                      : "auto",
                                   }}
                                 />
                               </div>
@@ -407,36 +465,43 @@ export default function Rules({ project, onUpdateProject }: RulesProps) {
             <div className="flex flex-col min-h-0">
               <div className="shrink-0 px-6 py-4 border-b border-border/50">
                 <div className="text-xs text-muted-foreground font-bold uppercase tracking-tight mb-1">
-                  {ruleType === 'exclude' ? "I CAN'T WEAR..." : 'I MUST WEAR...'}
+                  {ruleType === "exclude"
+                    ? "I CAN'T WEAR..."
+                    : "I MUST WEAR..."}
                 </div>
                 <div className="text-base font-black text-foreground uppercase tracking-tight">
                   {selectedIncompatibleTraits.size} STYLES
                 </div>
               </div>
-              
+
               <ScrollArea className="flex-1 min-h-0">
                 <div className="p-6 space-y-6">
                   {validLayers.map((layer) => {
                     const isDimmed = isTraitDimmed(layer.id);
-                    
+
                     return (
-                      <div key={layer.id} className={isDimmed ? 'opacity-40' : ''}>
+                      <div
+                        key={layer.id}
+                        className={isDimmed ? "opacity-40" : ""}
+                      >
                         <div className="text-xs font-bold text-muted-foreground uppercase tracking-tight mb-3">
                           {layer.name}
                         </div>
                         <div className="grid grid-cols-4 gap-3">
                           {layer.traits.map((trait) => {
                             const key = `${layer.id}:${trait.id}`;
-                            const isSelected = selectedIncompatibleTraits.has(key);
-                            
+                            const isSelected =
+                              selectedIncompatibleTraits.has(key);
+
                             return (
                               <button
+                                type="button"
                                 key={trait.id}
                                 onClick={() => toggleIncompatibleTrait(key)}
                                 className={`aspect-square bg-background border-2 overflow-hidden transition-all duration-200 ease-in-out group/trait ${
                                   isSelected
-                                    ? 'border-primary shadow-[0_0_15px_rgba(139,92,246,0.4)]'
-                                    : 'border-border hover:border-primary/50 hover:shadow-[0_0_12px_rgba(139,92,246,0.25)]'
+                                    ? "border-primary shadow-[0_0_15px_rgba(139,92,246,0.4)]"
+                                    : "border-border hover:border-primary/50 hover:shadow-[0_0_12px_rgba(139,92,246,0.25)]"
                                 }`}
                               >
                                 <div className="w-full h-full flex items-center justify-center overflow-hidden">
@@ -445,7 +510,9 @@ export default function Rules({ project, onUpdateProject }: RulesProps) {
                                     alt={trait.name}
                                     className="w-full h-full object-contain transition-transform duration-200 ease-in-out group-hover/trait:scale-110"
                                     style={{
-                                      imageRendering: project.pixelArtMode ? 'pixelated' : 'auto',
+                                      imageRendering: project.pixelArtMode
+                                        ? "pixelated"
+                                        : "auto",
                                     }}
                                   />
                                 </div>
@@ -464,6 +531,7 @@ export default function Rules({ project, onUpdateProject }: RulesProps) {
           {/* Footer with Action Buttons */}
           <div className="shrink-0 px-8 py-5 border-t border-border/50 flex items-center justify-between">
             <button
+              type="button"
               onClick={() => setIsAddRuleOpen(false)}
               className="text-sm text-muted-foreground hover:text-foreground font-bold uppercase tracking-tight transition-colors"
             >

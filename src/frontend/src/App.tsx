@@ -1,23 +1,34 @@
-import { useState, useEffect, useCallback, lazy, Suspense } from 'react';
-import { Toaster } from '@/components/ui/sonner';
-import Dashboard from './pages/Dashboard';
-import Header from './components/Header';
-import Footer from './components/Footer';
-import ConfirmDestructiveDialog from './components/ConfirmDestructiveDialog';
-import { toast } from 'sonner';
-import { atomicSave, loadCanonical, cleanupLegacyArtifacts, isStorageNearQuota } from './utils/persistence';
+import { Toaster } from "@/components/ui/sonner";
+import { Suspense, lazy, useCallback, useEffect, useState } from "react";
+import { toast } from "sonner";
+import ConfirmDestructiveDialog from "./components/ConfirmDestructiveDialog";
+import Footer from "./components/Footer";
+import Header from "./components/Header";
+import Dashboard from "./pages/Dashboard";
+import {
+  atomicSave,
+  cleanupLegacyArtifacts,
+  isStorageNearQuota,
+  loadCanonical,
+} from "./utils/persistence";
 
 // Lazy load non-critical views
-const Workshop = lazy(() => import('./pages/Workshop'));
-const RarityWorkshop = lazy(() => import('./pages/RarityWorkshop'));
-const Rules = lazy(() => import('./pages/Rules'));
-const Preview = lazy(() => import('./pages/Preview'));
-const Builder = lazy(() => import('./pages/Builder'));
-const Vault = lazy(() => import('./pages/Vault'));
-const Settings = lazy(() => import('./pages/Settings'));
+const Workshop = lazy(() => import("./pages/Workshop"));
+const RarityWorkshop = lazy(() => import("./pages/RarityWorkshop"));
+const Rules = lazy(() => import("./pages/Rules"));
+const Preview = lazy(() => import("./pages/Preview"));
+const Builder = lazy(() => import("./pages/Builder"));
+const Vault = lazy(() => import("./pages/Vault"));
+const Settings = lazy(() => import("./pages/Settings"));
 
-export type Blockchain = 'ICP' | 'ETH' | 'SOL' | 'POLYGON' | 'BNB' | 'BASE';
-export type MetadataFormat = 'solana' | 'ethereum' | 'polygon' | 'bnb' | 'base' | 'icp';
+export type Blockchain = "ICP" | "ETH" | "SOL" | "POLYGON" | "BNB" | "BASE";
+export type MetadataFormat =
+  | "solana"
+  | "ethereum"
+  | "polygon"
+  | "bnb"
+  | "base"
+  | "icp";
 
 export interface Trait {
   id: string;
@@ -32,12 +43,12 @@ export interface Layer {
   name: string;
   traits: Trait[];
   opacity: number;
-  blendMode: 'normal' | 'multiply' | 'overlay';
+  blendMode: "normal" | "multiply" | "overlay";
 }
 
 export interface Rule {
   id: string;
-  type: 'exclude' | 'force';
+  type: "exclude" | "force";
   primaryTrait: { layerId: string; traitId: string };
   incompatibleTraits: { layerId: string; traitId: string }[];
 }
@@ -45,7 +56,7 @@ export interface Rule {
 export interface CustomToken {
   id: string;
   name: string;
-  type: 'genesis' | 'direct';
+  type: "genesis" | "direct";
   traits?: { layerId: string; traitId: string }[];
   imageData?: string;
   tokenNumber?: number;
@@ -60,13 +71,13 @@ export interface GeneratedNFT {
   forgedTokenId?: string;
 }
 
-export type IPFSPublishingStatus = 
-  | 'not-ready'
-  | 'ready'
-  | 'ready-to-upload'
-  | 'uploading'
-  | 'uploaded'
-  | 'upload-failed';
+export type IPFSPublishingStatus =
+  | "not-ready"
+  | "ready"
+  | "ready-to-upload"
+  | "uploading"
+  | "uploaded"
+  | "upload-failed";
 
 export interface IPFSPublishingState {
   status: IPFSPublishingStatus;
@@ -110,134 +121,245 @@ export interface Project {
   ipfsPublishing?: IPFSPublishingState;
 }
 
-type View = 'dashboard' | 'workshop' | 'rarity' | 'rules' | 'preview' | 'builder' | 'vault' | 'settings';
-type SaveStatus = 'idle' | 'saving' | 'saved' | 'failed';
+type View =
+  | "dashboard"
+  | "workshop"
+  | "rarity"
+  | "rules"
+  | "preview"
+  | "builder"
+  | "vault"
+  | "settings";
+type SaveStatus = "idle" | "saving" | "saved" | "failed";
 
 function getDefaultSettings(blockchain: Blockchain): ProjectSettings {
   const metadataFormatMap: Record<Blockchain, MetadataFormat> = {
-    SOL: 'solana',
-    ETH: 'ethereum',
-    POLYGON: 'polygon',
-    BNB: 'bnb',
-    BASE: 'base',
-    ICP: 'icp',
+    SOL: "solana",
+    ETH: "ethereum",
+    POLYGON: "polygon",
+    BNB: "bnb",
+    BASE: "base",
+    ICP: "icp",
   };
 
   return {
     outputSize: 800,
     metadataFormat: metadataFormatMap[blockchain],
-    tokenNameTemplate: '{{collection}} #{{id}}',
-    tokenDescription: '',
+    tokenNameTemplate: "{{collection}} #{{id}}",
+    tokenDescription: "",
     startTokenNumberAtZero: false,
     royaltiesPercent: 5,
-    pinataApiKey: '',
-    solanaCreators: blockchain === 'SOL' ? [{ address: '', share: 100 }] : undefined,
+    pinataApiKey: "",
+    solanaCreators:
+      blockchain === "SOL" ? [{ address: "", share: 100 }] : undefined,
   };
 }
 
 function validateProject(project: any): project is Project {
-  if (!project || typeof project !== 'object') return false;
-  if (typeof project.id !== 'string' || !project.id) return false;
-  if (typeof project.name !== 'string' || !project.name) return false;
-  if (typeof project.symbol !== 'string') return false;
-  if (!['ICP', 'ETH', 'SOL', 'POLYGON', 'BNB', 'BASE'].includes(project.blockchain)) return false;
-  if (typeof project.collectionSize !== 'number' || project.collectionSize < 1) return false;
-  if (typeof project.pixelArtMode !== 'boolean') return false;
+  if (!project || typeof project !== "object") return false;
+  if (typeof project.id !== "string" || !project.id) return false;
+  if (typeof project.name !== "string" || !project.name) return false;
+  if (typeof project.symbol !== "string") return false;
+  if (
+    !["ICP", "ETH", "SOL", "POLYGON", "BNB", "BASE"].includes(
+      project.blockchain,
+    )
+  )
+    return false;
+  if (typeof project.collectionSize !== "number" || project.collectionSize < 1)
+    return false;
+  if (typeof project.pixelArtMode !== "boolean") return false;
   if (!Array.isArray(project.layers)) return false;
   if (!Array.isArray(project.rules)) return false;
   if (!Array.isArray(project.customTokens)) return false;
   if (!Array.isArray(project.generatedNFTs)) return false;
-  if (typeof project.createdAt !== 'number') return false;
-  if (!project.settings || typeof project.settings !== 'object') return false;
+  if (typeof project.createdAt !== "number") return false;
+  if (!project.settings || typeof project.settings !== "object") return false;
   return true;
 }
 
 function sanitizeProject(project: any): Project | null {
   try {
-    let blockchain: Blockchain = 'ETH';
+    let blockchain: Blockchain = "ETH";
     if (project.settings?.metadataFormat) {
       const formatToBlockchain: Record<MetadataFormat, Blockchain> = {
-        solana: 'SOL',
-        ethereum: 'ETH',
-        polygon: 'POLYGON',
-        bnb: 'BNB',
-        base: 'BASE',
-        icp: 'ICP',
+        solana: "SOL",
+        ethereum: "ETH",
+        polygon: "POLYGON",
+        bnb: "BNB",
+        base: "BASE",
+        icp: "ICP",
       };
-      blockchain = formatToBlockchain[project.settings.metadataFormat] || 'ETH';
-    } else if (['ICP', 'ETH', 'SOL', 'POLYGON', 'BNB', 'BASE'].includes(project.blockchain)) {
+      blockchain = formatToBlockchain[project.settings.metadataFormat] || "ETH";
+    } else if (
+      ["ICP", "ETH", "SOL", "POLYGON", "BNB", "BASE"].includes(
+        project.blockchain,
+      )
+    ) {
       blockchain = project.blockchain;
     }
-    
+
     let outputSize = 800;
     if (project.settings) {
-      if (typeof project.settings.outputSize === 'number') {
+      if (typeof project.settings.outputSize === "number") {
         outputSize = project.settings.outputSize;
-      } else if (typeof project.settings.outputWidth === 'number' || typeof project.settings.outputHeight === 'number') {
-        const width = parseInt(project.settings.outputWidth) || 800;
-        const height = parseInt(project.settings.outputHeight) || 800;
+      } else if (
+        typeof project.settings.outputWidth === "number" ||
+        typeof project.settings.outputHeight === "number"
+      ) {
+        const width = Number.parseInt(project.settings.outputWidth) || 800;
+        const height = Number.parseInt(project.settings.outputHeight) || 800;
         outputSize = Math.max(width, height);
       }
     }
-    
+
     let solanaCreators: SolanaCreator[] | undefined = undefined;
-    if (blockchain === 'SOL') {
-      if (Array.isArray(project.settings?.solanaCreators) && project.settings.solanaCreators.length > 0) {
+    if (blockchain === "SOL") {
+      if (
+        Array.isArray(project.settings?.solanaCreators) &&
+        project.settings.solanaCreators.length > 0
+      ) {
         solanaCreators = project.settings.solanaCreators
-          .filter((c: any) => c && typeof c.address === 'string' && typeof c.share === 'number')
+          .filter(
+            (c: any) =>
+              c && typeof c.address === "string" && typeof c.share === "number",
+          )
           .map((c: any) => ({
             address: String(c.address),
-            share: Math.max(0, Math.min(100, parseInt(c.share) || 0)),
+            share: Math.max(0, Math.min(100, Number.parseInt(c.share) || 0)),
           }));
       }
       if (!solanaCreators || solanaCreators.length === 0) {
-        solanaCreators = [{ address: '', share: 100 }];
+        solanaCreators = [{ address: "", share: 100 }];
       }
     }
-    
+
     const sanitized: Project = {
       id: String(project.id || Date.now()),
-      name: String(project.name || 'Untitled Project'),
-      symbol: String(project.symbol || 'NFT'),
+      name: String(project.name || "Untitled Project"),
+      symbol: String(project.symbol || "NFT"),
       blockchain,
-      collectionSize: Math.max(1, parseInt(project.collectionSize) || 1000),
+      collectionSize: Math.max(
+        1,
+        Number.parseInt(project.collectionSize) || 1000,
+      ),
       pixelArtMode: Boolean(project.pixelArtMode),
-      layers: Array.isArray(project.layers) ? project.layers.filter((l: any) => 
-        l && typeof l.id === 'string' && typeof l.name === 'string' && Array.isArray(l.traits)
-      ) : [],
-      rules: Array.isArray(project.rules) ? project.rules.filter((r: any) => 
-        r && typeof r.id === 'string' && r.primaryTrait && Array.isArray(r.incompatibleTraits)
-      ) : [],
-      customTokens: Array.isArray(project.customTokens) ? project.customTokens.filter((t: any) =>
-        t && typeof t.id === 'string' && typeof t.name === 'string'
-      ) : [],
-      generatedNFTs: Array.isArray(project.generatedNFTs) ? project.generatedNFTs.filter((n: any) =>
-        n && typeof n.id === 'number' && typeof n.dna === 'string' && n.metadata
-      ) : [],
-      createdAt: typeof project.createdAt === 'number' ? project.createdAt : Date.now(),
-      lastGeneratedAt: typeof project.lastGeneratedAt === 'number' ? project.lastGeneratedAt : undefined,
+      layers: Array.isArray(project.layers)
+        ? project.layers.filter(
+            (l: any) =>
+              l &&
+              typeof l.id === "string" &&
+              typeof l.name === "string" &&
+              Array.isArray(l.traits),
+          )
+        : [],
+      rules: Array.isArray(project.rules)
+        ? project.rules.filter(
+            (r: any) =>
+              r &&
+              typeof r.id === "string" &&
+              r.primaryTrait &&
+              Array.isArray(r.incompatibleTraits),
+          )
+        : [],
+      customTokens: Array.isArray(project.customTokens)
+        ? project.customTokens.filter(
+            (t: any) =>
+              t && typeof t.id === "string" && typeof t.name === "string",
+          )
+        : [],
+      generatedNFTs: Array.isArray(project.generatedNFTs)
+        ? project.generatedNFTs.filter(
+            (n: any) =>
+              n &&
+              typeof n.id === "number" &&
+              typeof n.dna === "string" &&
+              n.metadata,
+          )
+        : [],
+      createdAt:
+        typeof project.createdAt === "number" ? project.createdAt : Date.now(),
+      lastGeneratedAt:
+        typeof project.lastGeneratedAt === "number"
+          ? project.lastGeneratedAt
+          : undefined,
       collectionLocked: Boolean(project.collectionLocked),
-      ipfsPublishing: project.ipfsPublishing && typeof project.ipfsPublishing === 'object' ? {
-        status: ['not-ready', 'ready', 'ready-to-upload', 'uploading', 'uploaded', 'upload-failed'].includes(project.ipfsPublishing.status)
-          ? project.ipfsPublishing.status
-          : 'not-ready',
-        uploadProgress: typeof project.ipfsPublishing.uploadProgress === 'number' ? project.ipfsPublishing.uploadProgress : undefined,
-        errorMessage: typeof project.ipfsPublishing.errorMessage === 'string' ? project.ipfsPublishing.errorMessage : undefined,
-        imageDirCID: typeof project.ipfsPublishing.imageDirCID === 'string' ? project.ipfsPublishing.imageDirCID : undefined,
-        metadataCID: typeof project.ipfsPublishing.metadataCID === 'string' ? project.ipfsPublishing.metadataCID : undefined,
-      } : { status: 'not-ready' },
-      settings: project.settings && typeof project.settings === 'object' ? {
-        outputSize: Math.max(100, Math.min(4096, outputSize)),
-        metadataFormat: ['solana', 'ethereum', 'polygon', 'bnb', 'base', 'icp'].includes(project.settings.metadataFormat) 
-          ? project.settings.metadataFormat 
-          : (blockchain === 'SOL' ? 'solana' : blockchain === 'POLYGON' ? 'polygon' : blockchain === 'BNB' ? 'bnb' : blockchain === 'BASE' ? 'base' : blockchain === 'ICP' ? 'icp' : 'ethereum'),
-        tokenNameTemplate: String(project.settings.tokenNameTemplate || '{{collection}} #{{id}}'),
-        tokenDescription: String(project.settings.tokenDescription || ''),
-        startTokenNumberAtZero: Boolean(project.settings.startTokenNumberAtZero),
-        royaltiesPercent: Math.max(0, Math.min(100, parseFloat(project.settings.royaltiesPercent) || 5)),
-        pinataApiKey: typeof project.settings.pinataApiKey === 'string' ? project.settings.pinataApiKey : '',
-        solanaCreators,
-      } : getDefaultSettings(blockchain),
+      ipfsPublishing:
+        project.ipfsPublishing && typeof project.ipfsPublishing === "object"
+          ? {
+              status: [
+                "not-ready",
+                "ready",
+                "ready-to-upload",
+                "uploading",
+                "uploaded",
+                "upload-failed",
+              ].includes(project.ipfsPublishing.status)
+                ? project.ipfsPublishing.status
+                : "not-ready",
+              uploadProgress:
+                typeof project.ipfsPublishing.uploadProgress === "number"
+                  ? project.ipfsPublishing.uploadProgress
+                  : undefined,
+              errorMessage:
+                typeof project.ipfsPublishing.errorMessage === "string"
+                  ? project.ipfsPublishing.errorMessage
+                  : undefined,
+              imageDirCID:
+                typeof project.ipfsPublishing.imageDirCID === "string"
+                  ? project.ipfsPublishing.imageDirCID
+                  : undefined,
+              metadataCID:
+                typeof project.ipfsPublishing.metadataCID === "string"
+                  ? project.ipfsPublishing.metadataCID
+                  : undefined,
+            }
+          : { status: "not-ready" },
+      settings:
+        project.settings && typeof project.settings === "object"
+          ? {
+              outputSize: Math.max(100, Math.min(4096, outputSize)),
+              metadataFormat: [
+                "solana",
+                "ethereum",
+                "polygon",
+                "bnb",
+                "base",
+                "icp",
+              ].includes(project.settings.metadataFormat)
+                ? project.settings.metadataFormat
+                : blockchain === "SOL"
+                  ? "solana"
+                  : blockchain === "POLYGON"
+                    ? "polygon"
+                    : blockchain === "BNB"
+                      ? "bnb"
+                      : blockchain === "BASE"
+                        ? "base"
+                        : blockchain === "ICP"
+                          ? "icp"
+                          : "ethereum",
+              tokenNameTemplate: String(
+                project.settings.tokenNameTemplate || "{{collection}} #{{id}}",
+              ),
+              tokenDescription: String(project.settings.tokenDescription || ""),
+              startTokenNumberAtZero: Boolean(
+                project.settings.startTokenNumberAtZero,
+              ),
+              royaltiesPercent: Math.max(
+                0,
+                Math.min(
+                  100,
+                  Number.parseFloat(project.settings.royaltiesPercent) || 5,
+                ),
+              ),
+              pinataApiKey:
+                typeof project.settings.pinataApiKey === "string"
+                  ? project.settings.pinataApiKey
+                  : "",
+              solanaCreators,
+            }
+          : getDefaultSettings(blockchain),
     };
 
     sanitized.rules = sanitized.rules.map((r: any) => {
@@ -252,18 +374,18 @@ function sanitizeProject(project: any): Project | null {
       return r;
     });
 
-    sanitized.layers = sanitized.layers.map(layer => ({
+    sanitized.layers = sanitized.layers.map((layer) => ({
       ...layer,
       traits: layer.traits.map((trait: any) => ({
         ...trait,
-        weight: typeof trait.weight === 'number' ? trait.weight : 0,
+        weight: typeof trait.weight === "number" ? trait.weight : 0,
         locked: Boolean(trait.locked),
       })),
     }));
 
     return validateProject(sanitized) ? sanitized : null;
   } catch (error) {
-    console.error('Error sanitizing project:', error);
+    console.error("Error sanitizing project:", error);
     return null;
   }
 }
@@ -292,7 +414,7 @@ function normalizeProjects(projects: Project[]): Project[] {
     }
   }
 
-  return projects.map(project => {
+  return projects.map((project) => {
     if (latestGeneratedProject && project.id === latestGeneratedProject.id) {
       return project;
     }
@@ -309,7 +431,7 @@ function loadProjectsFromStorage(): Project[] {
     if (!parsed) return [];
 
     if (!Array.isArray(parsed)) {
-      console.warn('Invalid projects data format, resetting');
+      console.warn("Invalid projects data format, resetting");
       return [];
     }
 
@@ -318,7 +440,9 @@ function loadProjectsFromStorage(): Project[] {
       .filter((p): p is Project => p !== null);
 
     if (sanitized.length !== parsed.length) {
-      console.warn(`Recovered ${sanitized.length} of ${parsed.length} projects`);
+      console.warn(
+        `Recovered ${sanitized.length} of ${parsed.length} projects`,
+      );
       toast.warning(`Recovered ${sanitized.length} projects`);
     }
 
@@ -326,18 +450,18 @@ function loadProjectsFromStorage(): Project[] {
 
     return normalized;
   } catch (error) {
-    console.error('Error loading projects from storage:', error);
-    toast.error('Storage error - data may be corrupted');
+    console.error("Error loading projects from storage:", error);
+    toast.error("Storage error - data may be corrupted");
     return [];
   }
 }
 
 function App() {
-  const [currentView, setCurrentView] = useState<View>('dashboard');
+  const [currentView, setCurrentView] = useState<View>("dashboard");
   const [projects, setProjects] = useState<Project[]>([]);
   const [currentProjectId, setCurrentProjectId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [saveStatus, setSaveStatus] = useState<SaveStatus>('idle');
+  const [saveStatus, setSaveStatus] = useState<SaveStatus>("idle");
 
   useEffect(() => {
     const cleanup = cleanupLegacyArtifacts();
@@ -345,7 +469,9 @@ function App() {
       console.log(`Cleaned up ${cleanup.removed} legacy storage artifact(s)`);
     }
     if (cleanup.errors > 0) {
-      console.warn(`${cleanup.errors} error(s) during legacy cleanup (non-fatal)`);
+      console.warn(
+        `${cleanup.errors} error(s) during legacy cleanup (non-fatal)`,
+      );
     }
 
     const loadedProjects = loadProjectsFromStorage();
@@ -356,35 +482,47 @@ function App() {
   useEffect(() => {
     if (isLoading) return;
 
-    setSaveStatus('saving');
+    setSaveStatus("saving");
 
     const timeoutId = setTimeout(() => {
       const validProjects = projects.filter(validateProject);
-      
+
       if (validProjects.length !== projects.length) {
-        console.warn(`Saving ${validProjects.length} of ${projects.length} valid projects`);
+        console.warn(
+          `Saving ${validProjects.length} of ${projects.length} valid projects`,
+        );
       }
 
       const normalizedProjects = normalizeProjects(validProjects);
 
       if (isStorageNearQuota(normalizedProjects)) {
-        toast.warning('Storage nearly full - consider exporting projects');
+        toast.warning("Storage nearly full - consider exporting projects");
       }
 
       const result = atomicSave(normalizedProjects);
-      
+
       if (result.success) {
-        setSaveStatus('saved');
-        setTimeout(() => setSaveStatus('idle'), 2000);
+        setSaveStatus("saved");
+        setTimeout(() => setSaveStatus("idle"), 2000);
       } else {
-        setSaveStatus('failed');
-        
-        if (result.error?.includes('QuotaExceededError') || result.error?.includes('quota')) {
-          console.error('❌ Auto-save failed: Storage quota exceeded');
-          console.error('💡 Action required: Reduce project data or export projects to free up space');
+        setSaveStatus("failed");
+
+        if (
+          result.error?.includes("QuotaExceededError") ||
+          result.error?.includes("quota")
+        ) {
+          console.error("❌ Auto-save failed: Storage quota exceeded");
+          console.error(
+            "💡 Action required: Reduce project data or export projects to free up space",
+          );
         } else {
-          console.error('❌ Auto-save failed:', result.error || 'Unknown error');
-          console.error('💡 Check browser console for details. App will continue functioning.');
+          console.error(
+            "❌ Auto-save failed:",
+            result.error || "Unknown error",
+          );
+          console.error(
+            "💡 Check browser console for details. App will continue functioning.",
+          );
         }
       }
     }, 500);
@@ -398,96 +536,118 @@ function App() {
     setProjects(updatedProjects);
   }, []);
 
-  const updateCurrentProject = useCallback((updater: (project: Project) => Project) => {
-    if (!currentProjectId) return;
-    
-    setProjects(prevProjects => {
-      const updated = prevProjects.map((p) => {
-        if (p.id !== currentProjectId) return p;
-        
-        try {
-          const updatedProject = updater(p);
-          return validateProject(updatedProject) ? updatedProject : p;
-        } catch (error) {
-          console.error('Error updating project:', error);
-          toast.error('Update failed');
-          return p;
-        }
+  const updateCurrentProject = useCallback(
+    (updater: (project: Project) => Project) => {
+      if (!currentProjectId) return;
+
+      setProjects((prevProjects) => {
+        const updated = prevProjects.map((p) => {
+          if (p.id !== currentProjectId) return p;
+
+          try {
+            const updatedProject = updater(p);
+            return validateProject(updatedProject) ? updatedProject : p;
+          } catch (error) {
+            console.error("Error updating project:", error);
+            toast.error("Update failed");
+            return p;
+          }
+        });
+
+        return updated;
       });
-      
-      return updated;
-    });
-  }, [currentProjectId]);
+    },
+    [currentProjectId],
+  );
 
-  const updateProject = useCallback((projectId: string, updater: (project: Project) => Project) => {
-    setProjects(prevProjects => {
-      const updated = prevProjects.map((p) => {
-        if (p.id !== projectId) return p;
-        
-        try {
-          const updatedProject = updater(p);
-          return validateProject(updatedProject) ? updatedProject : p;
-        } catch (error) {
-          console.error('Error updating project:', error);
-          toast.error('Update failed');
-          return p;
-        }
+  const updateProject = useCallback(
+    (projectId: string, updater: (project: Project) => Project) => {
+      setProjects((prevProjects) => {
+        const updated = prevProjects.map((p) => {
+          if (p.id !== projectId) return p;
+
+          try {
+            const updatedProject = updater(p);
+            return validateProject(updatedProject) ? updatedProject : p;
+          } catch (error) {
+            console.error("Error updating project:", error);
+            toast.error("Update failed");
+            return p;
+          }
+        });
+
+        return updated;
       });
-      
-      return updated;
-    });
-  }, []);
+    },
+    [],
+  );
 
-  const createProject = useCallback((project: Omit<Project, 'id' | 'createdAt' | 'settings' | 'collectionLocked' | 'ipfsPublishing'> & { settings?: Partial<ProjectSettings> }) => {
-    const newProject: Project = {
-      ...project,
-      id: `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-      createdAt: Date.now(),
-      collectionLocked: false,
-      ipfsPublishing: { status: 'not-ready' },
-      settings: {
-        ...getDefaultSettings(project.blockchain),
-        ...project.settings,
-      },
-    };
+  const createProject = useCallback(
+    (
+      project: Omit<
+        Project,
+        "id" | "createdAt" | "settings" | "collectionLocked" | "ipfsPublishing"
+      > & { settings?: Partial<ProjectSettings> },
+    ) => {
+      const newProject: Project = {
+        ...project,
+        id: `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+        createdAt: Date.now(),
+        collectionLocked: false,
+        ipfsPublishing: { status: "not-ready" },
+        settings: {
+          ...getDefaultSettings(project.blockchain),
+          ...project.settings,
+        },
+      };
 
-    if (!validateProject(newProject)) {
-      toast.error('Invalid project data');
-      return;
-    }
+      if (!validateProject(newProject)) {
+        toast.error("Invalid project data");
+        return;
+      }
 
-    saveProjects([...projects, newProject]);
-    setCurrentProjectId(newProject.id);
-    setCurrentView('workshop');
-    toast.success('Project created');
-  }, [projects, saveProjects]);
+      saveProjects([...projects, newProject]);
+      setCurrentProjectId(newProject.id);
+      setCurrentView("workshop");
+      toast.success("Project created");
+    },
+    [projects, saveProjects],
+  );
 
-  const deleteProject = useCallback((id: string) => {
-    saveProjects(projects.filter((p) => p.id !== id));
-    if (currentProjectId === id) {
-      setCurrentProjectId(null);
-      setCurrentView('dashboard');
-    }
-    toast.success('Project deleted');
-  }, [projects, currentProjectId, saveProjects]);
+  const deleteProject = useCallback(
+    (id: string) => {
+      saveProjects(projects.filter((p) => p.id !== id));
+      if (currentProjectId === id) {
+        setCurrentProjectId(null);
+        setCurrentView("dashboard");
+      }
+      toast.success("Project deleted");
+    },
+    [projects, currentProjectId, saveProjects],
+  );
 
-  const openProject = useCallback((id: string) => {
-    const project = projects.find(p => p.id === id);
-    if (!project) {
-      toast.error('Project not found');
-      return;
-    }
-    
-    setCurrentProjectId(id);
-    setCurrentView('workshop');
-  }, [projects]);
+  const openProject = useCallback(
+    (id: string) => {
+      const project = projects.find((p) => p.id === id);
+      if (!project) {
+        toast.error("Project not found");
+        return;
+      }
+
+      setCurrentProjectId(id);
+      setCurrentView("workshop");
+    },
+    [projects],
+  );
 
   if (isLoading) {
     return (
       <div className="h-screen bg-background text-foreground flex items-center justify-center">
         <div className="text-center">
-          <div className="w-12 h-12 border-2 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-3"></div>
-          <p className="text-sm font-medium text-muted-foreground">Loading...</p>
+          <div className="w-12 h-12 border-2 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-3" />
+          <p className="text-sm font-medium text-muted-foreground">
+            Loading...
+          </p>
         </div>
       </div>
     );
@@ -500,15 +660,15 @@ function App() {
         onNavigate={setCurrentView}
         currentProject={currentProject}
         onBackToDashboard={() => {
-          setCurrentView('dashboard');
+          setCurrentView("dashboard");
           setCurrentProjectId(null);
         }}
         saveStatus={saveStatus}
       />
-      
+
       <main className="flex-1 overflow-hidden">
-        <div key={currentView} className="h-full">
-          {currentView === 'dashboard' && (
+        <div key={currentView} className="h-full page-enter">
+          {currentView === "dashboard" && (
             <Dashboard
               projects={projects}
               onCreateProject={createProject}
@@ -517,36 +677,61 @@ function App() {
               onUpdateProject={updateProject}
             />
           )}
-          
-          {currentView !== 'dashboard' && currentProject && (
-            <Suspense fallback={
-              <div className="h-full flex items-center justify-center">
-                <div className="text-center">
-                  <div className="w-12 h-12 border-2 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-3"></div>
-                  <p className="text-sm font-medium text-muted-foreground">Loading...</p>
+
+          {currentView !== "dashboard" && currentProject && (
+            <Suspense
+              fallback={
+                <div className="h-full flex items-center justify-center">
+                  <div className="text-center">
+                    <div className="w-12 h-12 border-2 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-3" />
+                    <p className="text-sm font-medium text-muted-foreground">
+                      Loading...
+                    </p>
+                  </div>
                 </div>
-              </div>
-            }>
-              {currentView === 'workshop' && (
-                <Workshop project={currentProject} onUpdateProject={updateCurrentProject} />
+              }
+            >
+              {currentView === "workshop" && (
+                <Workshop
+                  project={currentProject}
+                  onUpdateProject={updateCurrentProject}
+                />
               )}
-              {currentView === 'rarity' && (
-                <RarityWorkshop project={currentProject} onUpdateProject={updateCurrentProject} />
+              {currentView === "rarity" && (
+                <RarityWorkshop
+                  project={currentProject}
+                  onUpdateProject={updateCurrentProject}
+                />
               )}
-              {currentView === 'rules' && (
-                <Rules project={currentProject} onUpdateProject={updateCurrentProject} />
+              {currentView === "rules" && (
+                <Rules
+                  project={currentProject}
+                  onUpdateProject={updateCurrentProject}
+                />
               )}
-              {currentView === 'preview' && (
-                <Preview project={currentProject} onUpdateProject={updateCurrentProject} />
+              {currentView === "preview" && (
+                <Preview
+                  project={currentProject}
+                  onUpdateProject={updateCurrentProject}
+                />
               )}
-              {currentView === 'builder' && (
-                <Builder project={currentProject} onUpdateProject={updateCurrentProject} />
+              {currentView === "builder" && (
+                <Builder
+                  project={currentProject}
+                  onUpdateProject={updateCurrentProject}
+                />
               )}
-              {currentView === 'vault' && (
-                <Vault project={currentProject} onUpdateProject={updateCurrentProject} />
+              {currentView === "vault" && (
+                <Vault
+                  project={currentProject}
+                  onUpdateProject={updateCurrentProject}
+                />
               )}
-              {currentView === 'settings' && (
-                <Settings project={currentProject} onUpdateProject={updateCurrentProject} />
+              {currentView === "settings" && (
+                <Settings
+                  project={currentProject}
+                  onUpdateProject={updateCurrentProject}
+                />
               )}
             </Suspense>
           )}

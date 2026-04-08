@@ -24,13 +24,17 @@
     --input: 38 38 38;
     --ring: 102 102 102;
     --radius: 0.5rem;
-    
+
     --motion-hover: 120ms;
     --motion-press: 90ms;
     --motion-component: 300ms;
-    --motion-modal: 700ms;
-    
+    --motion-modal: 500ms;
+    --motion-stagger: 60ms;
+
     --ease-apple: cubic-bezier(0.16, 1, 0.3, 1);
+    --ease-spring-snap: cubic-bezier(0.34, 1.56, 0.64, 1);
+    --ease-out-cubic: cubic-bezier(0.33, 1, 0.68, 1);
+    --ease-smooth: cubic-bezier(0.25, 0.46, 0.45, 0.94);
   }
 }
 
@@ -40,14 +44,17 @@
   }
   body {
     @apply bg-background text-foreground;
-    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+    font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI",
+      "Roboto", sans-serif;
     font-feature-settings: "cv11", "ss01";
     font-optical-sizing: auto;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     text-rendering: optimizeLegibility;
+    scroll-behavior: smooth;
+    overscroll-behavior-y: contain;
   }
-  
+
   @media (prefers-reduced-motion: reduce) {
     *,
     *::before,
@@ -61,16 +68,16 @@
   input:not([type="button"]):not([type="submit"]):not([type="reset"]),
   textarea,
   select {
-    transition: border-color var(--motion-hover) var(--ease-apple),
-                box-shadow var(--motion-hover) var(--ease-apple),
-                background-color var(--motion-hover) var(--ease-apple);
+    transition: border-color var(--motion-hover) var(--ease-apple), box-shadow
+      var(--motion-hover) var(--ease-apple), background-color
+      var(--motion-hover) var(--ease-apple);
   }
 
   input:focus,
   textarea:focus,
   select:focus {
     transition: border-color var(--motion-component) var(--ease-apple),
-                box-shadow var(--motion-component) var(--ease-apple);
+      box-shadow var(--motion-component) var(--ease-apple);
   }
 }
 
@@ -78,21 +85,21 @@
   .sharp-shadow {
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
   }
-  
+
   .sharp-shadow-hover {
-    transition: box-shadow var(--motion-hover) var(--ease-apple), 
-                transform var(--motion-hover) var(--ease-apple);
+    transition: box-shadow var(--motion-hover) var(--ease-apple), transform
+      var(--motion-hover) var(--ease-apple);
   }
-  
+
   .sharp-shadow-hover:hover {
     box-shadow: 0 4px 16px rgba(0, 0, 0, 0.5);
     transform: translateY(-2px);
   }
-  
+
   .sharp-shadow-lg {
     box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
   }
-  
+
   .smooth-transition {
     transition: all var(--motion-hover) var(--ease-apple);
   }
@@ -106,7 +113,9 @@
   }
 
   @media (max-width: 768px) {
-    button, a, [role="button"] {
+    button,
+    a,
+    [role="button"] {
       min-height: 44px;
       min-width: 44px;
     }
@@ -120,19 +129,21 @@
 
   .rarity-slider [role="slider"]:hover {
     transform: scale(1.15);
-    box-shadow: 0 0 0 6px rgba(136, 136, 136, 0.15);
+    box-shadow: 0 0 0 8px rgba(136, 136, 136, 0.18), 0 2px 12px
+      rgba(136, 136, 136, 0.25);
+    transition: all 150ms var(--ease-apple);
   }
 
   .rarity-slider [role="slider"]:active {
-    transform: scale(1.1);
-    transition: all var(--motion-press) var(--ease-apple);
+    transform: scale(1.08);
+    transition: all var(--motion-press) var(--ease-spring-snap);
   }
 
   .rarity-slider [role="slider"]:disabled {
     opacity: 0.5;
     cursor: not-allowed;
   }
-  
+
   .focus-ring {
     @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background;
     transition: box-shadow var(--motion-hover) var(--ease-apple);
@@ -144,8 +155,8 @@
 
   .tile-hover-glow {
     transition: box-shadow var(--motion-component) var(--ease-apple),
-                border-color var(--motion-component) var(--ease-apple),
-                transform var(--motion-hover) var(--ease-apple);
+      border-color var(--motion-component) var(--ease-apple), transform
+      var(--motion-hover) var(--ease-apple);
   }
 
   .tile-hover-glow:hover {
@@ -154,33 +165,57 @@
 
   /* Scoped motion classes for buttons */
   .motion-button {
-    transition: transform var(--motion-press) var(--ease-apple),
-                background-color var(--motion-hover) var(--ease-apple),
-                border-color var(--motion-hover) var(--ease-apple),
-                color var(--motion-hover) var(--ease-apple),
-                box-shadow var(--motion-hover) var(--ease-apple),
-                opacity var(--motion-hover) var(--ease-apple);
+    transition:
+      transform var(--motion-press) var(--ease-apple),
+      background-color var(--motion-hover) var(--ease-apple),
+      border-color var(--motion-hover) var(--ease-apple),
+      color var(--motion-hover) var(--ease-apple),
+      box-shadow var(--motion-hover) var(--ease-apple),
+      opacity 350ms var(--ease-apple);
     will-change: transform;
   }
 
+  .motion-button:disabled {
+    opacity: 0.45;
+    transition: opacity 350ms var(--ease-apple);
+    cursor: not-allowed;
+  }
+
   .motion-button:active:not(:disabled) {
-    transform: scale(0.98);
-    transition: transform var(--motion-press) var(--ease-apple);
+    transform: scale(0.97);
+    transition: transform var(--motion-press) var(--ease-spring-snap);
   }
 
   .motion-button:hover:not(:disabled) {
-    transition: transform var(--motion-hover) var(--ease-apple),
-                background-color var(--motion-hover) var(--ease-apple),
-                border-color var(--motion-hover) var(--ease-apple),
-                color var(--motion-hover) var(--ease-apple),
-                box-shadow var(--motion-hover) var(--ease-apple),
-                opacity var(--motion-hover) var(--ease-apple);
+    transition:
+      transform var(--motion-hover) var(--ease-apple),
+      background-color var(--motion-hover) var(--ease-apple),
+      border-color var(--motion-hover) var(--ease-apple),
+      color var(--motion-hover) var(--ease-apple),
+      box-shadow var(--motion-hover) var(--ease-apple),
+      opacity 350ms var(--ease-apple);
+  }
+
+  /* Motion press with spring-snap recoil — use on all buttons/icons */
+  .motion-press-snappy {
+    transition: transform var(--motion-press) var(--ease-spring-snap), opacity
+      350ms var(--ease-apple);
+    will-change: transform;
+  }
+
+  .motion-press-snappy:active:not(:disabled) {
+    transform: scale(0.97);
+  }
+
+  .motion-press-snappy:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
   }
 
   /* Scoped motion classes for icon buttons */
   .motion-icon-button {
-    transition: transform var(--motion-hover) var(--ease-apple),
-                opacity var(--motion-hover) var(--ease-apple);
+    transition: transform var(--motion-hover) var(--ease-apple), opacity
+      var(--motion-hover) var(--ease-apple);
     will-change: transform;
   }
 
@@ -189,8 +224,8 @@
   }
 
   .motion-icon-button:active:not(:disabled) {
-    transform: scale(0.95);
-    transition: transform var(--motion-press) var(--ease-apple);
+    transform: scale(0.9);
+    transition: transform var(--motion-press) var(--ease-spring-snap);
   }
 
   /* Scoped modal motion classes */
@@ -239,7 +274,8 @@
 }
 
 @keyframes pulse-subtle {
-  0%, 100% {
+  0%,
+  100% {
     opacity: 1;
   }
   50% {
@@ -316,7 +352,12 @@
 }
 
 .skeleton {
-  background: linear-gradient(90deg, rgba(255,255,255,0.05) 25%, rgba(255,255,255,0.1) 50%, rgba(255,255,255,0.05) 75%);
+  background: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0.05) 25%,
+    rgba(255, 255, 255, 0.1) 50%,
+    rgba(255, 255, 255, 0.05) 75%
+  );
   background-size: 1000px 100%;
   animation: shimmer 2s infinite;
 }
@@ -347,4 +388,167 @@
 [data-state="open"][data-radix-dialog-content],
 [data-state="open"][data-radix-alert-dialog-content] {
   animation: modal-slide-scale var(--motion-modal) var(--ease-apple);
+}
+
+/* Premium micro-interactions: Error shake */
+@keyframes error-shake {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  10%,
+  30%,
+  50%,
+  70%,
+  90% {
+    transform: translateX(-2px);
+  }
+  20%,
+  40%,
+  60%,
+  80% {
+    transform: translateX(2px);
+  }
+}
+
+.error-shake {
+  animation: error-shake 400ms var(--ease-apple);
+}
+
+/* Success checkmark spring pop */
+@keyframes success-pop {
+  0% {
+    transform: scale(0) rotate(-45deg);
+    opacity: 0;
+  }
+  50% {
+    transform: scale(1.2) rotate(0deg);
+  }
+  100% {
+    transform: scale(1) rotate(0deg);
+    opacity: 1;
+  }
+}
+
+.success-pop {
+  animation: success-pop 500ms var(--ease-spring-snap);
+}
+
+/* Trait card lift effect */
+.trait-card-lift {
+  transition: transform var(--motion-hover) var(--ease-apple), box-shadow
+    var(--motion-hover) var(--ease-apple);
+}
+
+.trait-card-lift:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.3);
+}
+
+/* Rarity slider glow-up */
+.rarity-slider-glow:hover {
+  transition: all var(--motion-hover) var(--ease-apple);
+  filter: drop-shadow(0 0 12px rgba(136, 136, 136, 0.4));
+}
+
+/* Staggered grid item entrance (nth-child timing) */
+.stagger-grid > * {
+  animation: slide-in var(--motion-component) var(--ease-apple) backwards;
+}
+
+.stagger-grid > :nth-child(1) {
+  animation-delay: 0ms;
+}
+.stagger-grid > :nth-child(2) {
+  animation-delay: 60ms;
+}
+.stagger-grid > :nth-child(3) {
+  animation-delay: 120ms;
+}
+.stagger-grid > :nth-child(4) {
+  animation-delay: 180ms;
+}
+.stagger-grid > :nth-child(5) {
+  animation-delay: 240ms;
+}
+.stagger-grid > :nth-child(6) {
+  animation-delay: 300ms;
+}
+.stagger-grid > :nth-child(n + 7) {
+  animation-delay: 300ms;
+}
+
+/* Skeleton shimmer to content transition */
+@keyframes skeleton-fade-out {
+  to {
+    opacity: 0;
+  }
+}
+
+.skeleton-loading {
+  animation: skeleton-fade-out 500ms var(--ease-smooth) forwards;
+}
+
+/* Smooth page transitions */
+.page-enter {
+  animation: page-transition var(--motion-component) var(--ease-apple);
+}
+
+.page-exit {
+  animation: fade-out var(--motion-press) var(--ease-apple);
+}
+
+@keyframes fade-out {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+/* Button press with spring recoil */
+.button-press-spring {
+  transition: transform var(--motion-press) var(--ease-spring-snap);
+}
+
+.button-press-spring:active:not(:disabled) {
+  transform: scale(0.96);
+}
+
+/* Enhanced modal entrance */
+.modal-premium-enter {
+  animation: modal-slide-scale 500ms var(--ease-out-cubic);
+}
+
+/* Text shimmer effect (premium) */
+@keyframes text-shimmer {
+  0% {
+    background-position: -1000px 0;
+  }
+  100% {
+    background-position: 1000px 0;
+  }
+}
+
+.text-shimmer {
+  background: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0) 0%,
+    rgba(255, 255, 255, 0.2) 50%,
+    rgba(255, 255, 255, 0) 100%
+  );
+  background-size: 1000px 100%;
+  animation: text-shimmer 1.5s infinite;
+}
+
+/* Smooth scroll container momentum */
+.scroll-momentum {
+  scroll-behavior: smooth;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Load state subtle pulse */
+.loading-pulse {
+  animation: pulse-subtle 1.5s var(--ease-apple) infinite;
 }

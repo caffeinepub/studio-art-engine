@@ -7,11 +7,12 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from '@/components/ui/alert-dialog';
-import { useConfirmStore } from '@/hooks/useConfirmDestructive';
+} from "@/components/ui/alert-dialog";
+import { useConfirmStore } from "@/hooks/useConfirmDestructive";
 
 export default function ConfirmDestructiveDialog() {
-  const { isOpen, title, description, onConfirm, onCancel, closeConfirm } = useConfirmStore();
+  const { isOpen, title, description, onConfirm, onCancel, closeConfirm } =
+    useConfirmStore();
 
   const handleConfirm = () => {
     if (onConfirm) onConfirm();
@@ -35,7 +36,10 @@ export default function ConfirmDestructiveDialog() {
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
-          <AlertDialogCancel onClick={handleCancel} className="font-medium transition-all duration-hover ease-apple">
+          <AlertDialogCancel
+            onClick={handleCancel}
+            className="font-medium transition-all duration-hover ease-apple"
+          >
             Cancel
           </AlertDialogCancel>
           <AlertDialogAction
@@ -49,4 +53,3 @@ export default function ConfirmDestructiveDialog() {
     </AlertDialog>
   );
 }
-

@@ -19,7 +19,7 @@ export interface TraitData {
 }
 
 export interface RuleData {
-  type: 'exclude' | 'force';
+  type: "exclude" | "force";
   primaryTrait: {
     layerId: string;
     traitId: string;
@@ -37,7 +37,7 @@ export interface ForgedTokenData {
 
 // UI -> Worker messages
 export interface StartGenerationMessage {
-  type: 'start';
+  type: "start";
   payload: {
     layers: LayerData[];
     rules: RuleData[];
@@ -52,14 +52,16 @@ export interface StartGenerationMessage {
 }
 
 export interface CancelGenerationMessage {
-  type: 'cancel';
+  type: "cancel";
 }
 
-export type WorkerInputMessage = StartGenerationMessage | CancelGenerationMessage;
+export type WorkerInputMessage =
+  | StartGenerationMessage
+  | CancelGenerationMessage;
 
 // Worker -> UI messages
 export interface ProgressMessage {
-  type: 'progress';
+  type: "progress";
   payload: {
     generatedCount: number;
     totalCount: number;
@@ -78,7 +80,7 @@ export interface GeneratedNFTData {
 }
 
 export interface BatchResultMessage {
-  type: 'batch';
+  type: "batch";
   payload: {
     nfts: GeneratedNFTData[];
     supportsImageCompositing: boolean;
@@ -86,18 +88,18 @@ export interface BatchResultMessage {
 }
 
 export interface CompleteMessage {
-  type: 'complete';
+  type: "complete";
   payload: {
     totalGenerated: number;
   };
 }
 
 export interface CancelAckMessage {
-  type: 'cancelAck';
+  type: "cancelAck";
 }
 
 export interface ErrorMessage {
-  type: 'error';
+  type: "error";
   payload: {
     message: string;
     details?: string;
@@ -105,7 +107,7 @@ export interface ErrorMessage {
 }
 
 export interface CapabilityMessage {
-  type: 'capability';
+  type: "capability";
   payload: {
     supportsImageCompositing: boolean;
   };
@@ -120,26 +122,36 @@ export type WorkerOutputMessage =
   | CapabilityMessage;
 
 // Type guards
-export function isProgressMessage(msg: WorkerOutputMessage): msg is ProgressMessage {
-  return msg.type === 'progress';
+export function isProgressMessage(
+  msg: WorkerOutputMessage,
+): msg is ProgressMessage {
+  return msg.type === "progress";
 }
 
-export function isBatchResultMessage(msg: WorkerOutputMessage): msg is BatchResultMessage {
-  return msg.type === 'batch';
+export function isBatchResultMessage(
+  msg: WorkerOutputMessage,
+): msg is BatchResultMessage {
+  return msg.type === "batch";
 }
 
-export function isCompleteMessage(msg: WorkerOutputMessage): msg is CompleteMessage {
-  return msg.type === 'complete';
+export function isCompleteMessage(
+  msg: WorkerOutputMessage,
+): msg is CompleteMessage {
+  return msg.type === "complete";
 }
 
-export function isCancelAckMessage(msg: WorkerOutputMessage): msg is CancelAckMessage {
-  return msg.type === 'cancelAck';
+export function isCancelAckMessage(
+  msg: WorkerOutputMessage,
+): msg is CancelAckMessage {
+  return msg.type === "cancelAck";
 }
 
 export function isErrorMessage(msg: WorkerOutputMessage): msg is ErrorMessage {
-  return msg.type === 'error';
+  return msg.type === "error";
 }
 
-export function isCapabilityMessage(msg: WorkerOutputMessage): msg is CapabilityMessage {
-  return msg.type === 'capability';
+export function isCapabilityMessage(
+  msg: WorkerOutputMessage,
+): msg is CapabilityMessage {
+  return msg.type === "capability";
 }

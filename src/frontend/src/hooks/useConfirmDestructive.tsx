@@ -1,4 +1,4 @@
-import { create } from 'zustand';
+import { create } from "zustand";
 
 interface ConfirmState {
   isOpen: boolean;
@@ -20,8 +20,8 @@ interface ConfirmStore extends ConfirmState {
 
 export const useConfirmStore = create<ConfirmStore>((set) => ({
   isOpen: false,
-  title: '',
-  description: '',
+  title: "",
+  description: "",
   onConfirm: null,
   onCancel: null,
   openConfirm: (config) =>
@@ -35,8 +35,8 @@ export const useConfirmStore = create<ConfirmStore>((set) => ({
   closeConfirm: () =>
     set({
       isOpen: false,
-      title: '',
-      description: '',
+      title: "",
+      description: "",
       onConfirm: null,
       onCancel: null,
     }),

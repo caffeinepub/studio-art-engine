@@ -1,7 +1,7 @@
-import { useState, useEffect, useRef } from 'react';
-import { validatePinataKey } from '../utils/pinata';
+import { useEffect, useRef, useState } from "react";
+import { validatePinataKey } from "../utils/pinata";
 
-export type ValidationStatus = 'idle' | 'checking' | 'valid' | 'invalid';
+export type ValidationStatus = "idle" | "checking" | "valid" | "invalid";
 
 export interface UsePinataKeyValidationResult {
   status: ValidationStatus;
@@ -11,9 +11,11 @@ export interface UsePinataKeyValidationResult {
 /**
  * Hook that automatically validates a Pinata JWT (secret access token) with debouncing
  */
-export function usePinataKeyValidation(apiKey: string): UsePinataKeyValidationResult {
-  const [status, setStatus] = useState<ValidationStatus>('idle');
-  const [message, setMessage] = useState('');
+export function usePinataKeyValidation(
+  apiKey: string,
+): UsePinataKeyValidationResult {
+  const [status, setStatus] = useState<ValidationStatus>("idle");
+  const [message, setMessage] = useState("");
   const debounceTimer = useRef<NodeJS.Timeout | null>(null);
   const abortController = useRef<AbortController | null>(null);
 
@@ -28,31 +30,31 @@ export function usePinataKeyValidation(apiKey: string): UsePinataKeyValidationRe
 
     // Reset to idle if key is empty
     if (!apiKey || apiKey.trim().length === 0) {
-      setStatus('idle');
-      setMessage('');
+      setStatus("idle");
+      setMessage("");
       return;
     }
 
     // Debounce validation
     debounceTimer.current = setTimeout(async () => {
-      setStatus('checking');
-      setMessage('Validating JWT token...');
+      setStatus("checking");
+      setMessage("Validating JWT token...");
 
       abortController.current = new AbortController();
 
       try {
         const result = await validatePinataKey(apiKey);
-        
+
         if (result.valid) {
-          setStatus('valid');
+          setStatus("valid");
           setMessage(result.message);
         } else {
-          setStatus('invalid');
+          setStatus("invalid");
           setMessage(result.message);
         }
-      } catch (error) {
-        setStatus('invalid');
-        setMessage('Could not validate JWT token');
+      } catch (_error) {
+        setStatus("invalid");
+        setMessage("Could not validate JWT token");
       }
     }, 800);
 
