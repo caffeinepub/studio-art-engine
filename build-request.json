@@ -1,61 +1,81 @@
 {
   "kind": "build_request",
-  "title": "Add scrolling to Vault sidebar and NFT preview page",
-  "projectName": "NFT Vault Generator",
+  "title": "Upload processed Forge images to Pinata (pixel mode + configured dimensions)",
   "priority": "normal",
   "requirements": [
     {
       "id": "REQ-1",
-      "text": "Add vertical scrolling to the Vault sidebar so that all sidebar content (layers, filters, controls) is accessible when it overflows the viewport height, without altering any existing sidebar styling, layout, or visual design.",
+      "text": "Ensure Forge “Direct Injection” image uploads are processed into a new square PNG at the project’s configured output dimensions before being saved into project state (so the stored image matches what the app displays). Processing must: (1) resize to exactly project.settings.outputSize x project.settings.outputSize, and (2) apply pixel mode by disabling canvas image smoothing when project.pixelArtMode is enabled.",
       "target": "frontend",
       "source": {
         "messageIds": [
-          "msg-17"
+          "msg-1"
         ],
         "quotes": [
-          "Add scrolling to the sidebar and the NFT preview page within the Vault so users can view all content in the VAULT, without changing the current Vault design as in the existing Draft (Draft 169)."
+          "the file uploaded to Pinata always be the processed version (Pixel Mode + configured Dimensions), matching what the user sees in the app."
         ]
       },
       "acceptanceCriteria": [
-        "The Vault sidebar scrolls vertically when its content exceeds the available viewport height.",
-        "The sidebar scrollbar does not appear when content fits within the viewport.",
-        "No existing sidebar styles, colors, spacing, or layout are changed.",
-        "The sidebar header/title and any sticky controls remain visually anchored (do not scroll away if previously fixed)."
+        "When a user uploads a 1:1 image via Forge > Direct Injection, the resulting saved token imageData is a PNG data URL whose intrinsic pixel dimensions equal project.settings.outputSize x project.settings.outputSize.",
+        "If project.pixelArtMode is enabled, the processing step uses a canvas with imageSmoothingEnabled=false so the output is pixelated rather than anti-aliased.",
+        "The Forge gallery display continues to work and shows the processed image."
       ]
     },
     {
       "id": "REQ-2",
-      "text": "Add vertical scrolling to the NFT preview panel/page within the Vault so that all NFT preview content (image, metadata, traits) is accessible when it overflows the available height, without altering any existing preview panel styling, layout, or visual design.",
+      "text": "Discard the original, unprocessed uploaded file once processing is complete: do not persist original dimensions or original image bytes in project.customTokens or any other long-lived project state used for export/upload.",
       "target": "frontend",
       "source": {
         "messageIds": [
-          "msg-17"
+          "msg-1"
         ],
         "quotes": [
-          "Add scrolling to the sidebar and the NFT preview page within the Vault so users can view all content in the VAULT, without changing the current Vault design as in the existing Draft (Draft 169)."
+          "discarded once processed"
         ]
       },
       "acceptanceCriteria": [
-        "The NFT preview panel scrolls vertically when its content exceeds the available height.",
-        "The scrollbar does not appear when all preview content fits within the viewport.",
-        "No existing preview panel styles, colors, spacing, typography, or layout are changed.",
-        "The overall Vault page layout (sidebar + main content + preview) remains structurally identical to Draft 169."
+        "After Direct Injection, project.customTokens contains only the processed (resized/pixel-mode) imageData for each injected token.",
+        "Refreshing/reloading the app does not restore any original (pre-processed) Direct Injection image variant because it was never persisted."
+      ]
+    },
+    {
+      "id": "REQ-3",
+      "text": "Verify the IPFS/Pinata upload pipeline uses the processed images for any NFTs originating from Forge uploads by ensuring the imageData that flows into uploadCollectionToIPFS (project.generatedNFTs[*].imageData) is the processed Forge output rather than the original upload data URL.",
+      "target": "frontend",
+      "source": {
+        "messageIds": [
+          "msg-1"
+        ],
+        "quotes": [
+          "the file uploaded to Pinata always be the processed version (Pixel Mode + configured Dimensions)"
+        ]
+      },
+      "acceptanceCriteria": [
+        "Uploading a collection to Pinata results in image files whose intrinsic pixel dimensions match project.settings.outputSize x project.settings.outputSize for Forge-upload-derived NFTs.",
+        "No Pinata-uploaded image for Forge-upload-derived NFTs retains the original uploaded pixel dimensions."
       ]
     }
   ],
   "constraints": [
-    "Do not change any existing Vault visual design, colors, typography, spacing, or layout structure.",
-    "Only add overflow/scroll behavior — no other CSS or component changes.",
-    "Do not modify the backend."
+    "Do not edit any files under frontend/src/components/ui or other frontend.immutablePaths listed in SYSTEM_CONTEXT.",
+    "Keep all user-facing text in English."
   ],
   "nonGoals": [
-    "Redesigning or restyling any part of the Vault UI.",
-    "Adding horizontal scrolling.",
-    "Changing scroll behavior on any page other than the Vault.",
-    "Any backend changes."
+    "Do not change the Pinata API endpoints or authentication method.",
+    "Do not add new backend storage or change backend state/schema for this fix."
   ],
   "imageRequirements": {
     "required": [],
     "edits": []
+  },
+  "userProfileUpdate": {
+    "goalsToAdd": [],
+    "goalsToRemove": [],
+    "preferencesToAdd": [],
+    "preferencesToRemove": [],
+    "miscToAdd": [],
+    "miscToRemove": [],
+    "fieldsToSet": {},
+    "fieldsToDelete": []
   }
 }

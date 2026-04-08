@@ -24,10 +24,10 @@ export function buildMetadataPreview(
   tokenId: number
 ): Record<string, unknown> {
   const actualTokenId = settings.startTokenNumberAtZero ? tokenId - 1 : tokenId;
-
+  
   const name = resolveTemplate(settings.tokenNameTemplate, collectionName, actualTokenId);
   const description = settings.tokenDescription || `${collectionName} NFT Collection`;
-
+  
   // Base image path (will be replaced with actual CID/path during export)
   const imagePath = `${actualTokenId}.png`;
 
@@ -70,17 +70,20 @@ export function buildMetadataPreview(
   }
 
   // ERC-721 standard (Ethereum, Polygon, Base, BNB Chain)
-  if (
-    settings.metadataFormat === 'ethereum' ||
-    settings.metadataFormat === 'polygon' ||
-    settings.metadataFormat === 'base' ||
-    settings.metadataFormat === 'bnb'
-  ) {
-    return { ...baseMetadata };
+  if (settings.metadataFormat === 'ethereum' || 
+      settings.metadataFormat === 'polygon' || 
+      settings.metadataFormat === 'base' || 
+      settings.metadataFormat === 'bnb') {
+    return {
+      ...baseMetadata,
+    };
   }
 
   if (settings.metadataFormat === 'icp') {
-    return { ...baseMetadata, symbol };
+    return {
+      ...baseMetadata,
+      symbol,
+    };
   }
 
   return baseMetadata;
@@ -90,7 +93,6 @@ export function buildMetadataPreview(
  * Builds metadata for a specific NFT during generation or export.
  * Includes actual trait attributes.
  * If imageDirCID is provided, uses ipfs:// URIs; otherwise uses local filenames.
- * Supports both PNG and GIF file extensions.
  */
 export function buildMetadataForNFT(
   collectionName: string,
@@ -98,18 +100,17 @@ export function buildMetadataForNFT(
   settings: ProjectSettings,
   tokenId: number,
   attributes: Array<{ trait_type: string; value: string }>,
-  imageDirCID?: string,
-  fileExtension: string = 'png'
+  imageDirCID?: string
 ): Record<string, unknown> {
   const actualTokenId = settings.startTokenNumberAtZero ? tokenId - 1 : tokenId;
-
+  
   const name = resolveTemplate(settings.tokenNameTemplate, collectionName, actualTokenId);
   const description = settings.tokenDescription || `${collectionName} NFT Collection`;
-
+  
   // Use IPFS URI if CID is provided, otherwise local filename
-  const imagePath = imageDirCID
-    ? `ipfs://${imageDirCID}/${actualTokenId}.${fileExtension}`
-    : `${actualTokenId}.${fileExtension}`;
+  const imagePath = imageDirCID 
+    ? `ipfs://${imageDirCID}/${actualTokenId}.png`
+    : `${actualTokenId}.png`;
 
   const baseMetadata: Record<string, unknown> = {
     name,
@@ -126,8 +127,6 @@ export function buildMetadataForNFT(
         }))
       : [{ address: 'YOUR_WALLET_ADDRESS', share: 100 }];
 
-    const mimeType = fileExtension === 'gif' ? 'image/gif' : 'image/png';
-
     return {
       ...baseMetadata,
       symbol,
@@ -136,7 +135,7 @@ export function buildMetadataForNFT(
         files: [
           {
             uri: imagePath,
-            type: mimeType,
+            type: 'image/png',
           },
         ],
         category: 'image',
@@ -146,17 +145,20 @@ export function buildMetadataForNFT(
   }
 
   // ERC-721 standard (Ethereum, Polygon, Base, BNB Chain)
-  if (
-    settings.metadataFormat === 'ethereum' ||
-    settings.metadataFormat === 'polygon' ||
-    settings.metadataFormat === 'base' ||
-    settings.metadataFormat === 'bnb'
-  ) {
-    return { ...baseMetadata };
+  if (settings.metadataFormat === 'ethereum' || 
+      settings.metadataFormat === 'polygon' || 
+      settings.metadataFormat === 'base' || 
+      settings.metadataFormat === 'bnb') {
+    return {
+      ...baseMetadata,
+    };
   }
 
   if (settings.metadataFormat === 'icp') {
-    return { ...baseMetadata, symbol };
+    return {
+      ...baseMetadata,
+      symbol,
+    };
   }
 
   return baseMetadata;

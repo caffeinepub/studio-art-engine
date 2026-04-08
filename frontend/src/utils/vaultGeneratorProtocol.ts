@@ -1,7 +1,6 @@
 /**
  * Message protocol for communication between Vault UI and the generator worker.
  * Defines all message types and payloads for worker-based NFT generation.
- * Supports animated GIF output when traits contain GIF files.
  */
 
 export interface LayerData {
@@ -49,7 +48,6 @@ export interface StartGenerationMessage {
     symbol: string;
     pixelArtMode: boolean;
     batchSize: number;
-    outputFormat?: string; // 'png' | 'gif' | 'same-as-assets'
   };
 }
 
@@ -77,7 +75,6 @@ export interface GeneratedNFTData {
   isForged: boolean;
   forgedTokenId?: string;
   selectedTraits?: Record<string, string>; // For fallback compositing
-  outputFormat?: string; // 'png' | 'gif'
 }
 
 export interface BatchResultMessage {

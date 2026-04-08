@@ -17,12 +17,11 @@ export interface IPFSUploadResult {
 }
 
 /**
- * Uploads all NFT images and metadata to IPFS via Pinata.
+ * Uploads all NFT images and metadata to IPFS via Pinata
  * Follows industry-standard workflow:
  * 1. Upload images as a directory (images/1.png, images/2.png, etc.) -> get IMAGES_FOLDER_CID
- * 2. Generate metadata JSON files with image field as ipfs://IMAGES_FOLDER_CID/<TOKEN_ID>.<ext>
+ * 2. Generate metadata JSON files with image field as ipfs://IMAGES_FOLDER_CID/<TOKEN_ID>.png
  * 3. Upload metadata as a directory (metadata/1.json, metadata/2.json, etc.) -> get METADATA_FOLDER_CID
- * Supports both PNG and GIF formats.
  */
 export async function uploadCollectionToIPFS(
   apiKey: string,
@@ -35,45 +34,36 @@ export async function uploadCollectionToIPFS(
   try {
     // Stage 1: Prepare all images for directory upload
     const imageFiles: Array<{ filename: string; blob: Blob }> = [];
-
+    
     for (let i = 0; i < nfts.length; i++) {
       const nft = nfts[i];
-
+      
       if (onProgress) {
         onProgress({
           current: i + 1,
           total: nfts.length,
-          percentage: ((i + 1) / nfts.length) * 30,
+          percentage: ((i + 1) / nfts.length) * 30, // First 30% for preparing images
           stage: 'images',
         });
       }
 
-      // Detect image format from data URL
-      let mimeType = 'image/png';
-      let fileExtension = 'png';
-
-      if (nft.imageData.startsWith('data:image/gif')) {
-        mimeType = 'image/gif';
-        fileExtension = 'gif';
-      } else if (nft.imageData.startsWith('data:image/png')) {
-        mimeType = 'image/png';
-        fileExtension = 'png';
+      // Validate that imageData is a PNG data URL (processed images should be PNG)
+      if (!nft.imageData.startsWith('data:image/png')) {
+        console.warn(`NFT #${nft.id} imageData is not a PNG data URL, may be unprocessed`);
       }
 
       // Convert base64 to blob
       const base64Data = nft.imageData.split(',')[1];
-      if (!base64Data) continue;
-
       const binaryString = atob(base64Data);
       const bytes = new Uint8Array(binaryString.length);
       for (let j = 0; j < binaryString.length; j++) {
         bytes[j] = binaryString.charCodeAt(j);
       }
-      const imageBlob = new Blob([bytes], { type: mimeType });
+      const imageBlob = new Blob([bytes], { type: 'image/png' });
 
       const actualTokenId = settings.startTokenNumberAtZero ? nft.id - 1 : nft.id;
       imageFiles.push({
-        filename: `${actualTokenId}.${fileExtension}`,
+        filename: `${actualTokenId}.png`,
         blob: imageBlob,
       });
     }
@@ -83,7 +73,7 @@ export async function uploadCollectionToIPFS(
       onProgress({
         current: nfts.length,
         total: nfts.length,
-        percentage: 40,
+        percentage: 40, // 40% for uploading images directory
         stage: 'images',
       });
     }
@@ -104,21 +94,18 @@ export async function uploadCollectionToIPFS(
 
     for (let i = 0; i < nfts.length; i++) {
       const nft = nfts[i];
-
+      
       if (onProgress) {
         onProgress({
           current: i + 1,
           total: nfts.length,
-          percentage: 40 + ((i + 1) / nfts.length) * 30,
+          percentage: 40 + ((i + 1) / nfts.length) * 30, // 30% for preparing metadata
           stage: 'metadata',
         });
       }
 
       const attributes = nft.metadata.attributes as Array<{ trait_type: string; value: string }>;
-
-      // Detect file extension for this NFT
-      const fileExtension = nft.imageData.startsWith('data:image/gif') ? 'gif' : 'png';
-
+      
       // Build metadata with IPFS image URI
       const metadata = buildMetadataForNFT(
         projectName,
@@ -126,25 +113,24 @@ export async function uploadCollectionToIPFS(
         settings,
         nft.id,
         attributes,
-        imageDirCID,
-        fileExtension
+        imageDirCID // Pass CID to generate ipfs:// URIs
       );
 
       const actualTokenId = settings.startTokenNumberAtZero ? nft.id - 1 : nft.id;
       const metadataBlob = new Blob([JSON.stringify(metadata, null, 2)], { type: 'application/json' });
-
+      
       metadataFiles.push({
         filename: `${actualTokenId}.json`,
         blob: metadataBlob,
       });
     }
 
-    // Upload all metadata as a directory
+    // Upload all metadata as a directory with "metadata" folder prefix
     if (onProgress) {
       onProgress({
         current: nfts.length,
         total: nfts.length,
-        percentage: 80,
+        percentage: 80, // 80% for uploading metadata directory
         stage: 'metadata',
       });
     }
@@ -170,7 +156,7 @@ export async function uploadCollectionToIPFS(
     return {
       success: true,
       imageDirCID,
-      metadataCID: metadataDirResult.cid,
+      metadataCID: metadataDirResult.cid, // This is now the metadata folder CID
     };
   } catch (error) {
     return {

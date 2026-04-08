@@ -1,11 +1,12 @@
 # Specification
 
 ## Summary
-**Goal:** Add vertical scrolling to the Vault sidebar and NFT preview panel so all content is accessible when it overflows the viewport, without changing any existing design.
+**Goal:** Ensure Forge “Direct Injection” uploads are processed (square PNG at configured output size, with optional pixel mode) and that the processed result is what gets stored and uploaded to Pinata/IPFS.
 
 **Planned changes:**
-- Enable vertical overflow scrolling on the Vault sidebar so layers, filters, and controls are reachable when content exceeds viewport height
-- Enable vertical overflow scrolling on the NFT preview panel so the image, metadata, and traits are reachable when content exceeds available height
-- Scrollbars appear only when content overflows; no visual changes to styles, colors, spacing, or layout
+- Process Direct Injection uploads into a new square PNG at `project.settings.outputSize x project.settings.outputSize` before saving into project state.
+- When `project.pixelArtMode` is enabled, apply pixel-mode processing by rendering with canvas image smoothing disabled.
+- Persist only the processed image data in long-lived project state (discard the original, unprocessed upload bytes/dimensions).
+- Ensure the IPFS/Pinata upload pipeline uses the processed Forge-derived `imageData` for `project.generatedNFTs` when uploading collections.
 
-**User-visible outcome:** Users can scroll through all content in both the Vault sidebar and NFT preview panel without any change to the existing Vault appearance.
+**User-visible outcome:** Directly injected Forge images display and export/upload exactly as shown in the app (correct dimensions and pixel mode when enabled), and Pinata receives only the processed versions.

@@ -1,39 +1,61 @@
 {
   "kind": "implementation_plan",
   "version": "1.0",
-  "title": "Add scrolling to Vault sidebar and NFT preview page",
+  "title": "Process Forge Direct Injection images to square PNGs before Pinata upload",
   "requirements": [
     {
       "id": "REQ-1",
-      "summary": "Add vertical scrolling to the Vault sidebar so that all sidebar content (layers, filters, controls) is accessible when it overflows the viewport height",
+      "summary": "Process Forge Direct Injection uploads into a square PNG at project.settings.outputSize with optional pixel-mode rendering before saving to project state.",
       "acceptanceCriteria": [
-        "The Vault sidebar scrolls vertically when its content exceeds the available viewport height.",
-        "The sidebar scrollbar does not appear when content fits within the viewport.",
-        "No existing sidebar styles, colors, spacing, or layout are changed.",
-        "The sidebar header/title and any sticky controls remain visually anchored (do not scroll away if previously fixed)."
+        "When a user uploads a 1:1 image via Forge > Direct Injection, the resulting saved token imageData is a PNG data URL whose intrinsic pixel dimensions equal project.settings.outputSize x project.settings.outputSize.",
+        "If project.pixelArtMode is enabled, the processing step uses a canvas with imageSmoothingEnabled=false so the output is pixelated rather than anti-aliased.",
+        "The Forge gallery display continues to work and shows the processed image."
       ],
       "file_operations": [
         {
-          "path": "frontend/src/pages/Vault.tsx",
+          "path": "frontend/src/utils/forgeImageProcessing.ts",
+          "operation": "create",
+          "description": "Add a reusable image-processing helper that takes an uploaded image data URL, draws it onto a square canvas sized to project.settings.outputSize x project.settings.outputSize, disables canvas image smoothing when pixel mode is enabled, and returns a PNG data URL. Implement a non-distorting scale-and-crop (cover) strategy so inputs reliably become a square output."
+        },
+        {
+          "path": "frontend/src/pages/Builder.tsx",
           "operation": "modify",
-          "description": "Add overflow-y-auto CSS class to the Vault sidebar container element to enable vertical scrolling when content exceeds viewport height. Ensure the sidebar maintains its existing width, background, border, and padding styles. If the sidebar has a fixed header or title section, wrap only the scrollable content area (layers, filters, controls) with the overflow-y-auto class while keeping the header outside the scrollable region to remain visually anchored."
+          "description": "Update Forge > Direct Injection flow to process uploads via the new forgeImageProcessing helper before adding items to the injection queue and before persisting forged tokens. Ensure the queue preview and the saved CustomToken.imageData use the processed PNG output, and that pixel mode toggles canvas smoothing behavior during processing."
         }
       ]
     },
     {
       "id": "REQ-2",
-      "summary": "Add vertical scrolling to the NFT preview panel/page within the Vault so that all NFT preview content (image, metadata, traits) is accessible when it overflows the available height",
+      "summary": "Do not persist any original, unprocessed Direct Injection image bytes or dimensions in long-lived project state.",
       "acceptanceCriteria": [
-        "The NFT preview panel scrolls vertically when its content exceeds the available height.",
-        "The scrollbar does not appear when all preview content fits within the viewport.",
-        "No existing preview panel styles, colors, spacing, typography, or layout are changed.",
-        "The overall Vault page layout (sidebar + main content + preview) remains structurally identical to Draft 169."
+        "After Direct Injection, project.customTokens contains only the processed (resized/pixel-mode) imageData for each injected token.",
+        "Refreshing/reloading the app does not restore any original (pre-processed) Direct Injection image variant because it was never persisted."
       ],
       "file_operations": [
         {
-          "path": "frontend/src/pages/Vault.tsx",
+          "path": "frontend/src/pages/Builder.tsx",
           "operation": "modify",
-          "description": "Add overflow-y-auto CSS class to the NFT preview panel container element to enable vertical scrolling when preview content (image, metadata, traits) exceeds the available height. Preserve all existing preview panel styles including background, border, padding, typography, and spacing. Ensure the scrollable area encompasses all preview content while maintaining the structural layout of the Vault page (sidebar + main content + preview)."
+          "description": "Ensure Direct Injection never stores the original uploaded data URL into project.customTokens (or any other project state used for persistence/export). Only keep the processed PNG data URL when creating CustomToken entries, and avoid adding any extra fields that retain original file bytes/dimensions."
+        }
+      ]
+    },
+    {
+      "id": "REQ-3",
+      "summary": "Ensure the IPFS/Pinata upload pipeline uses processed Forge images by keeping project.generatedNFTs[*].imageData sourced from processed forged token imageData.",
+      "acceptanceCriteria": [
+        "Uploading a collection to Pinata results in image files whose intrinsic pixel dimensions match project.settings.outputSize x project.settings.outputSize for Forge-upload-derived NFTs.",
+        "No Pinata-uploaded image for Forge-upload-derived NFTs retains the original uploaded pixel dimensions."
+      ],
+      "file_operations": [
+        {
+          "path": "frontend/src/pages/Builder.tsx",
+          "operation": "modify",
+          "description": "Ensure all Forge Direct Injection CustomToken.imageData values are already processed, so when Vault generation includes forged tokens and populates project.generatedNFTs[*].imageData for those NFTs, the data flowing into Pinata upload is the processed output."
+        },
+        {
+          "path": "frontend/src/utils/ipfsPublishing.ts",
+          "operation": "modify",
+          "description": "Add a lightweight guard/validation in the image preparation step to assert uploaded NFT imageData is a PNG data URL and optionally warn/throw if forged-token-derived images are missing or malformed, helping ensure the upload uses the processed imageData already stored in project/generatedNFTs."
         }
       ]
     }
